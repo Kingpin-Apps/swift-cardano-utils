@@ -1,12 +1,12 @@
 import Foundation
-import System
+import SystemPackage
 import Logging
 
 /// Kupo binary runner
 public struct Kupo: BinaryRunnable {
     let binaryPath: FilePath
     let workingDirectory: FilePath
-    let configuration: Configuration
+    let configuration: CardanoCLIToolsConfig
     let logger: Logging.Logger
     static let binaryName: String = "kupo"
     static let mininumSupportedVersion: String = "2.3.4"
@@ -15,8 +15,9 @@ public struct Kupo: BinaryRunnable {
     let cardanoConfig: CardanoConfig
     let kupoConfig: KupoConfig
     var process: Process?
+    var processTerminated: Bool = false
 
-    init(configuration: Configuration, logger: Logging.Logger?) async throws {
+    init(configuration: CardanoCLIToolsConfig, logger: Logging.Logger?) async throws {
         // Assign all let properties directly
         self.configuration = configuration
         self.cardanoConfig = configuration.cardano
@@ -50,9 +51,31 @@ public struct Kupo: BinaryRunnable {
     public mutating func start() throws {
         var arguments: [String] = []
         
-        // Required arguments
-        arguments.append(contentsOf: ["--node-socket", cardanoConfig.socket.string])
-        arguments.append(contentsOf: ["--node-config", cardanoConfig.config.string])
+        // Connection arguments - prefer Ogmios if available, otherwise use direct node connection
+        if let ogmiosConfig = configuration.ogmios {
+            // Use Ogmios connection
+            let ogmiosHost = ogmiosConfig.host ?? "127.0.0.1"
+            let ogmiosPort = ogmiosConfig.port ?? 1337
+            arguments.append(contentsOf: ["--ogmios-host", ogmiosHost])
+            arguments.append(contentsOf: ["--ogmios-port", String(ogmiosPort)])
+        } else {
+            // Use direct node connection
+            guard let socket = cardanoConfig.socket else {
+                throw CardanoCLIToolsError.valueError("Cardano node socket path is required for kupo when Ogmios is not configured")
+            }
+            guard let config = cardanoConfig.config else {
+                throw CardanoCLIToolsError.valueError("Cardano node config path is required for kupo when Ogmios is not configured")
+            }
+            arguments.append(contentsOf: ["--node-socket", socket.string])
+            arguments.append(contentsOf: ["--node-config", config.string])
+        }
+        
+        // In-memory mode or work directory
+        if let inMemory = kupoConfig.inMemory, inMemory {
+            arguments.append("--in-memory")
+        } else if let workDir = kupoConfig.workingDir {
+            arguments.append(contentsOf: ["--workdir", workDir.string])
+        }
         
         // Host and port
         arguments.append(contentsOf: ["--host", kupoConfig.host ?? "127.0.0.1"])
@@ -63,9 +86,55 @@ public struct Kupo: BinaryRunnable {
             arguments.append(contentsOf: ["--since", since])
         }
         
-        // Work directory
-        if let workDir = kupoConfig.workingDir {
-            arguments.append(contentsOf: ["--workdir", workDir.string])
+        // Match patterns (can be provided multiple times)
+        if let matches = kupoConfig.matches {
+            for pattern in matches {
+                arguments.append(contentsOf: ["--match", pattern])
+            }
+        }
+        
+        // Boolean flags
+        if let deferDbIndexes = kupoConfig.deferDbIndexes, deferDbIndexes {
+            arguments.append("--defer-db-indexes")
+        }
+        
+        if let pruneUTxO = kupoConfig.pruneUTxO, pruneUTxO {
+            arguments.append("--prune-utxo")
+        }
+        
+        // Numeric options
+        if let gcInterval = kupoConfig.gcInterval {
+            arguments.append(contentsOf: ["--gc-interval", String(gcInterval)])
+        }
+        
+        if let maxConcurrency = kupoConfig.maxConcurrency {
+            arguments.append(contentsOf: ["--max-concurrency", String(maxConcurrency)])
+        }
+        
+        // Log level options - use global log level if provided, otherwise use specific ones
+        if let logLevel = kupoConfig.logLevel {
+            arguments.append(contentsOf: ["--log-level", logLevel])
+        } else {
+            // Individual log levels (only if global log level is not set)
+            if let logLevelHttpServer = kupoConfig.logLevelHttpServer {
+                arguments.append(contentsOf: ["--log-level-http-server", logLevelHttpServer])
+            }
+            
+            if let logLevelDatabase = kupoConfig.logLevelDatabase {
+                arguments.append(contentsOf: ["--log-level-database", logLevelDatabase])
+            }
+            
+            if let logLevelConsumer = kupoConfig.logLevelConsumer {
+                arguments.append(contentsOf: ["--log-level-consumer", logLevelConsumer])
+            }
+            
+            if let logLevelGarbageCollector = kupoConfig.logLevelGarbageCollector {
+                arguments.append(contentsOf: ["--log-level-garbage-collector", logLevelGarbageCollector])
+            }
+            
+            if let logLevelConfiguration = kupoConfig.logLevelConfiguration {
+                arguments.append(contentsOf: ["--log-level-configuration", logLevelConfiguration])
+            }
         }
         
         try self.start(arguments)

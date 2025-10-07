@@ -1,12 +1,12 @@
 import Foundation
-import System
+import SystemPackage
 import Logging
 
 /// Ogmios binary runner
 public struct Ogmios: BinaryRunnable {
     let binaryPath: FilePath
     let workingDirectory: FilePath
-    let configuration: Configuration
+    let configuration: CardanoCLIToolsConfig
     let logger: Logging.Logger
     static let binaryName: String = "ogmios"
     static let mininumSupportedVersion: String = "6.13.0"
@@ -15,8 +15,9 @@ public struct Ogmios: BinaryRunnable {
     let cardanoConfig: CardanoConfig
     let ogmiosConfig: OgmiosConfig
     var process: Process?
+    var processTerminated: Bool = false
     
-    init(configuration: Configuration, logger: Logging.Logger?) async throws {
+    init(configuration: CardanoCLIToolsConfig, logger: Logging.Logger?) async throws {
         // Assign all let properties directly
         self.configuration = configuration
         self.cardanoConfig = configuration.cardano
@@ -51,16 +52,22 @@ public struct Ogmios: BinaryRunnable {
         var arguments: [String] = []
         
         // Required arguments
-        arguments.append(contentsOf: ["--node-config", cardanoConfig.config.string])
-        arguments.append(contentsOf: ["--node-socket", cardanoConfig.socket.string])
+        guard let nodeConfig = cardanoConfig.config else {
+            throw CardanoCLIToolsError.valueError("Cardano node config path is required for Ogmios")
+        }
+        guard let nodeSocket = cardanoConfig.socket else {
+            throw CardanoCLIToolsError.valueError("Cardano node socket path is required for Ogmios")
+        }
+        arguments.append(contentsOf: ["--node-config", nodeConfig.string])
+        arguments.append(contentsOf: ["--node-socket", nodeSocket.string])
         
         // Host and port
         arguments.append(contentsOf: ["--host", ogmiosConfig.host ?? "127.0.0.1"])
         arguments.append(contentsOf: ["--port", String(ogmiosConfig.port ?? 1337)])
         
         // Timeout and max in flight
-        arguments.append(contentsOf: ["--timeout", String(ogmiosConfig.timeout ?? 90)])
-        arguments.append(contentsOf: ["--max-in-flight", String(ogmiosConfig.maxInFlight ?? 100)])
+        if let timeout = ogmiosConfig.timeout { arguments.append(contentsOf: ["--timeout", String(timeout)]) }
+        if let maxInFlight = ogmiosConfig.maxInFlight { arguments.append(contentsOf: ["--max-in-flight", String(maxInFlight)]) }
         
         // Logging levels
         if let logLevel = ogmiosConfig.logLevel {
@@ -73,7 +80,7 @@ public struct Ogmios: BinaryRunnable {
                 arguments.append(contentsOf: ["--log-level-metrics", logLevelMetrics])
             }
             if let logLevelWebsocket = ogmiosConfig.logLevelWebsocket {
-                arguments.append(contentsOf: ["--log-level-websockets", logLevelWebsocket])
+                arguments.append(contentsOf: ["--log-level-websocket", logLevelWebsocket])
             }
             if let logLevelServer = ogmiosConfig.logLevelServer {
                 arguments.append(contentsOf: ["--log-level-server", logLevelServer])

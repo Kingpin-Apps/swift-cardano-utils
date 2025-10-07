@@ -25,7 +25,7 @@ The primary interface for interacting with the Cardano blockchain through the of
 
 ## Configuration
 
-The CardanoCLI requires a ``Configuration`` object that specifies paths to binaries and network settings:
+The CardanoCLI requires a ``CardanoCLIToolsConfig`` object that specifies paths to binaries and network settings:
 
 ### Basic Configuration
 

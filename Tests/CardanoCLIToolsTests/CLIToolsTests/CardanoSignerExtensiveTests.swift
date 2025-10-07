@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 import Logging
-import System
+import SystemPackage
 import SwiftCardanoCore
 @testable import CardanoCLITools
 
@@ -521,7 +521,7 @@ struct CardanoSignerExtensiveTests {
             #expect(!config.cardano.signer!.string.isEmpty)
             
             // Test that it maintains other configuration properties (CLI paths differ due to mock creation)
-            #expect(!config.cardano.cli.string.isEmpty)
+            #expect(!config.cardano.cli!.string.isEmpty)
             #expect(config.cardano.workingDir.string == baseConfig.cardano.workingDir.string)
         }
     }
@@ -607,7 +607,7 @@ struct CardanoSignerExtensiveTests {
     }
     
     /// Create configuration with specific signer path
-    private func createConfigWithSigner(_ signerPath: String) -> Configuration {
+    private func createConfigWithSigner(_ signerPath: String) -> CardanoCLIToolsConfig {
         let baseConfig = createTestConfiguration()
         let cardanoConfig = CardanoConfig(
             cli: baseConfig.cardano.cli,
@@ -627,11 +627,11 @@ struct CardanoSignerExtensiveTests {
             showOutput: baseConfig.cardano.showOutput
         )
         
-        return Configuration(cardano: cardanoConfig, ogmios: nil, kupo: nil)
+        return CardanoCLIToolsConfig(cardano: cardanoConfig, ogmios: nil, kupo: nil)
     }
     
     /// Create configuration with specific signer path and network
-    private func createConfigWithSignerAndNetwork(_ signerPath: String, _ network: CardanoCLITools.Network) -> Configuration {
+    private func createConfigWithSignerAndNetwork(_ signerPath: String, _ network: CardanoCLITools.Network) -> CardanoCLIToolsConfig {
         let baseConfig = createTestConfiguration()
         let cardanoConfig = CardanoConfig(
             cli: baseConfig.cardano.cli,
@@ -651,7 +651,7 @@ struct CardanoSignerExtensiveTests {
             showOutput: baseConfig.cardano.showOutput
         )
         
-        return Configuration(cardano: cardanoConfig, ogmios: nil, kupo: nil)
+        return CardanoCLIToolsConfig(cardano: cardanoConfig, ogmios: nil, kupo: nil)
     }
 }
 

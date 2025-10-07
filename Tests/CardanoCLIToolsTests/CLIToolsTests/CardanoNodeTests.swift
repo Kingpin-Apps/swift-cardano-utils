@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 import Logging
-import System
+import SystemPackage
 import SwiftCardanoCore
 @testable import CardanoCLITools
 
@@ -48,7 +48,7 @@ struct CardanoNodeTests {
             showOutput: false
         )
         
-        let config = Configuration(
+        let config = CardanoCLIToolsConfig(
             cardano: cardanoConfig,
             ogmios: nil,
             kupo: nil
@@ -124,8 +124,8 @@ struct CardanoNodeTests {
         
         // Simulate argument construction logic from start() method
         var arguments: [String] = ["run"]
-        arguments.append(contentsOf: ["--config", cardanoConfig.config.string])
-        arguments.append(contentsOf: ["--socket-path", cardanoConfig.socket.string])
+        arguments.append(contentsOf: ["--config", cardanoConfig.config?.string ?? "/tmp/config.json"])
+        arguments.append(contentsOf: ["--socket-path", cardanoConfig.socket?.string ?? "/tmp/node.socket"])
         
         if let topology = cardanoConfig.topology {
             arguments.append(contentsOf: ["--topology", topology.string])
@@ -179,8 +179,8 @@ struct CardanoNodeTests {
         
         // Simulate minimal argument construction
         var arguments: [String] = ["run"]
-        arguments.append(contentsOf: ["--config", cardanoConfig.config.string])
-        arguments.append(contentsOf: ["--socket-path", cardanoConfig.socket.string])
+        arguments.append(contentsOf: ["--config", cardanoConfig.config?.string ?? "/tmp/config.json"])
+        arguments.append(contentsOf: ["--socket-path", cardanoConfig.socket?.string ?? "/tmp/node.socket"])
         
         let expectedArguments = [
             "run",
@@ -293,9 +293,9 @@ struct CardanoNodeTests {
         let cardanoConfig = config.cardano
         
         // Test that CardanoNode configuration fields are properly mapped
-        #expect(config.cardano.node.string == cardanoConfig.node.string)
-        #expect(config.cardano.socket.string == cardanoConfig.socket.string)
-        #expect(config.cardano.config.string == cardanoConfig.config.string)
+        #expect(config.cardano.node?.string == cardanoConfig.node?.string)
+        #expect(config.cardano.socket?.string == cardanoConfig.socket?.string)
+        #expect(config.cardano.config?.string == cardanoConfig.config?.string)
         #expect(config.cardano.workingDir.string == cardanoConfig.workingDir.string)
         
         // Verify optional fields

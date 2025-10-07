@@ -1,13 +1,20 @@
 import Testing
 import Foundation
 import Logging
-import System
+import SystemPackage
 import SwiftCardanoCore
 @testable import CardanoCLITools
 
 // MARK: - Protocol Parameters Path
 let protocolParametersJSONFilePath = (
     forResource: "protocol-parameters",
+    ofType: "json",
+    inDirectory: "data"
+)
+
+// MARK: - Config Path
+let configJSONFilePath = (
+    forResource: "config",
     ofType: "json",
     inDirectory: "data"
 )
@@ -37,7 +44,7 @@ var protocolParameters: ProtocolParameters? {
     }
 }
 
-func createMockConfig() -> Configuration {
+func createMockConfig() -> CardanoCLIToolsConfig {
     let cardanoConfig = CardanoConfig(
         cli: FilePath(createMockCardanoCLI()),
         node: FilePath("/tmp/mock-cardano-node"),
@@ -56,14 +63,14 @@ func createMockConfig() -> Configuration {
         showOutput: false
     )
     
-    return Configuration(
+    return CardanoCLIToolsConfig(
         cardano: cardanoConfig,
         ogmios: nil,
         kupo: nil
     )
 }
 
-func createMockConfiguration() -> Configuration {
+func createMockConfiguration() -> CardanoCLIToolsConfig {
     let mockCardanoConfig = CardanoConfig(
         cli: FilePath(createMockCardanoCLI()),
         node: FilePath("/usr/bin/true"),
@@ -82,7 +89,7 @@ func createMockConfiguration() -> Configuration {
         showOutput: false
     )
     
-    return Configuration(
+    return CardanoCLIToolsConfig(
         cardano: mockCardanoConfig,
         ogmios: nil,
         kupo: nil
@@ -96,7 +103,7 @@ func createMockBaseCLIConfiguration(
     mode: String = "online",
     hwCli: String? = nil,
     jcli: String? = nil
-) throws -> Configuration {
+) throws -> CardanoCLIToolsConfig {
     
     // Create mock CLI binaries
     let mockCardanoCliPath = cli ?? {
@@ -123,7 +130,7 @@ func createMockBaseCLIConfiguration(
         showOutput: false
     )
     
-    return Configuration(
+    return CardanoCLIToolsConfig(
         cardano: cardanoConfig,
         ogmios: nil,
         kupo: nil
@@ -136,7 +143,7 @@ func createMockBinary(withContent content: String = "#!/bin/bash\necho 'mock bin
     let tempDir = FileManager.default.temporaryDirectory
     let binaryPath = tempDir.appendingPathComponent("mock-binary-\(UUID().uuidString)").path
     
-    FileManager.default.createFile(atPath: binaryPath, contents: content.data(using: .utf8))
+    _ = FileManager.default.createFile(atPath: binaryPath, contents: content.data(using: .utf8))
     
     // Make it executable
     let permissions = [FileAttributeKey.posixPermissions: 0o755]
@@ -146,7 +153,7 @@ func createMockBinary(withContent content: String = "#!/bin/bash\necho 'mock bin
 }
 
 /// Creates a mock configuration for testing
-func createTestConfiguration() -> Configuration {
+func createTestConfiguration() -> CardanoCLIToolsConfig {
     let cardanoConfig = CardanoConfig(
         cli: FilePath(createMockCardanoCLI()),
         node: FilePath("/usr/bin/true"),
@@ -165,7 +172,7 @@ func createTestConfiguration() -> Configuration {
         showOutput: false
     )
     
-    return Configuration(
+    return CardanoCLIToolsConfig(
         cardano: cardanoConfig,
         ogmios: nil,
         kupo: nil
@@ -327,7 +334,7 @@ func createMockCardanoCLI(withResponses responses: [String: String] = [:]) -> St
     exit 0
     """
     
-    FileManager.default.createFile(atPath: binaryPath, contents: mockScript.data(using: .utf8))
+    _ = FileManager.default.createFile(atPath: binaryPath, contents: mockScript.data(using: .utf8))
     
     // Make it executable
     let permissions = [FileAttributeKey.posixPermissions: 0o755]
@@ -337,7 +344,7 @@ func createMockCardanoCLI(withResponses responses: [String: String] = [:]) -> St
 }
 
 /// Creates a comprehensive test configuration with all necessary paths
-func createAdvancedTestConfiguration(cliPath: String? = nil) -> Configuration {
+func createAdvancedTestConfiguration(cliPath: String? = nil) -> CardanoCLIToolsConfig {
     let mockCliPath = cliPath ?? createMockCardanoCLI()
     
     let cardanoConfig = CardanoConfig(
@@ -358,7 +365,7 @@ func createAdvancedTestConfiguration(cliPath: String? = nil) -> Configuration {
         showOutput: false
     )
     
-    return Configuration(
+    return CardanoCLIToolsConfig(
         cardano: cardanoConfig,
         ogmios: nil,
         kupo: nil
@@ -366,7 +373,7 @@ func createAdvancedTestConfiguration(cliPath: String? = nil) -> Configuration {
 }
 
 /// Creates a test configuration for offline mode
-func createOfflineTestConfiguration(shelleyGenesisFile: String? = nil, offlineFile: String? = nil) -> Configuration {
+func createOfflineTestConfiguration(shelleyGenesisFile: String? = nil, offlineFile: String? = nil) -> CardanoCLIToolsConfig {
     let mockCliPath = createMockCardanoCLI()
     
     let cardanoConfig = CardanoConfig(
@@ -387,7 +394,7 @@ func createOfflineTestConfiguration(shelleyGenesisFile: String? = nil, offlineFi
         showOutput: false
     )
     
-    return Configuration(
+    return CardanoCLIToolsConfig(
         cardano: cardanoConfig,
         ogmios: nil,
         kupo: nil

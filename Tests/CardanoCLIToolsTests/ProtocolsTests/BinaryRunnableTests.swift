@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 import Logging
-import System
+import SystemPackage
 import SwiftCardanoCore
 @testable import CardanoCLITools
 
@@ -14,17 +14,18 @@ struct BinaryRunnableTests {
     struct MockBinaryRunnable: BinaryRunnable {
         let binaryPath: FilePath
         let workingDirectory: FilePath
-        let configuration: Configuration
+        let configuration: CardanoCLIToolsConfig
         let logger: Logger
         let showOutput: Bool
         var process: Process?
+        var processTerminated: Bool = false
         static let binaryName: String = "test-runner"
         static let mininumSupportedVersion: String = "1.0.0"
         
         private let mockVersion: String
         private let shouldFailOnStart: Bool
         
-        init(configuration: Configuration, logger: Logger?) async throws {
+        init(configuration: CardanoCLIToolsConfig, logger: Logger?) async throws {
             self.configuration = configuration
             self.logger = logger ?? Logger(label: Self.binaryName)
             self.showOutput = false // Default to not showing output for tests
@@ -40,7 +41,7 @@ struct BinaryRunnableTests {
             try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
         }
         
-        init(configuration: Configuration, logger: Logger?, showOutput: Bool, mockVersion: String = "1.0.0", shouldFailOnStart: Bool = false) async throws {
+        init(configuration: CardanoCLIToolsConfig, logger: Logger?, showOutput: Bool, mockVersion: String = "1.0.0", shouldFailOnStart: Bool = false) async throws {
             self.configuration = configuration
             self.logger = logger ?? Logger(label: Self.binaryName)
             self.showOutput = showOutput
@@ -137,7 +138,7 @@ struct BinaryRunnableTests {
         #expect(processExists)
         
         // Clean up
-        mockRunner.stop()
+        try await mockRunner.stop()
     }
     
     @Test("start throws error when process already running")
@@ -177,7 +178,7 @@ struct BinaryRunnableTests {
         }
         
         // Clean up
-        mockRunner.stop()
+        try await mockRunner.stop()
         
         // Wait a bit for cleanup
         try await Task.sleep(for: .milliseconds(100))
@@ -204,10 +205,16 @@ struct BinaryRunnableTests {
         #expect(mockRunner.process != nil)
         
         // Stop the process
-        mockRunner.stop()
+        try await mockRunner.stop()
         
-        // Give it a moment to terminate
-        try await Task.sleep(for: .milliseconds(200))
+        // Wait for termination with timeout (more robust across platforms)
+        var attempts = 0
+        let maxAttempts = 50 // 5 seconds total
+        
+        while mockRunner.isRunning && attempts < maxAttempts {
+            try await Task.sleep(for: .milliseconds(100))
+            attempts += 1
+        }
         
         // Process should no longer be running
         #expect(mockRunner.isRunning == false)
@@ -218,14 +225,14 @@ struct BinaryRunnableTests {
         let config = createTestConfiguration()
         let logger = Logger(label: "test")
         
-        let mockRunner = try await MockBinaryRunnable(
+        var mockRunner = try await MockBinaryRunnable(
             configuration: config,
             logger: logger,
             showOutput: false
         )
         
         // Try to stop when no process is running - should not throw
-        mockRunner.stop()
+        try await mockRunner.stop()
         
         // Still no process
         #expect(mockRunner.process == nil)
@@ -256,7 +263,7 @@ struct BinaryRunnableTests {
         #expect(mockRunner.process != nil)
         
         // Wait for it to finish
-        try await Task.sleep(for: .milliseconds(300))
+        try await Task.sleep(for: .milliseconds(1000))
         
         // Should no longer be running
         #expect(mockRunner.isRunning == false)
@@ -350,7 +357,7 @@ struct BinaryRunnableTests {
         #expect(duration < 0.1, "Expected start() to return immediately, took \(duration) seconds")
         
         // Clean up
-        mockRunner.stop()
+        try await mockRunner.stop()
         try await Task.sleep(for: .milliseconds(100))
     }
     
@@ -412,7 +419,7 @@ struct BinaryRunnableTests {
             showOutput: false
         )
         
-        let config = Configuration(
+        let config = CardanoCLIToolsConfig(
             cardano: cardanoConfig,
             ogmios: nil,
             kupo: nil
@@ -434,14 +441,15 @@ struct BinaryRunnableTests {
         struct InvalidBinaryMock: BinaryRunnable {
             let binaryPath: FilePath
             let workingDirectory: FilePath
-            let configuration: Configuration
+            let configuration: CardanoCLIToolsConfig
             let logger: Logger
             let showOutput: Bool
             var process: Process?
+            var processTerminated: Bool = false
             static let binaryName: String = "invalid-runner"
             static let mininumSupportedVersion: String = "1.0.0"
             
-            init(configuration: Configuration, logger: Logger? = nil) async throws {
+            init(configuration: CardanoCLIToolsConfig, logger: Logger? = nil) async throws {
                 self.configuration = configuration
                 self.logger = logger ?? Logger(label: Self.binaryName)
                 self.showOutput = false
@@ -495,7 +503,7 @@ struct BinaryRunnableTests {
         // Give it time to start
         try await Task.sleep(for: .milliseconds(50))
         
-        mockRunner.stop()
+        try await mockRunner.stop()
         
         // Give it time to stop
         try await Task.sleep(for: .milliseconds(150))
@@ -592,7 +600,7 @@ struct BinaryRunnableTests {
         }
         
         // Clean up
-        mockRunner.stop()
+        try await mockRunner.stop()
         try await Task.sleep(for: .milliseconds(100))
     }
     
@@ -618,7 +626,7 @@ struct BinaryRunnableTests {
         #expect(mockRunner.process != nil)
         
         // Stop it quickly
-        mockRunner.stop()
+        try await mockRunner.stop()
         
         // Give it time to stop
         try await Task.sleep(for: .milliseconds(100))
@@ -646,7 +654,7 @@ struct BinaryRunnableTests {
         try await Task.sleep(for: .milliseconds(200))
         
         // Clean up
-        mockRunner.stop()
+        try await mockRunner.stop()
     }
     
     @Test("BinaryRunnable process termination handler works")

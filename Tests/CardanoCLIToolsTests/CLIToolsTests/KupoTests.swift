@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 import Logging
-import System
+import SystemPackage
 import SwiftCardanoCore
 @testable import CardanoCLITools
 
@@ -32,7 +32,7 @@ struct KupoTests {
     func testConfigurationRequirements() async throws {
         let testConfig = createTestConfiguration()
         
-        let config = Configuration(
+        let config = CardanoCLIToolsConfig(
             cardano: testConfig.cardano,
             ogmios: nil,
             kupo: nil // Missing kupo configuration should cause failure
@@ -66,7 +66,7 @@ struct KupoTests {
         )
         
         let testConfig = createTestConfiguration()
-        let config = Configuration(
+        let config = CardanoCLIToolsConfig(
             cardano: testConfig.cardano,
             ogmios: nil,
             kupo: kupoConfig
@@ -159,8 +159,8 @@ struct KupoTests {
         var arguments: [String] = []
         
         // Required arguments
-        arguments.append(contentsOf: ["--node-socket", cardanoConfig.socket.string])
-        arguments.append(contentsOf: ["--node-config", cardanoConfig.config.string])
+        arguments.append(contentsOf: ["--node-socket", cardanoConfig.socket?.string ?? "/tmp/node.socket"])
+        arguments.append(contentsOf: ["--node-config", cardanoConfig.config?.string ?? "/tmp/config.json"])
         
         // Host and port
         arguments.append(contentsOf: ["--host", kupoConfig.host ?? "127.0.0.1"])
@@ -214,14 +214,14 @@ struct KupoTests {
         
         // Simulate minimal argument construction
         var arguments: [String] = []
-        arguments.append(contentsOf: ["--node-socket", cardanoConfig.socket.string])
-        arguments.append(contentsOf: ["--node-config", cardanoConfig.config.string])
+        arguments.append(contentsOf: ["--node-socket", cardanoConfig.socket?.string ?? "/tmp/node.socket"])
+        arguments.append(contentsOf: ["--node-config", cardanoConfig.config?.string ?? "/tmp/config.json"])
         arguments.append(contentsOf: ["--host", kupoConfig.host ?? "127.0.0.1"])
         arguments.append(contentsOf: ["--port", String(kupoConfig.port ?? 1442)])
         
         let expectedArguments = [
-            "--node-socket", cardanoConfig.socket.string,
-            "--node-config", cardanoConfig.config.string,
+            "--node-socket", cardanoConfig.socket?.string ?? "/tmp/node.socket",
+            "--node-config", cardanoConfig.config?.string ?? "/tmp/config.json",
             "--host", "127.0.0.1",
             "--port", "1442"
         ]
@@ -552,7 +552,7 @@ struct KupoTests {
         )
         
         let testConfig = createTestConfiguration()
-        let config = Configuration(
+        let config = CardanoCLIToolsConfig(
             cardano: testConfig.cardano,
             ogmios: nil,
             kupo: kupoConfig

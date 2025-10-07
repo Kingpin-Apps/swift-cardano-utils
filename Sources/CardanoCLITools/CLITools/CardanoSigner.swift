@@ -1,5 +1,5 @@
 import Foundation
-import System
+import SystemPackage
 import Logging
 
 // MARK: - Cardano Signer CLI
@@ -8,13 +8,13 @@ import Logging
 public struct CardanoSigner: BinaryInterfaceable {
     public let binaryPath: FilePath
     public let workingDirectory: FilePath
-    public let configuration: Configuration
+    public let configuration: CardanoCLIToolsConfig
     public let logger: Logger
     public static let binaryName: String = "cardano-signer"
     public static let mininumSupportedVersion: String = "1.17.0"
     
     /// Initialize with optional configuration
-    public init(configuration: Configuration, logger: Logger? = nil) async throws {
+    public init(configuration: CardanoCLIToolsConfig, logger: Logger? = nil) async throws {
         // Assign all let properties directly
         self.configuration = configuration
         

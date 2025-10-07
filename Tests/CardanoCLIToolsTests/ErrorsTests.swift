@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 import Logging
-import System
+import SystemPackage
 import SwiftCardanoCore
 @testable import CardanoCLITools
 @Suite("CardanoCLIToolsError Tests")
@@ -130,7 +130,7 @@ struct CardanoCLIToolsErrorTests {
             showOutput: false
         )
         
-        let configuration = Configuration(
+        let configuration = CardanoCLIToolsConfig(
             cardano: minimalCardanoConfig,
             ogmios: nil,
             kupo: nil
@@ -395,6 +395,7 @@ struct CardanoCLIToolsErrorTests {
             .unsupportedVersion("1.0.0", "2.0.0"),
             .invalidMultiSigConfig("test config error"),
             .fileNotFound("/test/file.json"),
+            .fileAlreadyExists("/test/existing-file.json"),
             .versionMismatch("test version mismatch")
         ]
         
@@ -440,6 +441,7 @@ struct CardanoCLIToolsErrorTests {
             .unsupportedVersion("1.0", "2.0"),
             .invalidMultiSigConfig("test"),
             .fileNotFound("/test/file"),
+            .fileAlreadyExists("/test/existing-file"),
             .valueError("test"),
             .versionMismatch("test")
         ]
@@ -467,6 +469,8 @@ struct CardanoCLIToolsErrorTests {
             case .invalidMultiSigConfig:
                 patternMatchCount += 1
             case .fileNotFound:
+                patternMatchCount += 1
+            case .fileAlreadyExists:
                 patternMatchCount += 1
             case .versionMismatch:
                 patternMatchCount += 1
@@ -532,6 +536,7 @@ struct CardanoCLIToolsErrorTests {
             (.unsupportedVersion("1.0", "2.0"), "Unsupported version:"),
             (.invalidMultiSigConfig("test"), "Invalid multi-signature configuration:"),
             (.fileNotFound("test"), "File not found:"),
+            (.fileAlreadyExists("test"), "File already exists:"),
             (.valueError("test"), "Value error:"),
             (.versionMismatch("test"), "Version mismatch for binary at path:")
         ]

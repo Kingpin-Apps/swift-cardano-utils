@@ -1,5 +1,5 @@
 import Foundation
-import System
+import SystemPackage
 import Logging
 
 // MARK: - Base CLI Protocol
@@ -8,7 +8,7 @@ protocol BinaryInterfaceable: BinaryExecutable {
     var binaryPath: FilePath { get }
     var workingDirectory: FilePath { get }
     
-    init(configuration: Configuration, logger: Logger?) async throws
+    init(configuration: CardanoCLIToolsConfig, logger: Logger?) async throws
 }
 
 // MARK: - Base CLI Implementation

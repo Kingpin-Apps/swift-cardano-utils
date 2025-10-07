@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 import Logging
-import System
+import SystemPackage
 import SwiftCardanoCore
 @testable import CardanoCLITools
 
@@ -12,14 +12,14 @@ struct BinaryExecutableTests {
     
     /// Mock implementation of BinaryExecutable for testing
     struct MockBinaryExecutable: BinaryExecutable {
-        let configuration: Configuration
+        let configuration: CardanoCLIToolsConfig
         let logger: Logger
         static let binaryName: String = "test-binary"
         static let mininumSupportedVersion: String = "1.0.0"
         
         private let mockVersion: String
         
-        init(configuration: Configuration, logger: Logger, mockVersion: String = "1.0.0") {
+        init(configuration: CardanoCLIToolsConfig, logger: Logger, mockVersion: String = "1.0.0") {
             self.configuration = configuration
             self.logger = logger
             self.mockVersion = mockVersion

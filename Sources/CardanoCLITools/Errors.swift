@@ -6,12 +6,13 @@ enum CardanoCLIToolsError: Error, LocalizedError {
     case binaryNotFound(String)
     case commandFailed([String], String)
     case processAlreadyRunning
-    case configurationMissing(Configuration)
+    case configurationMissing(CardanoCLIToolsConfig)
     case deviceError(String)
     case invalidOutput(String)
     case nodeNotSynced(Double)
     case unsupportedVersion(String, String)
     case invalidMultiSigConfig(String)
+    case fileAlreadyExists(String)
     case fileNotFound(String)
     case valueError(String)
     case versionMismatch(String)
@@ -36,6 +37,8 @@ enum CardanoCLIToolsError: Error, LocalizedError {
                 return "Unsupported version: \(current). Minimum required: \(minimum)"
             case .invalidMultiSigConfig(let message):
                 return "Invalid multi-signature configuration: \(message)"
+            case .fileAlreadyExists(let path):
+                return "File already exists: \(path)"
             case .fileNotFound(let path):
                 return "File not found: \(path)"
             case .valueError(let message):

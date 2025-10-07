@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 import Logging
-import System
+import SystemPackage
 import SwiftCardanoCore
 @testable import CardanoCLITools
 
@@ -33,7 +33,7 @@ struct CardanoSignerTests {
         let testConfig = createTestConfiguration()
         
         // Create config without signer path
-        let configWithoutSigner = Configuration(
+        let configWithoutSigner = CardanoCLIToolsConfig(
             cardano: CardanoConfig(
                 cli: testConfig.cardano.cli,
                 node: testConfig.cardano.node,
@@ -65,7 +65,7 @@ struct CardanoSignerTests {
         let testConfig = createTestConfiguration()
         
         // Create config with invalid signer path
-        let configWithInvalidSigner = Configuration(
+        let configWithInvalidSigner = CardanoCLIToolsConfig(
             cardano: CardanoConfig(
                 cli: testConfig.cardano.cli,
                 node: testConfig.cardano.node,
@@ -315,12 +315,12 @@ struct CardanoSignerTests {
             showOutput: testConfig.cardano.showOutput
         )
         
-        let config = Configuration(cardano: cardanoConfig, ogmios: nil, kupo: nil)
+        let config = CardanoCLIToolsConfig(cardano: cardanoConfig, ogmios: nil, kupo: nil)
         
         // Test that CardanoSigner configuration fields are properly accessible
         #expect(config.cardano.signer != nil)
         #expect(config.cardano.signer?.string == signerPath.string)
-        #expect(config.cardano.cli.string == testConfig.cardano.cli.string)
+        #expect(config.cardano.cli!.string == testConfig.cardano.cli!.string)
         #expect(config.cardano.workingDir.string == testConfig.cardano.workingDir.string)
     }
 }

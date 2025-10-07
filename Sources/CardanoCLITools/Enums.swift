@@ -1,17 +1,22 @@
 import Foundation
+import Configuration
 import SwiftCardanoCore
 
 
 // MARK: - Network Type Enum
 
 /// Supported Cardano networks
-public enum Network: Codable, Sendable, Equatable {
+public enum Network: Sendable, Equatable, ExpressibleByConfigString {
     case mainnet
     case preprod
     case preview
     case guildnet
     case sanchonet
     case custom(Int)
+    
+    public init(configString from: String) {
+        self.init(from: from)
+    }
     
     init(from: String) {
         switch from.lowercased() {
@@ -33,6 +38,7 @@ public enum Network: Codable, Sendable, Equatable {
                 }
         }
     }
+    
     
     /// Returns the testnet magic for the network
     public var testnetMagic: Int? {
@@ -95,6 +101,39 @@ public enum Network: Codable, Sendable, Equatable {
                 return .mainnet
             default:
                 return .testnet
+        }
+    }
+}
+
+// MARK: - Network Codable Implementation
+
+extension Network: Codable {
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let stringValue = try? container.decode(String.self) {
+            self.init(from: stringValue)
+        } else if let intValue = try? container.decode(Int.self) {
+            self = .custom(intValue)
+        } else {
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Invalid network value"))
+        }
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .mainnet:
+            try container.encode("mainnet")
+        case .preprod:
+            try container.encode("preprod")
+        case .preview:
+            try container.encode("preview")
+        case .guildnet:
+            try container.encode("guildnet")
+        case .sanchonet:
+            try container.encode("sanchonet")
+        case .custom(let magic):
+            try container.encode(magic)
         }
     }
 }

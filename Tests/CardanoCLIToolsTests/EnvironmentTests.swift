@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-import System
+import SystemPackage
 @testable import CardanoCLITools
 
 @Suite("Environment Tests", .serialized)

@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 import Logging
-import System
+import SystemPackage
 import SwiftCardanoCore
 @testable import CardanoCLITools
 
@@ -30,7 +30,7 @@ struct CardanoCLITests {
             showOutput: false
         )
         
-        let config = Configuration(
+        let config = CardanoCLIToolsConfig(
             cardano: mockCardanoConfig,
             ogmios: nil,
             kupo: nil,
@@ -119,7 +119,7 @@ struct CardanoCLITests {
     @Test("CardanoCLI version parsing with valid output")
     func testVersionParsing() async throws {
         let config = createAdvancedTestConfiguration()
-        defer { cleanupFile(at: config.cardano.cli.string) }
+        defer { cleanupFile(at: config.cardano.cli?.string ?? "/tmp/cardano-cli") }
         
         let cli = try await CardanoCLI(configuration: config)
         let version = try await cli.version()
@@ -162,7 +162,7 @@ struct CardanoCLITests {
         defer { cleanupFile(at: mockCliPath) }
         
         var config = createAdvancedTestConfiguration(cliPath: mockCliPath)
-        config = Configuration(
+        config = CardanoCLIToolsConfig(
             cardano: config.cardano,
             ogmios: config.ogmios,
             kupo: config.kupo
@@ -177,7 +177,7 @@ struct CardanoCLITests {
     @Test("CardanoCLI get sync progress with fully synced node")
     func testGetSyncProgressFullySynced() async throws {
         let config = createAdvancedTestConfiguration()
-        defer { cleanupFile(at: config.cardano.cli.string) }
+        defer { cleanupFile(at: config.cardano.cli?.string ?? "/tmp/cardano-cli") }
         
         let cli = try await CardanoCLI(configuration: config)
         let syncProgress = try await cli.getSyncProgress()
@@ -232,7 +232,7 @@ struct CardanoCLITests {
     @Test("CardanoCLI get current era")
     func testGetCurrentEra() async throws {
         let config = createAdvancedTestConfiguration()
-        defer { cleanupFile(at: config.cardano.cli.string) }
+        defer { cleanupFile(at: config.cardano.cli?.string ?? "/tmp/cardano-cli") }
         
         let cli = try await CardanoCLI(configuration: config)
         let era = try await cli.getEra()
@@ -257,7 +257,7 @@ struct CardanoCLITests {
     @Test("CardanoCLI get current epoch")
     func testGetCurrentEpoch() async throws {
         let config = createAdvancedTestConfiguration()
-        defer { cleanupFile(at: config.cardano.cli.string) }
+        defer { cleanupFile(at: config.cardano.cli?.string ?? "/tmp/cardano-cli") }
         
         let cli = try await CardanoCLI(configuration: config)
         let epoch = try await cli.getEpoch()
@@ -283,7 +283,7 @@ struct CardanoCLITests {
     @Test("CardanoCLI get current tip")
     func testGetCurrentTip() async throws {
         let config = createAdvancedTestConfiguration()
-        defer { cleanupFile(at: config.cardano.cli.string) }
+        defer { cleanupFile(at: config.cardano.cli?.string ?? "/tmp/cardano-cli") }
         
         let cli = try await CardanoCLI(configuration: config)
         let tip = try await cli.getTip()
@@ -294,7 +294,7 @@ struct CardanoCLITests {
     @Test("CardanoCLI get current TTL")
     func testGetCurrentTTL() async throws {
         let config = createAdvancedTestConfiguration()
-        defer { cleanupFile(at: config.cardano.cli.string) }
+        defer { cleanupFile(at: config.cardano.cli?.string ?? "/tmp/cardano-cli") }
         
         let cli = try await CardanoCLI(configuration: config)
         let ttl = try await cli.getCurrentTTL()
@@ -308,7 +308,7 @@ struct CardanoCLITests {
     @Test("CardanoCLI get protocol parameters online mode")
     func testGetProtocolParametersOnline() async throws {
         let config = createAdvancedTestConfiguration()
-        defer { cleanupFile(at: config.cardano.cli.string) }
+        defer { cleanupFile(at: config.cardano.cli?.string ?? "/tmp/cardano-cli") }
         
         let cli = try await CardanoCLI(configuration: config)
         let params = try await cli.getProtocolParameters()
@@ -321,7 +321,7 @@ struct CardanoCLITests {
     @Test("CardanoCLI get protocol parameters with custom file")
     func testGetProtocolParametersWithCustomFile() async throws {
         let config = createAdvancedTestConfiguration()
-        defer { cleanupFile(at: config.cardano.cli.string) }
+        defer { cleanupFile(at: config.cardano.cli?.string ?? "/tmp/cardano-cli") }
         
         let customFile = FileManager.default.temporaryDirectory
             .appendingPathComponent("custom-protocol.json")
@@ -339,7 +339,7 @@ struct CardanoCLITests {
     @Test("CardanoCLI query tip integration")
     func testQueryTipIntegration() async throws {
         let config = createAdvancedTestConfiguration()
-        defer { cleanupFile(at: config.cardano.cli.string) }
+        defer { cleanupFile(at: config.cardano.cli?.string ?? "/tmp/cardano-cli") }
         
         let cli = try await CardanoCLI(configuration: config)
         let tip = try await cli.query.tip()
@@ -350,7 +350,7 @@ struct CardanoCLITests {
     @Test("CardanoCLI address build integration")
     func testAddressBuildIntegration() async throws {
         let config = createAdvancedTestConfiguration()
-        defer { cleanupFile(at: config.cardano.cli.string) }
+        defer { cleanupFile(at: config.cardano.cli?.string ?? "/tmp/cardano-cli") }
         
         let cli = try await CardanoCLI(configuration: config)
         let address = try await cli.address.build(arguments: ["--payment-verification-key-file", "test.vkey"])
@@ -361,7 +361,7 @@ struct CardanoCLITests {
     @Test("CardanoCLI stake pool id integration")
     func testStakePoolIdIntegration() async throws {
         let config = createAdvancedTestConfiguration()
-        defer { cleanupFile(at: config.cardano.cli.string) }
+        defer { cleanupFile(at: config.cardano.cli?.string ?? "/tmp/cardano-cli") }
         
         let cli = try await CardanoCLI(configuration: config)
         let poolId = try await cli.stakePool.id(arguments: ["--cold-verification-key-file", "cold.vkey"])
@@ -372,7 +372,7 @@ struct CardanoCLITests {
     @Test("CardanoCLI governance drep id integration")
     func testGovernanceDrepIdIntegration() async throws {
         let config = createAdvancedTestConfiguration()
-        defer { cleanupFile(at: config.cardano.cli.string) }
+        defer { cleanupFile(at: config.cardano.cli?.string ?? "/tmp/cardano-cli") }
         
         let cli = try await CardanoCLI(configuration: config)
         let drepId = try await cli.governance.drepId(arguments: ["--drep-verification-key-file", "drep.vkey"])
@@ -383,7 +383,7 @@ struct CardanoCLITests {
     @Test("CardanoCLI debug command integration")
     func testDebugCommandIntegration() async throws {
         let config = createAdvancedTestConfiguration()
-        defer { cleanupFile(at: config.cardano.cli.string) }
+        defer { cleanupFile(at: config.cardano.cli?.string ?? "/tmp/cardano-cli") }
         
         let cli = try await CardanoCLI(configuration: config)
         let result = try await cli.debug.logEpochState(arguments: ["test-command"])
@@ -458,7 +458,7 @@ struct CardanoCLITests {
     @Test("CardanoCLI handles multiple sequential calls")
     func testMultipleSequentialCalls() async throws {
         let config = createAdvancedTestConfiguration()
-        defer { cleanupFile(at: config.cardano.cli.string) }
+        defer { cleanupFile(at: config.cardano.cli?.string ?? "/tmp/cardano-cli") }
         
         let cli = try await CardanoCLI(configuration: config)
         
@@ -493,7 +493,7 @@ struct CardanoCLITests {
     @Test("CardanoCLI sets environment variables correctly")
     func testEnvironmentVariableSetting() async throws {
         let config = createAdvancedTestConfiguration()
-        defer { cleanupFile(at: config.cardano.cli.string) }
+        defer { cleanupFile(at: config.cardano.cli?.string ?? "/tmp/cardano-cli") }
         
         // Store original value to restore later
         let originalValue = ProcessInfo.processInfo.environment["CARDANO_SOCKET_PATH"]
@@ -521,7 +521,7 @@ struct CardanoCLITests {
             .appendingPathComponent("cardano-cli-test-\(UUID().uuidString)")
         
         let config = createAdvancedTestConfiguration()
-        let modifiedConfig = Configuration(
+        let modifiedConfig = CardanoCLIToolsConfig(
             cardano: CardanoConfig(
                 cli: config.cardano.cli,
                 node: config.cardano.node,
@@ -544,7 +544,7 @@ struct CardanoCLITests {
         )
         
         defer {
-            cleanupFile(at: config.cardano.cli.string)
+            cleanupFile(at: config.cardano.cli?.string ?? "/tmp/cardano-cli")
             try? FileManager.default.removeItem(at: tempDir)
         }
         
@@ -561,7 +561,7 @@ struct CardanoCLITests {
     @Test("CardanoCLI configuration property access")
     func testConfigurationPropertyAccess() async throws {
         let config = createAdvancedTestConfiguration()
-        defer { cleanupFile(at: config.cardano.cli.string) }
+        defer { cleanupFile(at: config.cardano.cli?.string ?? "/tmp/cardano-cli") }
         
         let cli = try await CardanoCLI(configuration: config)
         

@@ -1,5 +1,5 @@
 import Foundation
-import System
+import SystemPackage
 import SwiftCardanoCore
 import Logging
 import PotentCodables
@@ -12,7 +12,7 @@ import PotentCBOR
 public struct CardanoCLI: BinaryInterfaceable {
     let binaryPath: FilePath
     let workingDirectory: FilePath
-    let configuration: Configuration
+    let configuration: CardanoCLIToolsConfig
     let logger: Logging.Logger
     
     static let binaryName: String = "cardano-cli"
@@ -20,12 +20,15 @@ public struct CardanoCLI: BinaryInterfaceable {
 
     
     /// Initialize with optional configuration
-    public init(configuration: Configuration, logger: Logger? = nil) async throws {
+    public init(configuration: CardanoCLIToolsConfig, logger: Logger? = nil) async throws {
         // Assign all let properties directly
         self.configuration = configuration
         
         // Setup binary path
-        self.binaryPath = configuration.cardano.cli
+        guard let cliPath = configuration.cardano.cli else {
+            throw CardanoCLIToolsError.binaryNotFound("cardano-cli path not configured")
+        }
+        self.binaryPath = cliPath
         try Self.checkBinary(binary: self.binaryPath)
         
         // Setup working directory
@@ -36,7 +39,9 @@ public struct CardanoCLI: BinaryInterfaceable {
         self.logger = logger ?? Logger(label: Self.binaryName)
         
         // Setup node socket environment variable
-        Environment.set(.cardanoSocketPath, value: configuration.cardano.socket.string)
+        if let socket = configuration.cardano.socket {
+            Environment.set(.cardanoSocketPath, value: socket.string)
+        }
         
         // Check the CLI version compatibility on initialization
         try await checkVersion()
@@ -127,12 +132,16 @@ public struct CardanoCLI: BinaryInterfaceable {
     
     /// Calculate current epoch from genesis.json offline
     public func calculateEpochOffline() async throws -> UInt32 {
+        guard let configPath = configuration.cardano.config else {
+            throw CardanoCLIToolsError.valueError("Cardano node config path is required for offline epoch calculation")
+        }
+        
         let nodeConfig = try NodeConfig.load(
-            from: configuration.cardano.config.string
+            from: configPath.string
         )
         
         // Get parent directory
-        let parentDir = configuration.cardano.config.removingLastComponent()
+        let parentDir = configPath.removingLastComponent()
         let shelleyGenesisFile = parentDir.appending(nodeConfig.shelleyGenesisFile)
         
         let shelleyGenesis = try ShelleyGenesis.load(

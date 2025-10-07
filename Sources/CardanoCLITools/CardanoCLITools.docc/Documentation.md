@@ -41,11 +41,7 @@ import SwiftCardanoCore
 import System
 
 // Create configuration
-let configuration = try Configuration(
-    cardano: .default(),
-    ogmios: .default(),
-    kupo: .default()
-)
+let configuration = try CardanoCLIToolsConfig.default()
 
 // Initialize CLI
 let cli = try await CardanoCLI(configuration: configuration)
@@ -72,7 +68,7 @@ print("Current tip: \(tip)")
 
 ### Configuration
 
-- ``Configuration``
+- ``CardanoCLIToolsConfig``
 - ``CardanoConfig``
 - ``OgmiosConfig``
 - ``KupoConfig``
@@ -88,12 +84,7 @@ print("Current tip: \(tip)")
 - ``StakePoolCommandImpl``
 - ``GenesisCommandImpl``
 
-### Error Handling
+### Tutorials
 
-- ``CardanoCLIToolsError``
-
-### Protocols
-
-- ``BinaryInterfaceable``
-- ``BinaryRunnable``
-- ``CommandProtocol``
+- <doc:MintingNativeTokenWithHardwareWallet>
+- <doc:BuildingDAppBackendWithOgmios>

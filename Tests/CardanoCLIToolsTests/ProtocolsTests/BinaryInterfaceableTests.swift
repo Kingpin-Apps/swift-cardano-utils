@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 import Logging
-import System
+import SystemPackage
 import SwiftCardanoCore
 @testable import CardanoCLITools
 
@@ -14,7 +14,7 @@ struct BinaryInterfaceableTests {
     struct MockBinaryInterfaceable: BinaryInterfaceable {
         let binaryPath: FilePath
         let workingDirectory: FilePath
-        let configuration: Configuration
+        let configuration: CardanoCLIToolsConfig
         let logger: Logger
         static let binaryName: String = "echo"
         static let mininumSupportedVersion: String = "1.0.0"
@@ -22,7 +22,7 @@ struct BinaryInterfaceableTests {
         private let mockVersion: String
         private let shouldFailCommands: Bool
         
-        init(configuration: Configuration, logger: Logger?) async throws {
+        init(configuration: CardanoCLIToolsConfig, logger: Logger?) async throws {
             self.configuration = configuration
             self.logger = logger ?? Logger(label: Self.binaryName)
             self.mockVersion = "1.0.0"
@@ -37,7 +37,7 @@ struct BinaryInterfaceableTests {
             try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
         }
         
-        init(configuration: Configuration, logger: Logger?, mockVersion: String, shouldFailCommands: Bool) async throws {
+        init(configuration: CardanoCLIToolsConfig, logger: Logger?, mockVersion: String, shouldFailCommands: Bool) async throws {
             self.configuration = configuration
             self.logger = logger ?? Logger(label: Self.binaryName)
             self.mockVersion = mockVersion
@@ -122,12 +122,12 @@ struct BinaryInterfaceableTests {
         struct NonExistentBinaryMock: BinaryInterfaceable {
             let binaryPath: FilePath
             let workingDirectory: FilePath
-            let configuration: Configuration
+            let configuration: CardanoCLIToolsConfig
             let logger: Logger
             static let binaryName: String = "nonexistent-binary-xyz123"
             static let mininumSupportedVersion: String = "1.0.0"
             
-            init(configuration: Configuration, logger: Logger?) async throws {
+            init(configuration: CardanoCLIToolsConfig, logger: Logger?) async throws {
                 self.configuration = configuration
                 self.logger = logger ?? Logger(label: Self.binaryName)
                 self.binaryPath = try Self.getBinaryPath()
@@ -151,12 +151,12 @@ struct BinaryInterfaceableTests {
         struct EmptyBinaryNameMock: BinaryInterfaceable {
             let binaryPath: FilePath
             let workingDirectory: FilePath
-            let configuration: Configuration
+            let configuration: CardanoCLIToolsConfig
             let logger: Logger
             static let binaryName: String = ""
             static let mininumSupportedVersion: String = "1.0.0"
             
-            init(configuration: Configuration, logger: Logger?) async throws {
+            init(configuration: CardanoCLIToolsConfig, logger: Logger?) async throws {
                 self.configuration = configuration
                 self.logger = logger ?? Logger(label: "empty-binary")
                 self.binaryPath = try Self.getBinaryPath()
@@ -408,7 +408,7 @@ struct BinaryInterfaceableTests {
             showOutput: false
         )
         
-        let config = Configuration(
+        let config = CardanoCLIToolsConfig(
             cardano: cardanoConfig,
             ogmios: nil,
             kupo: nil
@@ -430,12 +430,12 @@ struct BinaryInterfaceableTests {
         struct InvalidBinaryMock: BinaryInterfaceable {
             let binaryPath: FilePath
             let workingDirectory: FilePath
-            let configuration: Configuration
+            let configuration: CardanoCLIToolsConfig
             let logger: Logger
             static let binaryName: String = "invalid-binary"
             static let mininumSupportedVersion: String = "1.0.0"
             
-            init(configuration: Configuration, logger: Logger? = nil) async throws {
+            init(configuration: CardanoCLIToolsConfig, logger: Logger? = nil) async throws {
                 self.configuration = configuration
                 self.logger = logger ?? Logger(label: Self.binaryName)
                 
@@ -636,7 +636,7 @@ struct BinaryInterfaceableTests {
             showOutput: false
         )
         
-        let config = Configuration(
+        let config = CardanoCLIToolsConfig(
             cardano: cardanoConfig,
             ogmios: nil,
             kupo: nil

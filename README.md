@@ -87,7 +87,7 @@ let cardanoConfig = CardanoConfig(
     showOutput: true // Optional
 )
 
-let configuration = Configuration(
+let configuration = CardanoCLIToolsConfig(
     cardano: cardanoConfig,
     ogmios: nil,
     kupo: nil
@@ -244,9 +244,7 @@ You can also load configuration from a JSON file:
 
 ```swift
 // Load from JSON file
-let configData = try Data(contentsOf: URL(fileURLWithPath: "config.json"))
-let configuration = try JSONDecoder().decode(Configuration.self, from: configData)
-let cli = try await CardanoCLI(configuration: configuration)
+let configuration = try await CardanoCLIToolsConfig.load(path: FilePath("/path/to/config.json"))
 ```
 
 ### Network Types
@@ -567,89 +565,6 @@ try await hwCli.address.show(arguments: [
     "--payment-path", "1852'/1815'/0'/0/0",
     "--address-format", "bech32"
 ])
-```
-
-## Performance & Best Practices
-
-### Configuration Optimization
-
-```swift
-// Cache configuration for reuse
-static let sharedConfiguration: Configuration = {
-    do {
-        return try Configuration(
-            cardano: .default(),
-            ogmios: .default(),
-            kupo: .default()
-        )
-    } catch {
-        fatalError("Failed to create configuration: \(error)")
-    }
-}()
-
-// Reuse CLI instances
-static let cli = try await CardanoCLI(configuration: sharedConfiguration)
-```
-
-### Async/Await Best Practices
-
-```swift
-// Concurrent operations
-async let tip = cli.getTip()
-async let epoch = cli.getEpoch()
-async let syncProgress = cli.getSyncProgress()
-
-let (currentTip, currentEpoch, progress) = try await (tip, epoch, syncProgress)
-print("Tip: \(currentTip), Epoch: \(currentEpoch), Sync: \(progress)%")
-
-// Task groups for multiple addresses
-let addresses = ["addr1...", "addr2...", "addr3..."]
-let balances = try await withThrowingTaskGroup(of: (String, UInt64).self) { group in
-    for address in addresses {
-        group.addTask {
-            let balance = try await cli.query.balance(address: address)
-            return (address, balance)
-        }
-    }
-    
-    var results: [(String, UInt64)] = []
-    for try await result in group {
-        results.append(result)
-    }
-    return results
-}
-```
-
-### Error Handling Patterns
-
-```swift
-// Retry with exponential backoff
-func executeWithRetry<T>(
-    operation: () async throws -> T,
-    maxRetries: Int = 3,
-    baseDelay: TimeInterval = 1.0
-) async throws -> T {
-    var lastError: Error?
-    
-    for attempt in 0..<maxRetries {
-        do {
-            return try await operation()
-        } catch CardanoCLIToolsError.nodeNotSynced {
-            // Wait for node sync
-            try await Task.sleep(nanoseconds: UInt64(baseDelay * pow(2.0, Double(attempt)) * 1_000_000_000))
-            lastError = error
-        } catch {
-            throw error // Don't retry for other errors
-        }
-    }
-    
-    throw lastError!
-}
-
-// Usage
-let tip = try await executeWithRetry {
-    try await cli.getTip()
-}
 ```
 
 ## Testing

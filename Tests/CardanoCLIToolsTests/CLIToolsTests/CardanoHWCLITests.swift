@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 import Logging
-import System
+import SystemPackage
 import SwiftCardanoCore
 @testable import CardanoCLITools
 
@@ -51,7 +51,7 @@ struct CardanoHWCLITests {
             showOutput: false
         )
         
-        let config = Configuration(
+        let config = CardanoCLIToolsConfig(
             cardano: cardanoConfig,
             ogmios: nil,
             kupo: nil

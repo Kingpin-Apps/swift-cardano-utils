@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 import Logging
-import System
+import SystemPackage
 import SwiftCardanoCore
 @testable import CardanoCLITools
 
@@ -32,7 +32,7 @@ struct OgmiosTests {
     func testConfigurationRequirements() async throws {
         let testConfig = createTestConfiguration()
         
-        let config = Configuration(
+        let config = CardanoCLIToolsConfig(
             cardano: testConfig.cardano,
             ogmios: nil, // Missing ogmios configuration should cause failure
             kupo: nil
@@ -62,7 +62,7 @@ struct OgmiosTests {
         )
         
         let testConfig = createTestConfiguration()
-        let config = Configuration(
+        let config = CardanoCLIToolsConfig(
             cardano: testConfig.cardano,
             ogmios: ogmiosConfig,
             kupo: nil
@@ -159,8 +159,8 @@ struct OgmiosTests {
         var arguments: [String] = []
         
         // Required arguments
-        arguments.append(contentsOf: ["--node-config", cardanoConfig.config.string])
-        arguments.append(contentsOf: ["--node-socket", cardanoConfig.socket.string])
+        arguments.append(contentsOf: ["--node-config", cardanoConfig.config?.string ?? "/tmp/config.json"])
+        arguments.append(contentsOf: ["--node-socket", cardanoConfig.socket?.string ?? "/tmp/node.socket"])
         
         // Host and port
         arguments.append(contentsOf: ["--host", ogmiosConfig.host ?? "127.0.0.1"])
@@ -211,8 +211,8 @@ struct OgmiosTests {
         
         // Simulate argument construction with individual log levels
         var arguments: [String] = []
-        arguments.append(contentsOf: ["--node-config", cardanoConfig.config.string])
-        arguments.append(contentsOf: ["--node-socket", cardanoConfig.socket.string])
+        arguments.append(contentsOf: ["--node-config", cardanoConfig.config?.string ?? "/tmp/config.json"])
+        arguments.append(contentsOf: ["--node-socket", cardanoConfig.socket?.string ?? "/tmp/node.socket"])
         arguments.append(contentsOf: ["--host", ogmiosConfig.host ?? "127.0.0.1"])
         arguments.append(contentsOf: ["--port", String(ogmiosConfig.port ?? 1337)])
         arguments.append(contentsOf: ["--timeout", String(ogmiosConfig.timeout ?? 90)])
@@ -272,16 +272,16 @@ struct OgmiosTests {
         
         // Simulate minimal argument construction
         var arguments: [String] = []
-        arguments.append(contentsOf: ["--node-config", cardanoConfig.config.string])
-        arguments.append(contentsOf: ["--node-socket", cardanoConfig.socket.string])
+        arguments.append(contentsOf: ["--node-config", cardanoConfig.config?.string ?? "/tmp/config.json"])
+        arguments.append(contentsOf: ["--node-socket", cardanoConfig.socket?.string ?? "/tmp/node.socket"])
         arguments.append(contentsOf: ["--host", ogmiosConfig.host ?? "127.0.0.1"])
         arguments.append(contentsOf: ["--port", String(ogmiosConfig.port ?? 1337)])
         arguments.append(contentsOf: ["--timeout", String(ogmiosConfig.timeout ?? 90)])
         arguments.append(contentsOf: ["--max-in-flight", String(ogmiosConfig.maxInFlight ?? 100)])
         
         let expectedArguments = [
-            "--node-config", cardanoConfig.config.string,
-            "--node-socket", cardanoConfig.socket.string,
+            "--node-config", cardanoConfig.config?.string ?? "/tmp/config.json",
+            "--node-socket", cardanoConfig.socket?.string ?? "/tmp/node.socket",
             "--host", "127.0.0.1",
             "--port", "1337",
             "--timeout", "90",
@@ -455,7 +455,7 @@ struct OgmiosTests {
         )
         
         let testConfig = createTestConfiguration()
-        let config = Configuration(
+        let config = CardanoCLIToolsConfig(
             cardano: testConfig.cardano,
             ogmios: ogmiosConfig,
             kupo: nil

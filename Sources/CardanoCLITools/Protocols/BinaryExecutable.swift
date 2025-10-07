@@ -1,5 +1,5 @@
 import Foundation
-import System
+import SystemPackage
 import Logging
 
 
@@ -7,7 +7,7 @@ protocol BinaryExecutable: Sendable {
     static var binaryName: String { get }
     static var mininumSupportedVersion: String { get }
     
-    var configuration: Configuration { get }
+    var configuration: CardanoCLIToolsConfig { get }
     var logger: Logger { get }
     
     func version() async throws -> String
