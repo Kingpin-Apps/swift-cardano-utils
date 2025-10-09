@@ -5,19 +5,19 @@ import SwiftCardanoCore
 
 /// Ogmios configuration
 public struct OgmiosConfig: Codable, Sendable {
-    let binary: FilePath
-    let host: String?
-    let port: Int?
-    let timeout: Int?
-    let maxInFlight: Int?
-    let logLevel: String?
-    let logLevelHealth: String?
-    let logLevelMetrics: String?
-    let logLevelWebsocket: String?
-    let logLevelServer: String?
-    let logLevelOptions: String?
-    let workingDir: FilePath?
-    let showOutput: Bool?
+    @FilePathCodable public var binary: FilePath?
+    public let host: String?
+    public let port: Int?
+    public let timeout: Int?
+    public let maxInFlight: Int?
+    public let logLevel: String?
+    public let logLevelHealth: String?
+    public let logLevelMetrics: String?
+    public let logLevelWebsocket: String?
+    public let logLevelServer: String?
+    public let logLevelOptions: String?
+    @FilePathCodable public var workingDir: FilePath?
+    public let showOutput: Bool?
     
     enum CodingKeys: String, CodingKey {
         case binary
@@ -35,7 +35,7 @@ public struct OgmiosConfig: Codable, Sendable {
         case showOutput = "show_output"
     }
     
-    init(
+    public init(
         binary: FilePath,
         host: String? = nil,
         port: Int? = nil,
@@ -91,7 +91,7 @@ public struct OgmiosConfig: Codable, Sendable {
         self.showOutput = config.bool(forKey: key(.showOutput))
     }
     
-    static func `default`() throws -> OgmiosConfig {
+    public static func `default`() throws -> OgmiosConfig {
         return OgmiosConfig(
             binary: try Ogmios.getBinaryPath(),
             host: "0.0.0.0",

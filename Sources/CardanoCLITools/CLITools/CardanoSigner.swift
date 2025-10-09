@@ -28,7 +28,9 @@ public struct CardanoSigner: BinaryInterfaceable {
         try Self.checkBinary(binary: self.binaryPath)
         
         // Setup working directory
-        self.workingDirectory = configuration.cardano.workingDir
+        self.workingDirectory = configuration.cardano.workingDir ?? FilePath(
+            FileManager.default.currentDirectoryPath
+        )
         try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
         
         // Setup logger

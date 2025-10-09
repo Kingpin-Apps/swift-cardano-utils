@@ -29,7 +29,10 @@ public struct Ogmios: BinaryRunnable {
         self.ogmiosConfig = ogmiosConfig
         
         // Setup binary path
-        self.binaryPath = ogmiosConfig.binary
+        guard let binaryPath = ogmiosConfig.binary else {
+            throw CardanoCLIToolsError.valueError("Ogmios binary path is required")
+        }
+        self.binaryPath = binaryPath
         try Self.checkBinary(binary: self.binaryPath)
         
         // Setup working directory

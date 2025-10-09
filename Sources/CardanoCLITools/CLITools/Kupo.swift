@@ -29,7 +29,10 @@ public struct Kupo: BinaryRunnable {
         self.kupoConfig = kupoConfig
         
         // Setup binary path
-        self.binaryPath = kupoConfig.binary
+        guard let binaryPath = kupoConfig.binary else {
+            throw CardanoCLIToolsError.valueError("Kupo binary path is required")
+        }
+        self.binaryPath = binaryPath
         try Self.checkBinary(binary: self.binaryPath)
         
         // Setup working directory

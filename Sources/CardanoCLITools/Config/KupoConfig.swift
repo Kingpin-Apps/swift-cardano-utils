@@ -6,24 +6,24 @@ import SwiftCardanoCore
 
 /// Kupo configuration
 public struct KupoConfig: Codable, Sendable {
-    let binary: FilePath
-    let host: String?
-    let port: Int?
-    let since: String?
-    let matches: [String]?
-    let deferDbIndexes: Bool?
-    let pruneUTxO: Bool?
-    let gcInterval: Int?
-    let maxConcurrency: Int?
-    let inMemory: Bool?
-    let logLevel: String?
-    let logLevelHttpServer: String?
-    let logLevelDatabase: String?
-    let logLevelConsumer: String?
-    let logLevelGarbageCollector: String?
-    let logLevelConfiguration: String?
-    let workingDir: FilePath?
-    let showOutput: Bool?
+    @FilePathCodable public var binary: FilePath?
+    public let host: String?
+    public let port: Int?
+    public let since: String?
+    public let matches: [String]?
+    public let deferDbIndexes: Bool?
+    public let pruneUTxO: Bool?
+    public let gcInterval: Int?
+    public let maxConcurrency: Int?
+    public let inMemory: Bool?
+    public let logLevel: String?
+    public let logLevelHttpServer: String?
+    public let logLevelDatabase: String?
+    public let logLevelConsumer: String?
+    public let logLevelGarbageCollector: String?
+    public let logLevelConfiguration: String?
+    @FilePathCodable public var workingDir: FilePath?
+    public let showOutput: Bool?
     
     public init(
         binary: FilePath,
@@ -117,7 +117,7 @@ public struct KupoConfig: Codable, Sendable {
         self.showOutput = config.bool(forKey: key(.showOutput))
     }
     
-    static func `default`() throws -> KupoConfig {
+    public static func `default`() throws -> KupoConfig {
         return KupoConfig(
             binary: try Kupo.getBinaryPath(),
             host: "0.0.0.0",

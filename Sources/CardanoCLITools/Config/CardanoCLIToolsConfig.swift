@@ -7,11 +7,11 @@ import SwiftCardanoCore
 
 /// Main configuration structure for Cardano CLI tools
 public struct CardanoCLIToolsConfig: Codable, Sendable {
-    let cardano: CardanoConfig
-    let ogmios: OgmiosConfig?
-    let kupo: KupoConfig?
+    public let cardano: CardanoConfig
+    public let ogmios: OgmiosConfig?
+    public let kupo: KupoConfig?
     
-    init(
+    public init(
         cardano: CardanoConfig,
         ogmios: OgmiosConfig? = nil,
         kupo: KupoConfig? = nil
@@ -30,7 +30,7 @@ public struct CardanoCLIToolsConfig: Codable, Sendable {
         self.kupo = try KupoConfig(config: config)
     }
     
-    static func `default`() throws -> CardanoCLIToolsConfig {
+    public static func `default`() throws -> CardanoCLIToolsConfig {
         return CardanoCLIToolsConfig(
             cardano: try CardanoConfig.default(),
             ogmios: try? OgmiosConfig.default(),
@@ -40,7 +40,7 @@ public struct CardanoCLIToolsConfig: Codable, Sendable {
     
     /// Save the JSON representation to a file.
     /// - Parameter path: The file path.
-    func save(to path: FilePath) throws {
+    public func save(to path: FilePath) throws {
         if FileManager.default.fileExists(atPath: path.string) {
             throw CardanoCLIToolsError.fileAlreadyExists("File already exists: \(path)")
         }
@@ -49,7 +49,7 @@ public struct CardanoCLIToolsConfig: Codable, Sendable {
         try data.write(to: URL(fileURLWithPath: path.string), options: .atomic)
     }
     
-    static func load(path: FilePath) async throws -> CardanoCLIToolsConfig {
+    public static func load(path: FilePath) async throws -> CardanoCLIToolsConfig {
         let config = ConfigReader(providers: [
             EnvironmentVariablesProvider(),
             try await JSONProvider(filePath: .init(path.string))

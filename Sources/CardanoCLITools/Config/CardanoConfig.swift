@@ -6,18 +6,19 @@ import SwiftCardanoCore
 
 /// Cardano-specific configuration
 public struct CardanoConfig: Codable, Sendable {
-    public let cli: FilePath?
-    public let node: FilePath?
     
-    public let hwCli: FilePath?
-    public let signer: FilePath?
+    @FilePathCodable public var cli: FilePath?
+    @FilePathCodable public var node: FilePath?
     
-    public let socket: FilePath?
-    public let config: FilePath?
-    public let topology: FilePath?
-    public let database: FilePath?
-    public let immutableDatabase: FilePath?
-    public let volatileDatabase: FilePath?
+    @FilePathCodable public var hwCli: FilePath?
+    @FilePathCodable public var signer: FilePath?
+    
+    @FilePathCodable public var socket: FilePath?
+    @FilePathCodable public var config: FilePath?
+    @FilePathCodable public var topology: FilePath?
+    @FilePathCodable public var database: FilePath?
+    @FilePathCodable public var immutableDatabase: FilePath?
+    @FilePathCodable public var volatileDatabase: FilePath?
     
     public let port: Int?
     public let hostAddr: String?
@@ -28,16 +29,16 @@ public struct CardanoConfig: Codable, Sendable {
     public let nonProducingNode: Bool?
     
     // Tracer options
-    public let tracerSocketPathAccept: FilePath?
-    public let tracerSocketPathConnect: FilePath?
+    @FilePathCodable public var tracerSocketPathAccept: FilePath?
+    @FilePathCodable public var tracerSocketPathConnect: FilePath?
     
     // Key and certificate paths
-    public let byronDelegationCertificate: FilePath?
-    public let byronSigningKey: FilePath?
-    public let shelleyKesKey: FilePath?
-    public let shelleyVrfKey: FilePath?
-    public let shelleyOperationalCertificate: FilePath?
-    public let bulkCredentialsFile: FilePath?
+    @FilePathCodable public var byronDelegationCertificate: FilePath?
+    @FilePathCodable public var byronSigningKey: FilePath?
+    @FilePathCodable public var shelleyKesKey: FilePath?
+    @FilePathCodable public var shelleyVrfKey: FilePath?
+    @FilePathCodable public var shelleyOperationalCertificate: FilePath?
+    @FilePathCodable public var bulkCredentialsFile: FilePath?
     
     // Shutdown options
     public let shutdownIpc: Int?
@@ -51,7 +52,7 @@ public struct CardanoConfig: Codable, Sendable {
     public let network: Network
     public let era: Era
     public let ttlBuffer: Int
-    public let workingDir: FilePath
+    @FilePathCodable public var workingDir: FilePath?
     public let showOutput: Bool?
     
     public init(
@@ -86,7 +87,7 @@ public struct CardanoConfig: Codable, Sendable {
         network: Network,
         era: Era,
         ttlBuffer: Int,
-        workingDir: FilePath,
+        workingDir: FilePath? = nil,
         showOutput: Bool? = nil
     ) {
         self.cli = cli
@@ -280,7 +281,7 @@ public struct CardanoConfig: Codable, Sendable {
         self.showOutput = config.bool(forKey: key(.showOutput))
     }
     
-    static func `default`() throws -> CardanoConfig {
+    public static func `default`() throws -> CardanoConfig {
         return CardanoConfig(
             cli: try? CardanoCLI.getBinaryPath(),
             node: try? CardanoNode.getBinaryPath(),
