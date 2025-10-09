@@ -6,13 +6,22 @@ import SwiftCardanoCore
 // MARK: - Network Type Enum
 
 /// Supported Cardano networks
-public enum Network: Sendable, Equatable, ExpressibleByConfigString {
+public enum Network: CaseIterable, Sendable, Equatable, ExpressibleByConfigString {
     case mainnet
     case preprod
     case preview
     case guildnet
     case sanchonet
     case custom(Int)
+    
+    public static let allCases: [Network] = [
+        .mainnet,
+        .preprod,
+        .preview,
+        .guildnet,
+        .sanchonet,
+        .custom(0) // Placeholder for custom networks
+    ]
     
     public init(configString from: String) {
         self.init(from: from)
