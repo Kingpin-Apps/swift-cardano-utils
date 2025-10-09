@@ -5,19 +5,19 @@ import Logging
 
 /// Cardano Node binary runner
 public struct CardanoNode: BinaryRunnable {
-    let binaryPath: FilePath
-    let workingDirectory: FilePath
-    let configuration: CardanoCLIToolsConfig
-    let logger: Logging.Logger
-    static let binaryName: String = "cardano-node"
-    static let mininumSupportedVersion: String = "8.0.0"
+    public let binaryPath: FilePath
+    public let workingDirectory: FilePath
+    public let configuration: CardanoCLIToolsConfig
+    public let logger: Logging.Logger
+    public static let binaryName: String = "cardano-node"
+    public static let mininumSupportedVersion: String = "8.0.0"
     
-    let showOutput: Bool
-    let cardanoConfig: CardanoConfig
-    var process: Process?
-    var processTerminated: Bool = false
+    public let showOutput: Bool
+    public let cardanoConfig: CardanoConfig
+    public var process: Process?
+    public var processTerminated: Bool = false
 
-    init(configuration: CardanoCLIToolsConfig, logger: Logging.Logger?) async throws {
+    public init(configuration: CardanoCLIToolsConfig, logger: Logging.Logger? = nil) async throws {
         // Assign all let properties directly
         self.configuration = configuration
         self.cardanoConfig = configuration.cardano

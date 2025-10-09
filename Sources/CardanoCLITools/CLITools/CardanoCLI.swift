@@ -10,13 +10,13 @@ import PotentCBOR
 
 /// Main interface for interacting with Cardano CLI tools
 public struct CardanoCLI: BinaryInterfaceable {
-    let binaryPath: FilePath
-    let workingDirectory: FilePath
-    let configuration: CardanoCLIToolsConfig
-    let logger: Logging.Logger
+    public let binaryPath: FilePath
+    public let workingDirectory: FilePath
+    public let configuration: CardanoCLIToolsConfig
+    public let logger: Logging.Logger
     
-    static let binaryName: String = "cardano-cli"
-    static let mininumSupportedVersion: String = "8.0.0"
+    public static let binaryName: String = "cardano-cli"
+    public static let mininumSupportedVersion: String = "8.0.0"
 
     
     /// Initialize with optional configuration

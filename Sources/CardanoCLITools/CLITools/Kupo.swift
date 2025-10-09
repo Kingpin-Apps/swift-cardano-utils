@@ -4,20 +4,20 @@ import Logging
 
 /// Kupo binary runner
 public struct Kupo: BinaryRunnable {
-    let binaryPath: FilePath
-    let workingDirectory: FilePath
-    let configuration: CardanoCLIToolsConfig
-    let logger: Logging.Logger
-    static let binaryName: String = "kupo"
-    static let mininumSupportedVersion: String = "2.3.4"
+    public let binaryPath: FilePath
+    public let workingDirectory: FilePath
+    public let configuration: CardanoCLIToolsConfig
+    public let logger: Logging.Logger
+    public static let binaryName: String = "kupo"
+    public static let mininumSupportedVersion: String = "2.3.4"
     
-    let showOutput: Bool
-    let cardanoConfig: CardanoConfig
-    let kupoConfig: KupoConfig
-    var process: Process?
-    var processTerminated: Bool = false
+    public let showOutput: Bool
+    public let cardanoConfig: CardanoConfig
+    public let kupoConfig: KupoConfig
+    public var process: Process?
+    public var processTerminated: Bool = false
 
-    init(configuration: CardanoCLIToolsConfig, logger: Logging.Logger?) async throws {
+    public init(configuration: CardanoCLIToolsConfig, logger: Logging.Logger? = nil) async throws {
         // Assign all let properties directly
         self.configuration = configuration
         self.cardanoConfig = configuration.cardano
