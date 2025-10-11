@@ -1,3 +1,9 @@
+## 0.1.4 (2025-10-11)
+
+### Fix
+
+- add commands to CardanoHWCLI and improve docs
+
 ## 0.1.3 (2025-10-09)
 
 ### Fix
