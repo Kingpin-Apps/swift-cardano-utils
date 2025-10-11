@@ -33,7 +33,7 @@ struct BinaryInterfaceableTests {
             try Self.checkBinary(binary: self.binaryPath)
             
             // Set up working directory
-            self.workingDirectory = configuration.cardano.workingDir
+            self.workingDirectory = configuration.cardano.workingDir!
             try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
         }
         
@@ -48,7 +48,7 @@ struct BinaryInterfaceableTests {
             try Self.checkBinary(binary: self.binaryPath)
             
             // Set up working directory
-            self.workingDirectory = configuration.cardano.workingDir
+            self.workingDirectory = configuration.cardano.workingDir!
             try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
         }
         
@@ -131,7 +131,7 @@ struct BinaryInterfaceableTests {
                 self.configuration = configuration
                 self.logger = logger ?? Logger(label: Self.binaryName)
                 self.binaryPath = try Self.getBinaryPath()
-                self.workingDirectory = configuration.cardano.workingDir
+                self.workingDirectory = configuration.cardano.workingDir!
                 try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
             }
             
@@ -160,7 +160,7 @@ struct BinaryInterfaceableTests {
                 self.configuration = configuration
                 self.logger = logger ?? Logger(label: "empty-binary")
                 self.binaryPath = try Self.getBinaryPath()
-                self.workingDirectory = configuration.cardano.workingDir
+                self.workingDirectory = configuration.cardano.workingDir!
                 try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
             }
             
@@ -443,7 +443,7 @@ struct BinaryInterfaceableTests {
                 self.binaryPath = FilePath("/path/to/nonexistent/binary")
                 try Self.checkBinary(binary: self.binaryPath)
                 
-                self.workingDirectory = configuration.cardano.workingDir
+                self.workingDirectory = configuration.cardano.workingDir!
                 try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
             }
             

@@ -70,7 +70,7 @@ struct KupoConfigTests {
     func testMinimalInitialization() {
         let config = createMinimalConfig()
         
-        #expect(config.binary.string == "/usr/local/bin/kupo")
+        #expect(config.binary!.string == "/usr/local/bin/kupo")
         #expect(config.host == nil)
         #expect(config.port == nil)
         #expect(config.since == nil)
@@ -89,7 +89,7 @@ struct KupoConfigTests {
     func testFullInitialization() {
         let config = createFullConfig()
         
-        #expect(config.binary.string == "/usr/local/bin/kupo")
+        #expect(config.binary!.string == "/usr/local/bin/kupo")
         #expect(config.host == "0.0.0.0")
         #expect(config.port == 1442)
         #expect(config.since == "origin")
@@ -120,7 +120,7 @@ struct KupoConfigTests {
             logLevel: "debug"
         )
         
-        #expect(config.binary.string == "/opt/kupo")
+        #expect(config.binary!.string == "/opt/kupo")
         #expect(config.host == "localhost")
         #expect(config.port == 8080)
         #expect(config.since == "genesis")
@@ -209,7 +209,7 @@ struct KupoConfigTests {
         
         let config = try KupoConfig(config: configReader)
         
-        #expect(config.binary.string == "/usr/local/bin/kupo")
+        #expect(config.binary!.string == "/usr/local/bin/kupo")
         #expect(config.host == "127.0.0.1")
         #expect(config.port == 1442)
         #expect(config.since == "46.120")
@@ -454,7 +454,7 @@ struct KupoConfigTests {
         
         for path in paths {
             let config = KupoConfig(binary: FilePath(path))
-            #expect(config.binary.string == path)
+            #expect(config.binary!.string == path)
         }
     }
     
@@ -483,7 +483,7 @@ struct KupoConfigTests {
     @Test("KupoConfig handles empty binary path")
     func testEmptyBinaryPath() {
         let config = KupoConfig(binary: FilePath(""))
-        #expect(config.binary.string == "")
+        #expect(config.binary!.string == "")
     }
     
     @Test("KupoConfig handles zero values")

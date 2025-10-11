@@ -37,7 +37,7 @@ struct BinaryRunnableTests {
             try Self.checkBinary(binary: self.binaryPath)
             
             // Set up working directory
-            self.workingDirectory = configuration.cardano.workingDir
+            self.workingDirectory = configuration.cardano.workingDir!
             try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
         }
         
@@ -54,7 +54,7 @@ struct BinaryRunnableTests {
             try Self.checkBinary(binary: self.binaryPath)
             
             // Set up working directory
-            self.workingDirectory = configuration.cardano.workingDir
+            self.workingDirectory = configuration.cardano.workingDir!
             try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
         }
         
@@ -458,7 +458,7 @@ struct BinaryRunnableTests {
                 self.binaryPath = FilePath("/path/to/nonexistent/binary")
                 try Self.checkBinary(binary: self.binaryPath)
                 
-                self.workingDirectory = configuration.cardano.workingDir
+                self.workingDirectory = configuration.cardano.workingDir!
                 try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
             }
             

@@ -9,6 +9,7 @@ enum CardanoCLIToolsError: Error, LocalizedError {
     case configurationMissing(CardanoCLIToolsConfig)
     case deviceError(String)
     case invalidOutput(String)
+    case invalidParameters(String)
     case nodeNotSynced(Double)
     case unsupportedVersion(String, String)
     case invalidMultiSigConfig(String)
@@ -31,6 +32,8 @@ enum CardanoCLIToolsError: Error, LocalizedError {
                 return "Hardware wallet device error: \(message)"
             case .invalidOutput(let message):
                 return "Invalid CLI output: \(message)"
+            case .invalidParameters(let message):
+                return "Invalid parameters: \(message)"
             case .nodeNotSynced(let progress):
                 return "Node is not fully synced. Current sync progress: \(progress)%"
             case .unsupportedVersion(let current, let minimum):

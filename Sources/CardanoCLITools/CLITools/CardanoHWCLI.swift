@@ -43,7 +43,7 @@ public struct CardanoHWCLI: BinaryInterfaceable {
     
     /// Get the version of cardano-hw-cli
     public func version() async throws -> String {
-        let output = try await runCommand(["--version"])
+        let output = try await runCommand(["version"])
         
         // Extract version using regex pattern
         let pattern = #"version (\d+\.\d+\.\d+)"#
@@ -54,11 +54,6 @@ public struct CardanoHWCLI: BinaryInterfaceable {
         }
         
         return String(output[versionRange])
-    }
-    
-    /// Check device version
-    public func checkDeviceVersion() async throws -> String {
-        return try await runCommand(["device", "version"])
     }
     
     /// Start hardware wallet interaction process
@@ -76,7 +71,7 @@ public struct CardanoHWCLI: BinaryInterfaceable {
         
         while deviceLocked && attempts < maxAttempts {
             do {
-                deviceInfo = try await checkDeviceVersion()
+                deviceInfo = try await device.version()
                 if deviceInfo.contains("app version") || deviceInfo.contains("undefined") {
                     deviceLocked = false
                 }
@@ -160,33 +155,41 @@ public struct CardanoHWCLI: BinaryInterfaceable {
         
         logger.info("Transaction body file autocorrected for hardware wallet compatibility")
     }
+}
+
+// MARK: - Address Commands
+
+/// Address command namespace for CardanoHWCLI
+extension CardanoHWCLI {
+    // MARK: - Command Accessors
     
-    /// Generate device-specific witness for transaction
-    public func witnessTransaction(
-        txBodyFile: String,
-        signingKeyFile: String,
-        addressDerivationPath: String? = nil,
-        outputFile: String
-    ) async throws -> String {
-        var args = [
-            "transaction", "witness",
-            "--tx-body-file", txBodyFile,
-            "--hw-signing-file", signingKeyFile,
-            "--out-file", outputFile
-        ]
-        
-        if let derivationPath = addressDerivationPath {
-            args.append(contentsOf: ["--address-derivation-path", derivationPath])
-        }
-        
-        return try await runCommand(args)
+    /// Access to address commands
+    public var address: AddressCommandImpl {
+        return AddressCommandImpl(baseCLI: self)
     }
     
-    /// Verify transaction with hardware wallet
-    public func verifyTransaction(txFile: String) async throws -> String {
-        return try await runCommand([
-            "transaction", "verify",
-            "--tx-file", txFile
-        ])
+    /// Access to address commands
+    public var device: DeviceCommandImpl {
+        return DeviceCommandImpl(baseCLI: self)
+    }
+    
+    /// Access to key commands
+    public var key: KeyCommandImpl {
+        return KeyCommandImpl(baseCLI: self)
+    }
+    
+    /// Access to transaction commands
+    public var transaction: TransactionCommandImpl {
+        return TransactionCommandImpl(baseCLI: self)
+    }
+    
+    /// Access to node commands
+    public var node: NodeCommandImpl {
+        return NodeCommandImpl(baseCLI: self)
+    }
+    
+    /// Access to vote commands
+    public var vote: VoteCommandImpl {
+        return VoteCommandImpl(baseCLI: self)
     }
 }

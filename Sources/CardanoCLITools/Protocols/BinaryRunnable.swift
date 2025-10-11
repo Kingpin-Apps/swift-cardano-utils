@@ -8,19 +8,19 @@ import Glibc
 #endif
 
 /// Protocol for binary runners
-protocol BinaryRunnable: BinaryInterfaceable {
+public protocol BinaryRunnable: BinaryInterfaceable {
     var binaryPath: FilePath { get }
     var workingDirectory: FilePath { get }
     var showOutput: Bool { get }
     var process: Process? { get set }
     var processTerminated: Bool { get set }
     
-    init(configuration: CardanoCLIToolsConfig, logger: Logger?) async throws
+//    init(configuration: CardanoCLIToolsConfig, logger: Logger?) async throws
 }
 
 extension BinaryRunnable {
     
-    mutating func start(_ arguments: [String] = []) throws {
+    public mutating func start(_ arguments: [String] = []) throws {
         guard process == nil || !process!.isRunning else {
             throw CardanoCLIToolsError.processAlreadyRunning
         }
@@ -55,7 +55,7 @@ extension BinaryRunnable {
         }
     }
     
-    mutating func stop() async throws {
+    public mutating func stop() async throws {
         guard let process = process, process.isRunning else { return }
         
         logger.info("Stopping process...")
@@ -82,7 +82,7 @@ extension BinaryRunnable {
 //        }
     }
     
-    func version() async throws -> String {
+    public func version() async throws -> String {
         let versionProcess = Process()
         let pipe = Pipe()
         

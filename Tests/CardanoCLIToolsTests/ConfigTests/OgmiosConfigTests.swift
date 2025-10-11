@@ -60,7 +60,7 @@ struct OgmiosConfigTests {
     func testMinimalInitialization() {
         let config = createMinimalConfig()
         
-        #expect(config.binary.string == "/usr/local/bin/ogmios")
+        #expect(config.binary!.string == "/usr/local/bin/ogmios")
         #expect(config.host == nil)
         #expect(config.port == nil)
         #expect(config.timeout == nil)
@@ -74,7 +74,7 @@ struct OgmiosConfigTests {
     func testFullInitialization() {
         let config = createFullConfig()
         
-        #expect(config.binary.string == "/usr/local/bin/ogmios")
+        #expect(config.binary!.string == "/usr/local/bin/ogmios")
         #expect(config.host == "0.0.0.0")
         #expect(config.port == 1337)
         #expect(config.timeout == 30)
@@ -98,7 +98,7 @@ struct OgmiosConfigTests {
             logLevel: "debug"
         )
         
-        #expect(config.binary.string == "/opt/ogmios")
+        #expect(config.binary!.string == "/opt/ogmios")
         #expect(config.host == "localhost")
         #expect(config.port == 8080)
         #expect(config.logLevel == "debug")
@@ -174,7 +174,7 @@ struct OgmiosConfigTests {
         
         let config = try OgmiosConfig(config: configReader)
         
-        #expect(config.binary.string == "/usr/local/bin/ogmios")
+        #expect(config.binary!.string == "/usr/local/bin/ogmios")
         #expect(config.host == "127.0.0.1")
         #expect(config.port == 1337)
         #expect(config.timeout == 60)
@@ -281,7 +281,7 @@ struct OgmiosConfigTests {
         
         for path in paths {
             let config = OgmiosConfig(binary: FilePath(path))
-            #expect(config.binary.string == path)
+            #expect(config.binary!.string == path)
         }
     }
     
@@ -330,7 +330,7 @@ struct OgmiosConfigTests {
     @Test("OgmiosConfig handles empty binary path")
     func testEmptyBinaryPath() {
         let config = OgmiosConfig(binary: FilePath(""))
-        #expect(config.binary.string == "")
+        #expect(config.binary!.string == "")
     }
     
     @Test("OgmiosConfig handles zero values")
@@ -381,7 +381,7 @@ struct OgmiosConfigTests {
             showOutput: false
         )
         
-        #expect(config.binary.string == "/usr/local/bin/ogmios")
+        #expect(config.binary!.string == "/usr/local/bin/ogmios")
         #expect(config.host == "0.0.0.0")
         #expect(config.port == 1337)
         #expect(config.timeout == 60)

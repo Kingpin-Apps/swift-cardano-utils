@@ -146,30 +146,6 @@ struct CardanoHWCLITests {
         }
     }
     
-    // MARK: - Documentation Tests
-    
-    @Test("CardanoHWCLI initialization limitations are documented")
-    func testInitializationLimitations() {
-        // This test documents the current limitation that prevents full testing
-        // of CardanoHWCLI initialization in the test environment
-        
-        // The CardanoHWCLI initializer calls checkVersion() which tries to execute
-        // the cardano-hw-cli binary. In tests, we can't easily mock this without
-        // creating complex file system mocks.
-        
-        // Additionally, the startHardwareWallet() method has retry loops with
-        // Task.sleep(for: .seconds(10)) that make it unsuitable for unit testing
-        // without significant refactoring.
-        
-        // For now, we test:
-        // 1. Static properties and constants
-        // 2. Version parsing logic
-        // 3. Configuration validation (hwCli path requirement)
-        // 4. Error scenarios
-        
-        #expect(Bool(true), "This test documents known testing limitations")
-    }
-    
     // MARK: - Hardware Wallet Types Integration
     
     @Test("CardanoHWCLI integrates with HardwareWalletType enum")

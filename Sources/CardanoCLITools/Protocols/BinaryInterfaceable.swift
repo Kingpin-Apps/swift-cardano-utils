@@ -4,11 +4,11 @@ import Logging
 
 // MARK: - Base CLI Protocol
 
-protocol BinaryInterfaceable: BinaryExecutable {
+public protocol BinaryInterfaceable: BinaryExecutable {
     var binaryPath: FilePath { get }
     var workingDirectory: FilePath { get }
     
-    init(configuration: CardanoCLIToolsConfig, logger: Logger?) async throws
+//    init(configuration: CardanoCLIToolsConfig, logger: Logger?) async throws
 }
 
 // MARK: - Base CLI Implementation
@@ -21,7 +21,7 @@ extension BinaryInterfaceable {
     /// - Returns: Standard output from the command
     /// - Throws: CLIError if the command fails
     /// - Note: This method is thread-safe and uses a serial queue to prevent concurrent executions
-    func runCommand(_ arguments: [String]) async throws -> String {
+    public func runCommand(_ arguments: [String]) async throws -> String {
         try await withCheckedThrowingContinuation { continuation in
             let process = Process()
             process.executableURL = URL(fileURLWithPath: self.binaryPath.string)

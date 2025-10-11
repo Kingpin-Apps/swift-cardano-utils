@@ -3,7 +3,7 @@ import SystemPackage
 import Logging
 
 
-protocol BinaryExecutable: Sendable {
+public protocol BinaryExecutable: Sendable {
     static var binaryName: String { get }
     static var mininumSupportedVersion: String { get }
     

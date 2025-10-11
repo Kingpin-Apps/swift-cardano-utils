@@ -1,6 +1,7 @@
 import Foundation
 import Configuration
 import SwiftCardanoCore
+import SystemPackage
 
 
 // MARK: - Network Type Enum
@@ -163,4 +164,39 @@ public enum HardwareWalletType: String, CaseIterable, Codable {
                 return "Trezor"
         }
     }
+}
+
+// MARK: - Derivation Type
+
+/// Enumeration of supported derivation types for hardware wallets
+public enum DerivationType: String, CaseIterable, Codable {
+    case ledger = "LEDGER"
+    case icarus = "ICARUS"
+    case icarusTrezor = "ICARUS_TREZOR"
+    
+    public var displayName: String {
+        switch self {
+            case .ledger:
+                return "Ledger"
+            case .icarus:
+                return "Icarus"
+            case .icarusTrezor:
+                return "Icarus Trezor"
+        }
+    }
+}
+
+
+// MARK: - Vote Public Key Input Types
+
+/// Enumeration of supported vote public key input formats
+public enum VotePublicKeyInput {
+    /// Vote public key from jcli format file (ed25519extended format)
+    case jcli(FilePath)
+    /// Bech32-encoded vote public key string
+    case string(String)
+    /// Vote public key from hardware wallet signing file format
+    case hwsFile(FilePath)
+    /// Vote public key from cardano-cli file format
+    case file(FilePath)
 }

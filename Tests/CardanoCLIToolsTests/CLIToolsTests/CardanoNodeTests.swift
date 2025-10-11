@@ -296,7 +296,7 @@ struct CardanoNodeTests {
         #expect(config.cardano.node?.string == cardanoConfig.node?.string)
         #expect(config.cardano.socket?.string == cardanoConfig.socket?.string)
         #expect(config.cardano.config?.string == cardanoConfig.config?.string)
-        #expect(config.cardano.workingDir.string == cardanoConfig.workingDir.string)
+        #expect(config.cardano.workingDir == cardanoConfig.workingDir)
         
         // Verify optional fields
         #expect(config.cardano.topology?.string == cardanoConfig.topology?.string)

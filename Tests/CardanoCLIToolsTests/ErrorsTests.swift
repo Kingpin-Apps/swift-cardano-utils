@@ -391,6 +391,7 @@ struct CardanoCLIToolsErrorTests {
             .configurationMissing(createTestConfiguration()),
             .deviceError("test device error"),
             .invalidOutput("test invalid output"),
+            .invalidParameters("test invalid parameters"),
             .nodeNotSynced(75.0),
             .unsupportedVersion("1.0.0", "2.0.0"),
             .invalidMultiSigConfig("test config error"),
@@ -437,6 +438,7 @@ struct CardanoCLIToolsErrorTests {
             .configurationMissing(createTestConfiguration()),
             .deviceError("test"),
             .invalidOutput("test"),
+            .invalidParameters("test"),
             .nodeNotSynced(50.0),
             .unsupportedVersion("1.0", "2.0"),
             .invalidMultiSigConfig("test"),
@@ -461,6 +463,8 @@ struct CardanoCLIToolsErrorTests {
             case .deviceError:
                 patternMatchCount += 1
             case .invalidOutput:
+                patternMatchCount += 1
+            case .invalidParameters:
                 patternMatchCount += 1
             case .nodeNotSynced:
                 patternMatchCount += 1
@@ -532,6 +536,7 @@ struct CardanoCLIToolsErrorTests {
             (.configurationMissing(createTestConfiguration()), "Configuration is missing or invalid:"),
             (.deviceError("test"), "Hardware wallet device error:"),
             (.invalidOutput("test"), "Invalid CLI output:"),
+            (.invalidParameters("test"), "Invalid parameters:"),
             (.nodeNotSynced(50.0), "Node is not fully synced."),
             (.unsupportedVersion("1.0", "2.0"), "Unsupported version:"),
             (.invalidMultiSigConfig("test"), "Invalid multi-signature configuration:"),

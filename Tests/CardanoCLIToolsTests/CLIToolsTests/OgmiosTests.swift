@@ -462,7 +462,7 @@ struct OgmiosTests {
         )
         
         // Test that all configuration fields are properly accessible
-        #expect(config.ogmios!.binary.string == "/usr/local/bin/ogmios")
+        #expect(config.ogmios!.binary!.string == "/usr/local/bin/ogmios")
         #expect(config.ogmios!.host == "192.168.1.100")
         #expect(config.ogmios!.port == 1338)
         #expect(config.ogmios!.timeout == 120)

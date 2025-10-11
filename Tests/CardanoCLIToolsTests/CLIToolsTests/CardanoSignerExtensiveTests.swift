@@ -522,7 +522,7 @@ struct CardanoSignerExtensiveTests {
             
             // Test that it maintains other configuration properties (CLI paths differ due to mock creation)
             #expect(!config.cardano.cli!.string.isEmpty)
-            #expect(config.cardano.workingDir.string == baseConfig.cardano.workingDir.string)
+            #expect(config.cardano.workingDir == baseConfig.cardano.workingDir)
         }
     }
     

@@ -68,7 +68,7 @@ struct CardanoConfigTests {
         #expect(config.network == .preview)
         #expect(config.era == .conway)
         #expect(config.ttlBuffer == 3600)
-        #expect(config.workingDir.string == "/tmp/cardano")
+        #expect(config.workingDir!.string == "/tmp/cardano")
     }
     
     @Test("CardanoConfig initializes with all parameters")
@@ -193,7 +193,7 @@ struct CardanoConfigTests {
             #expect(config.network == .mainnet)
             #expect(config.era == .conway)
             #expect(config.ttlBuffer == 3600)
-            #expect(config.workingDir.string.isEmpty == false)
+            #expect(config.workingDir!.string.isEmpty == false)
         }
     }
     

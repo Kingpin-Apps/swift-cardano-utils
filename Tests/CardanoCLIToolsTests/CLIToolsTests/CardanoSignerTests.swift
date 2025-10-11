@@ -321,6 +321,6 @@ struct CardanoSignerTests {
         #expect(config.cardano.signer != nil)
         #expect(config.cardano.signer?.string == signerPath.string)
         #expect(config.cardano.cli!.string == testConfig.cardano.cli!.string)
-        #expect(config.cardano.workingDir.string == testConfig.cardano.workingDir.string)
+        #expect(config.cardano.workingDir == testConfig.cardano.workingDir)
     }
 }

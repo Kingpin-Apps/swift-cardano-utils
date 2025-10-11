@@ -559,7 +559,7 @@ struct KupoTests {
         )
         
         // Test that all configuration fields are properly accessible
-        #expect(config.kupo!.binary.string == "/usr/local/bin/kupo")
+        #expect(config.kupo!.binary!.string == "/usr/local/bin/kupo")
         #expect(config.kupo!.host == "192.168.1.200")
         #expect(config.kupo!.port == 8888)
         #expect(config.kupo!.since == "46.120")

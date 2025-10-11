@@ -297,9 +297,9 @@ struct CardanoCLIToolsConfigTests {
         #expect(config.cardano.cli?.string == "/usr/local/bin/cardano-cli")
         #expect(config.cardano.network == .preview)
         #expect(config.cardano.ttlBuffer == 7200)
-        #expect(config.ogmios?.binary.string == "/usr/local/bin/ogmios")
+        #expect(config.ogmios?.binary?.string == "/usr/local/bin/ogmios")
         #expect(config.ogmios?.host == "127.0.0.1")
-        #expect(config.kupo?.binary.string == "/usr/local/bin/kupo")
+        #expect(config.kupo?.binary?.string == "/usr/local/bin/kupo")
     }
     
     // MARK: - Default Configuration Tests
@@ -313,7 +313,7 @@ struct CardanoCLIToolsConfigTests {
             #expect(config.cardano.network == .mainnet)
             #expect(config.cardano.era == .conway)
             #expect(config.cardano.ttlBuffer > 0)
-            #expect(config.cardano.workingDir.string.isEmpty == false)
+            #expect(config.cardano.workingDir!.string.isEmpty == false)
         }
     }
     
