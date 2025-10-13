@@ -1,3 +1,9 @@
+## 0.1.6 (2025-10-13)
+
+### Fix
+
+- set shutdownOnSlotSynced to nil instead of 0
+
 ## 0.1.5 (2025-10-13)
 
 ### Refactor
