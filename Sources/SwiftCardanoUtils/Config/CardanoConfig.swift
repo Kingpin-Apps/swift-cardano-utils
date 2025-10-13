@@ -255,9 +255,12 @@ public struct CardanoConfig: Codable, Sendable {
         )
         
         self.shutdownIpc = config.int(forKey: key(.shutdownIpc))
-        self.shutdownOnSlotSynced = UInt64(
-            config.int(forKey: key(.shutdownOnSlotSynced)) ?? 0
-        )
+        
+        if let shutdownOnSlotSynced = config.int(forKey: key(.shutdownOnSlotSynced)), shutdownOnSlotSynced < 0 {
+            self.shutdownOnSlotSynced = UInt64(shutdownOnSlotSynced)
+        } else {
+            self.shutdownOnSlotSynced = nil
+        }
         self.shutdownOnBlockSynced = config.string(forKey: key(.shutdownOnBlockSynced))
         
         self.mempoolCapacityOverride = config.int(forKey: key(.mempoolCapacityOverride))
