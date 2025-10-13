@@ -1,4 +1,4 @@
-# CardanoCLITools
+# SwiftCardanoUtils
 
 A Swift package providing a convenient interface for interacting with Cardano CLI tools, including cardano-cli, cardano-node, Ogmios, and Kupo.
 
@@ -20,11 +20,11 @@ A Swift package providing a convenient interface for interacting with Cardano CL
 
 ### Swift Package Manager
 
-Add CardanoCLITools to your `Package.swift` dependencies:
+Add SwiftCardanoUtils to your `Package.swift` dependencies:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/Kingpin-Apps/cardano-cli-tools.git", from: "0.1.0")
+    .package(url: "https://github.com/Kingpin-Apps/swift-cardano-utils.git", from: "0.1.0")
 ]
 ```
 
@@ -34,12 +34,12 @@ Then add it to your target:
 .target(
     name: "YourTarget",
     dependencies: [
-        .product(name: "CardanoCLITools", package: "cardano-cli-tools")
+        .product(name: "SwiftCardanoUtils", package: "swift-cardano-utils")
     ]
 )
 ```
 
-### Installing Cardano CLI Tools
+### Installing Swift Cardano Utils
 
 Before using this package, you need to install the Cardano CLI tools:
 
@@ -64,7 +64,7 @@ Before using this package, you need to install the Cardano CLI tools:
 ### Basic Setup
 
 ```swift
-import CardanoCLITools
+import SwiftCardanoUtils
 import SwiftCardanoCore
 import System
 
@@ -87,7 +87,7 @@ let cardanoConfig = CardanoConfig(
     showOutput: true // Optional
 )
 
-let configuration = CardanoCLIToolsConfig(
+let configuration = Config(
     cardano: cardanoConfig,
     ogmios: nil,
     kupo: nil
@@ -244,7 +244,7 @@ You can also load configuration from a JSON file:
 
 ```swift
 // Load from JSON file
-let configuration = try await CardanoCLIToolsConfig.load(path: FilePath("/path/to/config.json"))
+let configuration = try await SwiftCardanoUtilsConfig.load(path: FilePath("/path/to/config.json"))
 ```
 
 ### Network Types
@@ -294,7 +294,7 @@ export CARDANO_BLOCK_PRODUCER="false"
 
 ```swift
 // Access environment variables programmatically
-import CardanoCLITools
+import SwiftCardanoUtils
 
 // Set environment variables at runtime
 Environment.set(.network, value: "preview")
@@ -437,12 +437,12 @@ The package defines comprehensive error types:
 do {
     let tip = try await cli.getTip()
     print("Current tip: \(tip)")
-} catch CardanoCLIToolsError.nodeNotSynced(let progress) {
+} catch SwiftCardanoUtilsError.nodeNotSynced(let progress) {
     print("Node not fully synced: \(progress)%")
-} catch CardanoCLIToolsError.commandFailed(let command, let message) {
+} catch SwiftCardanoUtilsError.commandFailed(let command, let message) {
     print("Command failed: \(command)")
     print("Error: \(message)")
-} catch CardanoCLIToolsError.binaryNotFound(let path) {
+} catch SwiftCardanoUtilsError.binaryNotFound(let path) {
     print("Binary not found at: \(path)")
 } catch {
     print("Unexpected error: \(error)")
@@ -454,7 +454,7 @@ do {
 Comprehensive error handling with specific error types:
 
 ```swift
-public enum CardanoCLIToolsError: Error, Equatable {
+public enum SwiftCardanoUtilsError: Error, Equatable {
     case binaryNotFound(String)              // CLI binary not found at path
     case commandFailed([String], String)     // CLI command execution failed
     case nodeNotSynced(Double)              // Node sync progress < 100%
@@ -475,17 +475,17 @@ public enum CardanoCLIToolsError: Error, Equatable {
 do {
     let tip = try await cli.getTip()
     print("Current tip: \(tip)")
-} catch CardanoCLIToolsError.nodeNotSynced(let progress) {
+} catch SwiftCardanoUtilsError.nodeNotSynced(let progress) {
     print("Node synchronizing: \(String(format: "%.1f", progress))%")
     // Wait and retry logic
-} catch CardanoCLIToolsError.commandFailed(let command, let message) {
+} catch SwiftCardanoUtilsError.commandFailed(let command, let message) {
     print("Command failed: \(command.joined(separator: " "))")
     print("Error details: \(message)")
     // Command-specific error handling
-} catch CardanoCLIToolsError.binaryNotFound(let path) {
+} catch SwiftCardanoUtilsError.binaryNotFound(let path) {
     print("Install cardano-cli at: \(path)")
     // Installation guidance
-} catch CardanoCLIToolsError.unsupportedVersion(let current, let required) {
+} catch SwiftCardanoUtilsError.unsupportedVersion(let current, let required) {
     print("Version \(current) found, \(required) required")
     // Version upgrade guidance
 } catch {

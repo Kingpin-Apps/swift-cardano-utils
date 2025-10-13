@@ -1,0 +1,80 @@
+import Foundation
+import SystemPackage
+import Logging
+
+// MARK: - Cardano Signer CLI
+
+/// Wrapper struct for the cardano-signer tool
+public struct CardanoSigner: BinaryInterfaceable {
+    public let binaryPath: FilePath
+    public let workingDirectory: FilePath
+    public let configuration: Config
+    public let logger: Logger
+    public static let binaryName: String = "cardano-signer"
+    public static let mininumSupportedVersion: String = "1.17.0"
+    
+    /// Initialize with optional configuration
+    public init(configuration: Config, logger: Logger? = nil) async throws {
+        // Assign all let properties directly
+        self.configuration = configuration
+        
+        // Check for signer binary
+        guard let signerPath = configuration.cardano.signer else {
+            throw SwiftCardanoUtilsError.binaryNotFound("cardano-signer path not configured")
+        }
+        
+        // Setup binary path
+        self.binaryPath = signerPath
+        try Self.checkBinary(binary: self.binaryPath)
+        
+        // Setup working directory
+        self.workingDirectory = configuration.cardano.workingDir ?? FilePath(
+            FileManager.default.currentDirectoryPath
+        )
+        try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
+        
+        // Setup logger
+        self.logger = logger ?? Logger(label: "CardanoSigner")
+        
+        try await checkVersion()
+    }
+    
+    /// Get the version of cardano-signer
+    public func version() async throws -> String {
+        let output = try await runCommand(["help"])
+        
+        // Extract version using regex pattern
+        let pattern = #"cardano-signer (\d+\.\d+\.\d+)"#
+        guard let regex = try? NSRegularExpression(pattern: pattern),
+              let match = regex.firstMatch(in: output, range: NSRange(output.startIndex..., in: output)),
+              let versionRange = Range(match.range(at: 1), in: output) else {
+            throw SwiftCardanoUtilsError.invalidOutput("Could not parse cardano-signer version from: \(output)")
+        }
+        
+        return String(output[versionRange])
+    }
+}
+
+extension CardanoSigner {
+    // MARK: - Command Accessors
+    
+    /// Access to canonize commands
+    public var canonize: CanonizeCommandImpl {
+        return CanonizeCommandImpl(baseCLI: self)
+    }
+    
+    /// Access to keygen commands
+    public var keygen: KeyGenCommandImpl {
+        return KeyGenCommandImpl(baseCLI: self)
+    }
+    
+    /// Access to sign commands
+    public var sign: SignCommandImpl {
+        return SignCommandImpl(baseCLI: self)
+    }
+    
+    /// Access to verify commands
+    public var verify: VerifyCommandImpl {
+        return VerifyCommandImpl(baseCLI: self)
+    }
+}
