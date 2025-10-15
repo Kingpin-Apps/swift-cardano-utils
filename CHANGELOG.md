@@ -1,3 +1,9 @@
+## 0.1.7 (2025-10-15)
+
+### Fix
+
+- use Command package and refactor
+
 ## 0.1.6 (2025-10-13)
 
 ### Fix
