@@ -1,6 +1,7 @@
 import Foundation
 import SystemPackage
 import Logging
+import Command
 
 // MARK: - Cardano Signer CLI
 
@@ -10,11 +11,18 @@ public struct CardanoSigner: BinaryInterfaceable {
     public let workingDirectory: FilePath
     public let configuration: Config
     public let logger: Logger
+    
     public static let binaryName: String = "cardano-signer"
     public static let mininumSupportedVersion: String = "1.17.0"
     
+    public let commandRunner: any CommandRunning
+    
     /// Initialize with optional configuration
-    public init(configuration: Config, logger: Logger? = nil) async throws {
+    public init(
+        configuration: Config,
+        logger: Logging.Logger? = nil,
+        commandRunner: (any CommandRunning)? = nil
+    ) async throws {
         // Assign all let properties directly
         self.configuration = configuration
         
@@ -35,6 +43,9 @@ public struct CardanoSigner: BinaryInterfaceable {
         
         // Setup logger
         self.logger = logger ?? Logger(label: "CardanoSigner")
+        
+        // Setup command runner
+        self.commandRunner = commandRunner ?? CommandRunner(logger: self.logger)
         
         try await checkVersion()
     }

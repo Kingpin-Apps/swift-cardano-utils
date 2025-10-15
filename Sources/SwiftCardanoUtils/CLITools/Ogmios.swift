@@ -1,23 +1,30 @@
 import Foundation
 import SystemPackage
+import Command
 import Logging
 
 /// Ogmios binary runner
 public struct Ogmios: BinaryRunnable {
+
     public let binaryPath: FilePath
     public let workingDirectory: FilePath
     public let configuration: Config
     public let logger: Logging.Logger
+    
     public static let binaryName: String = "ogmios"
     public static let mininumSupportedVersion: String = "6.13.0"
     
     public let showOutput: Bool
     public let cardanoConfig: CardanoConfig
     public let ogmiosConfig: OgmiosConfig
-    public var process: Process?
-    public var processTerminated: Bool = false
     
-    public init(configuration: Config, logger: Logging.Logger? = nil) async throws {
+    public let commandRunner: any CommandRunning
+    
+    public init(
+        configuration: Config,
+        logger: Logging.Logger? = nil,
+        commandRunner: (any CommandRunning)? = nil
+    ) async throws {
         // Assign all let properties directly
         self.configuration = configuration
         self.cardanoConfig = configuration.cardano
@@ -46,12 +53,15 @@ public struct Ogmios: BinaryRunnable {
         // Setup logger
         self.logger = logger ?? Logger(label: Self.binaryName)
         
+        // Setup command runner
+        self.commandRunner = commandRunner ?? CommandRunner(logger: self.logger)
+        
         // Check the version compatibility on initialization
         try await checkVersion()
     }
     
     /// Start the ogmios process
-    public mutating func start() throws {
+    public func start() async throws -> Void {
         var arguments: [String] = []
         
         // Required arguments
@@ -93,7 +103,7 @@ public struct Ogmios: BinaryRunnable {
             }
         }
         
-        try self.start(arguments)
+        return try await self.start(arguments)
     }
     
     public func version() async throws -> String {

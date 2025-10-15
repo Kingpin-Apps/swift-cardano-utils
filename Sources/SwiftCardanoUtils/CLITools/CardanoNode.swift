@@ -1,6 +1,7 @@
 import Foundation
 import SystemPackage
 import Logging
+import Command
 
 
 /// Cardano Node binary runner
@@ -9,15 +10,20 @@ public struct CardanoNode: BinaryRunnable {
     public let workingDirectory: FilePath
     public let configuration: Config
     public let logger: Logging.Logger
+    
     public static let binaryName: String = "cardano-node"
     public static let mininumSupportedVersion: String = "8.0.0"
     
     public let showOutput: Bool
     public let cardanoConfig: CardanoConfig
-    public var process: Process?
-    public var processTerminated: Bool = false
+    
+    public let commandRunner: any CommandRunning
 
-    public init(configuration: Config, logger: Logging.Logger? = nil) async throws {
+    public init(
+        configuration: Config,
+        logger: Logging.Logger? = nil,
+        commandRunner: (any CommandRunning)? = nil
+    ) async throws {
         // Assign all let properties directly
         self.configuration = configuration
         self.cardanoConfig = configuration.cardano
@@ -39,6 +45,9 @@ public struct CardanoNode: BinaryRunnable {
         // Setup logger
         self.logger = logger ?? Logger(label: Self.binaryName)
         
+        // Setup command runner
+        self.commandRunner = commandRunner ?? CommandRunner(logger: self.logger)
+        
         // Setup node socket environment variable
         guard let socket = cardanoConfig.socket else {
             throw SwiftCardanoUtilsError.configurationMissing(configuration)
@@ -50,7 +59,7 @@ public struct CardanoNode: BinaryRunnable {
     }
     
     /// Start the cardano-node process
-    public mutating func start() throws {
+    public func start() async throws -> Void {
         var arguments: [String] = ["run"]
         
         // Add required arguments
@@ -149,7 +158,7 @@ public struct CardanoNode: BinaryRunnable {
             arguments.append("--no-mempool-capacity-override")
         }
         
-        try self.start(arguments)
+        return try await self.start(arguments)
     }
     
     public func version() async throws -> String {

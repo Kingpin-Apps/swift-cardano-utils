@@ -2,7 +2,7 @@ import Foundation
 import SystemPackage
 
 /// Environment variables
-enum Environment: String {
+public enum Environment: String, CaseIterable {
     case debug = "DEBUG"
     case network = "NETWORK"
     case cardanoBindAddr = "CARDANO_BIND_ADDR"
@@ -38,5 +38,15 @@ enum Environment: String {
         } else {
             setenv(name.rawValue, value!, 1)
         }
+    }
+    
+    static func getEnv() -> [String: String] {
+        var env: [String: String] = [:]
+        for variable in Environment.allCases {
+            if let value = get(variable) {
+                env[variable.rawValue] = value
+            }
+        }
+        return env
     }
 }

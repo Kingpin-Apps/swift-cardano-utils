@@ -1,6 +1,7 @@
 import Foundation
 import SystemPackage
 import Logging
+import Command
 
 // MARK: - Cardano Hardware Wallet CLI
 
@@ -10,13 +11,20 @@ public struct CardanoHWCLI: BinaryInterfaceable {
     public let workingDirectory: FilePath
     public let configuration: Config
     public let logger: Logger
+    
     public static let binaryName: String = "cardano-hw-cli"
     public static let mininumSupportedVersion: String = "1.10.0"
     public static let minLedgerCardanoApp: String = "4.0.0"
     public static let minTrezorCardanoApp: String = "2.4.3"
     
+    public let commandRunner: any CommandRunning
+    
     /// Initialize with optional configuration
-    public init(configuration: Config, logger: Logger? = nil) async throws {
+    public init(
+        configuration: Config,
+        logger: Logging.Logger? = nil,
+        commandRunner: (any CommandRunning)? = nil
+    ) async throws {
         // Assign all let properties directly
         self.configuration = configuration
         
@@ -37,6 +45,9 @@ public struct CardanoHWCLI: BinaryInterfaceable {
         
         // Setup logger
         self.logger = logger ?? Logger(label: "CardanoHWCLI")
+        
+        // Setup command runner
+        self.commandRunner = commandRunner ?? CommandRunner(logger: self.logger)
         
         try await checkVersion()
     }

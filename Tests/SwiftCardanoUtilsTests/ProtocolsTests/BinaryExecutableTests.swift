@@ -3,6 +3,8 @@ import Foundation
 import Logging
 import SystemPackage
 import SwiftCardanoCore
+import Mockable
+import Command
 @testable import SwiftCardanoUtils
 
 @Suite("BinaryExecutable Protocol Tests")
@@ -16,6 +18,7 @@ struct BinaryExecutableTests {
         let logger: Logger
         static let binaryName: String = "test-binary"
         static let mininumSupportedVersion: String = "1.0.0"
+        var commandRunner: any CommandRunning
         
         private let mockVersion: String
         
@@ -23,6 +26,19 @@ struct BinaryExecutableTests {
             self.configuration = configuration
             self.logger = logger
             self.mockVersion = mockVersion
+            
+            let commandRunner = MockCommandRunning()
+            given(commandRunner)
+                .run(
+                    arguments: .any,
+                    environment: .any,
+                    workingDirectory: .any
+                )
+                .willReturn(AsyncThrowingStream<CommandEvent, any Error> { continuation in
+                    continuation.yield(.standardOutput([UInt8]("Done\n".utf8)))
+                    continuation.finish()
+                })
+            self.commandRunner = commandRunner
         }
         
         func version() async throws -> String {
@@ -200,36 +216,31 @@ struct BinaryExecutableTests {
         }
     }
     
-    @Test("checkVersion handles semantic versioning correctly")
-    func testCheckVersionWithSemanticVersioning() async throws {
+    @Test("checkVersion handles semantic versioning correctly", arguments: [
+        ("0.9.9", false),     // Lower
+        ("1.0.0", true),      // Exact match
+        ("1.0.1", true),      // Patch higher
+        ("1.1.0", true),      // Minor higher
+        ("2.0.0", true),      // Major higher
+        ("10.0.0", true),     // Much higher
+        ("0.10.0", false),    // Higher minor but lower major
+    ])
+    func testCheckVersionWithSemanticVersioning(_ testCase: (version: String, shouldPass: Bool)) async throws {
         let config = createTestConfiguration()
         let logger = Logger(label: "test")
         
-        // Test various version scenarios
-        let testCases: [(version: String, shouldPass: Bool)] = [
-            ("0.9.9", false),     // Lower
-            ("1.0.0", true),      // Exact match
-            ("1.0.1", true),      // Patch higher
-            ("1.1.0", true),      // Minor higher
-            ("2.0.0", true),      // Major higher
-            ("10.0.0", true),     // Much higher
-            ("0.10.0", false),    // Higher minor but lower major
-        ]
+        let mockBinary = MockBinaryExecutable(
+            configuration: config,
+            logger: logger,
+            mockVersion: testCase.version
+        )
         
-        for testCase in testCases {
-            let mockBinary = MockBinaryExecutable(
-                configuration: config,
-                logger: logger,
-                mockVersion: testCase.version
-            )
-            
-            if testCase.shouldPass {
-                // Should not throw
+        if testCase.shouldPass {
+            // Should not throw
+            try await mockBinary.checkVersion()
+        } else {
+            await #expect(throws: SwiftCardanoUtilsError.self) {
                 try await mockBinary.checkVersion()
-            } else {
-                await #expect(throws: SwiftCardanoUtilsError.self) {
-                    try await mockBinary.checkVersion()
-                }
             }
         }
     }

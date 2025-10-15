@@ -1,7 +1,7 @@
 import Foundation
 
 /// Structure representing the chain tip
-public struct ChainTip: Codable {
+public struct ChainTip: Codable, Equatable {
     let block: Int
     let epoch: Int
     let era: String

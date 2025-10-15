@@ -6,18 +6,18 @@ import SwiftCardanoCore
 /// Ogmios configuration
 public struct OgmiosConfig: Codable, Sendable {
     @FilePathCodable public var binary: FilePath?
-    public let host: String?
-    public let port: Int?
-    public let timeout: Int?
-    public let maxInFlight: Int?
-    public let logLevel: String?
-    public let logLevelHealth: String?
-    public let logLevelMetrics: String?
-    public let logLevelWebsocket: String?
-    public let logLevelServer: String?
-    public let logLevelOptions: String?
+    public var host: String?
+    public var port: Int?
+    public var timeout: Int?
+    public var maxInFlight: Int?
+    public var logLevel: String?
+    public var logLevelHealth: String?
+    public var logLevelMetrics: String?
+    public var logLevelWebsocket: String?
+    public var logLevelServer: String?
+    public var logLevelOptions: String?
     @FilePathCodable public var workingDir: FilePath?
-    public let showOutput: Bool?
+    public var showOutput: Bool?
     
     enum CodingKeys: String, CodingKey {
         case binary

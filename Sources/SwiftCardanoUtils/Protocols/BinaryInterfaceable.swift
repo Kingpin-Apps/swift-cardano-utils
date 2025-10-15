@@ -1,6 +1,7 @@
 import Foundation
 import SystemPackage
 import Logging
+import Path
 
 // MARK: - Base CLI Protocol
 
@@ -20,38 +21,20 @@ extension BinaryInterfaceable {
     /// - Throws: CLIError if the command fails
     /// - Note: This method is thread-safe and uses a serial queue to prevent concurrent executions
     public func runCommand(_ arguments: [String]) async throws -> String {
-        try await withCheckedThrowingContinuation { continuation in
-            let process = Process()
-            process.executableURL = URL(fileURLWithPath: self.binaryPath.string)
-            process.arguments = arguments
-            
-            let outputPipe = Pipe()
-            let errorPipe = Pipe()
-            process.standardOutput = outputPipe
-            process.standardError = errorPipe
-            
-            process.terminationHandler = { process in
-                if process.terminationStatus == 0 {
-                    let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
-                    let output = String(data: outputData, encoding: .utf8)?.trimmingCharacters(
-                        in: .whitespacesAndNewlines) ?? ""
-                    
-                    logger.debug("CLI command output: \(output)")
-                    continuation.resume(returning: output)
-                } else {
-                    let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-                    let errorMessage = String(data: errorData, encoding: .utf8) ?? "Unknown error"
-                    logger.error("CLI command failed with exit code \(process.terminationStatus)")
-                    logger.error("Error output: \(errorMessage)")
-                    continuation.resume(throwing: SwiftCardanoUtilsError.commandFailed(arguments, errorMessage))
-                }
-            }
-            
-            do {
-                try process.run()
-            } catch {
-                continuation.resume(throwing: error)
-            }
+        let fullCommand = [binaryPath.string] + arguments
+        
+        do {
+            return try await commandRunner.run(
+                arguments: fullCommand,
+                environment: Environment.getEnv(),
+                workingDirectory: try AbsolutePath(validating: self.workingDirectory.string)
+            ).concatenatedString()
+        } catch {
+            throw SwiftCardanoUtilsError
+                .commandFailed(
+                    fullCommand,
+                    error.localizedDescription
+                )
         }
     }
 }

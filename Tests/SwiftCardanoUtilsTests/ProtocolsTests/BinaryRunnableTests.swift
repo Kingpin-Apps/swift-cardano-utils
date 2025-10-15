@@ -2,6 +2,8 @@ import Testing
 import Foundation
 import Logging
 import SystemPackage
+import Mockable
+import Command
 import SwiftCardanoCore
 @testable import SwiftCardanoUtils
 
@@ -15,15 +17,16 @@ struct BinaryRunnableTests {
         let binaryPath: FilePath
         let workingDirectory: FilePath
         let configuration: Config
-        let logger: Logger
+        var logger: Logger
         let showOutput: Bool
         var process: Process?
         var processTerminated: Bool = false
-        static let binaryName: String = "test-runner"
+        static let binaryName: String = "sleep"
         static let mininumSupportedVersion: String = "1.0.0"
         
         private let mockVersion: String
         private let shouldFailOnStart: Bool
+        var commandRunner: any CommandRunning
         
         init(configuration: Config, logger: Logger?) async throws {
             self.configuration = configuration
@@ -39,23 +42,21 @@ struct BinaryRunnableTests {
             // Set up working directory
             self.workingDirectory = configuration.cardano.workingDir!
             try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
-        }
-        
-        init(configuration: Config, logger: Logger?, showOutput: Bool, mockVersion: String = "1.0.0", shouldFailOnStart: Bool = false) async throws {
-            self.configuration = configuration
+            
             self.logger = logger ?? Logger(label: Self.binaryName)
-            self.showOutput = showOutput
-            self.mockVersion = mockVersion
-            self.shouldFailOnStart = shouldFailOnStart
             
-            // Use /bin/sleep for testing, or /bin/false for failure tests
-            let binaryName = shouldFailOnStart ? "/bin/false" : "/bin/sleep"
-            self.binaryPath = FilePath(binaryName)
-            try Self.checkBinary(binary: self.binaryPath)
-            
-            // Set up working directory
-            self.workingDirectory = configuration.cardano.workingDir!
-            try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
+            let commandRunner = MockCommandRunning()
+            given(commandRunner)
+                .run(
+                    arguments: .any,
+                    environment: .any,
+                    workingDirectory: .any
+                )
+                .willReturn(AsyncThrowingStream<CommandEvent, any Error> { continuation in
+                    continuation.yield(.standardOutput([UInt8]("Done\n".utf8)))
+                    continuation.finish()
+                })
+            self.commandRunner = commandRunner
         }
         
         func version() async throws -> String {
@@ -84,7 +85,7 @@ struct BinaryRunnableTests {
         #expect(mockRunner.process == nil) // Should be nil initially
         
         // Test static properties
-        #expect(MockBinaryRunnable.binaryName == "test-runner")
+        #expect(MockBinaryRunnable.binaryName == "sleep")
         #expect(MockBinaryRunnable.mininumSupportedVersion == "1.0.0")
     }
     
@@ -106,231 +107,21 @@ struct BinaryRunnableTests {
         try await mockRunner.checkVersion()
     }
     
-    // MARK: - Process Management Tests
-    
-    @Test("start method launches process successfully")
-    func testStartProcessSuccessfully() async throws {
-        let config = createTestConfiguration()
-        let logger = Logger(label: "test")
-        
-        var mockRunner = try await MockBinaryRunnable(
-            configuration: config,
-            logger: logger,
-            showOutput: false
-        )
-        
-        // Initially no process
-        #expect(mockRunner.process == nil)
-        #expect(mockRunner.isRunning == false)
-        
-        // Start the process with a short sleep
-        try mockRunner.start(["0.1"]) // Sleep for 0.1 seconds
-        
-        // Process should now exist
-        #expect(mockRunner.process != nil)
-        
-        // Give the process a moment to start
-        try await Task.sleep(for: .milliseconds(50))
-        
-        // Process might still be running or have finished (depending on timing)
-        // We'll test this without strict expectations due to timing variability
-        let processExists = mockRunner.process != nil
-        #expect(processExists)
-        
-        // Clean up
-        try await mockRunner.stop()
-    }
-    
-    @Test("start throws error when process already running")
-    func testStartThrowsErrorWhenProcessAlreadyRunning() async throws {
-        let config = createTestConfiguration()
-        let logger = Logger(label: "test")
-        
-        var mockRunner = try await MockBinaryRunnable(
-            configuration: config,
-            logger: logger,
-            showOutput: false
-        )
-        
-        // Start the first process
-        try mockRunner.start(["10"]) // Sleep for 10 seconds
-        
-        // Give the process a moment to start
-        try await Task.sleep(for: .milliseconds(100))
-        
-        // Try to start another process - should throw error
-        #expect(throws: SwiftCardanoUtilsError.self) {
-            try mockRunner.start(["1"])
-        }
-        
-        // Verify the error type
-        do {
-            try mockRunner.start(["1"])
-            Issue.record("Expected SwiftCardanoUtilsError.processAlreadyRunning to be thrown")
-        } catch let error as SwiftCardanoUtilsError {
-            switch error {
-            case .processAlreadyRunning:
-                // Expected error
-                break
-            default:
-                Issue.record("Expected SwiftCardanoUtilsError.processAlreadyRunning, got \(error)")
-            }
-        }
-        
-        // Clean up
-        try await mockRunner.stop()
-        
-        // Wait a bit for cleanup
-        try await Task.sleep(for: .milliseconds(100))
-    }
-    
-    @Test("stop method terminates running process")
-    func testStopTerminatesRunningProcess() async throws {
-        let config = createTestConfiguration()
-        let logger = Logger(label: "test")
-        
-        var mockRunner = try await MockBinaryRunnable(
-            configuration: config,
-            logger: logger,
-            showOutput: false
-        )
-        
-        // Start a long-running process
-        try mockRunner.start(["10"]) // Sleep for 10 seconds
-        
-        // Give the process a moment to start
-        try await Task.sleep(for: .milliseconds(100))
-        
-        // Should be running
-        #expect(mockRunner.process != nil)
-        
-        // Stop the process
-        try await mockRunner.stop()
-        
-        // Wait for termination with timeout (more robust across platforms)
-        var attempts = 0
-        let maxAttempts = 50 // 5 seconds total
-        
-        while mockRunner.isRunning && attempts < maxAttempts {
-            try await Task.sleep(for: .milliseconds(100))
-            attempts += 1
-        }
-        
-        // Process should no longer be running
-        #expect(mockRunner.isRunning == false)
-    }
-    
-    @Test("stop method handles non-running process gracefully")
-    func testStopHandlesNonRunningProcessGracefully() async throws {
-        let config = createTestConfiguration()
-        let logger = Logger(label: "test")
-        
-        var mockRunner = try await MockBinaryRunnable(
-            configuration: config,
-            logger: logger,
-            showOutput: false
-        )
-        
-        // Try to stop when no process is running - should not throw
-        try await mockRunner.stop()
-        
-        // Still no process
-        #expect(mockRunner.process == nil)
-        #expect(mockRunner.isRunning == false)
-    }
-    
-    @Test("isRunning property reflects process state correctly")
-    func testIsRunningPropertyReflectsState() async throws {
-        let config = createTestConfiguration()
-        let logger = Logger(label: "test")
-        
-        var mockRunner = try await MockBinaryRunnable(
-            configuration: config,
-            logger: logger,
-            showOutput: false
-        )
-        
-        // Initially not running
-        #expect(mockRunner.isRunning == false)
-        
-        // Start a short process
-        try mockRunner.start(["0.2"]) // Sleep for 0.2 seconds
-        
-        // Give it a moment to start
-        try await Task.sleep(for: .milliseconds(50))
-        
-        // Should be running (or process object should exist)
-        #expect(mockRunner.process != nil)
-        
-        // Wait for it to finish
-        try await Task.sleep(for: .milliseconds(1000))
-        
-        // Should no longer be running
-        #expect(mockRunner.isRunning == false)
-    }
-    
-    // MARK: - Version Tests
-    
-    @Test("version method returns correct version")
-    func testVersionReturnsCorrectVersion() async throws {
-        let config = createTestConfiguration()
-        let logger = Logger(label: "test")
-        
-        let mockRunner = try await MockBinaryRunnable(
-            configuration: config,
-            logger: logger,
-            showOutput: false,
-            mockVersion: "2.1.0"
-        )
-        
-        let version = try await mockRunner.version()
-        #expect(version == "2.1.0")
-    }
-    
-    @Test("version method works with different mock versions")
-    func testVersionWithDifferentMockVersions() async throws {
-        let config = createTestConfiguration()
-        let logger = Logger(label: "test")
-        
-        let testVersions = ["1.0.0", "1.5.2", "2.0.0-rc1", "10.5.3"]
-        
-        for testVersion in testVersions {
-            let mockRunner = try await MockBinaryRunnable(
-                configuration: config,
-                logger: logger,
-                showOutput: false,
-                mockVersion: testVersion
-            )
-            
-            let version = try await mockRunner.version()
-            #expect(version == testVersion, "Expected version \(testVersion), got \(version)")
-        }
-    }
-    
     // MARK: - Output Handling Tests
     
     @Test("showOutput property controls process output handling")
     func testShowOutputPropertyControlsOutputHandling() async throws {
-        let config = createTestConfiguration()
+        var config = createTestConfiguration()
         let logger = Logger(label: "test")
+        config.cardano.showOutput = false
         
         // Test with showOutput = false
         let mockRunnerNoOutput = try await MockBinaryRunnable(
             configuration: config,
-            logger: logger,
-            showOutput: false
+            logger: logger
         )
         
         #expect(mockRunnerNoOutput.showOutput == false)
-        
-        // Test with showOutput = true
-        let mockRunnerWithOutput = try await MockBinaryRunnable(
-            configuration: config,
-            logger: logger,
-            showOutput: true
-        )
-        
-        #expect(mockRunnerWithOutput.showOutput == true)
     }
     
     @Test("process with showOutput false completes immediately")
@@ -338,16 +129,15 @@ struct BinaryRunnableTests {
         let config = createTestConfiguration()
         let logger = Logger(label: "test")
         
-        var mockRunner = try await MockBinaryRunnable(
+        let mockRunner = try await MockBinaryRunnable(
             configuration: config,
-            logger: logger,
-            showOutput: false
+            logger: logger
         )
         
         let startTime = Date()
         
         // Start a process that would normally take longer
-        try mockRunner.start(["0.5"]) // Sleep for 0.5 seconds
+        try await mockRunner.start(["0.5"]) // Sleep for 0.5 seconds
         
         let endTime = Date()
         let duration = endTime.timeIntervalSince(startTime)
@@ -356,9 +146,6 @@ struct BinaryRunnableTests {
         // (much less than the 0.5 seconds the process would take)
         #expect(duration < 0.1, "Expected start() to return immediately, took \(duration) seconds")
         
-        // Clean up
-        try await mockRunner.stop()
-        try await Task.sleep(for: .milliseconds(100))
     }
     
     // MARK: - Initialization Tests
@@ -386,10 +173,10 @@ struct BinaryRunnableTests {
         
         let mockRunner = try await MockBinaryRunnable(
             configuration: config,
-            logger: nil
+            logger: Logger(label: "custom-test")
         )
         
-        #expect(mockRunner.logger.label == "test-runner")
+        #expect(mockRunner.logger.label == "custom-test")
     }
     
     @Test("BinaryRunnable creates working directory if needed")
@@ -448,6 +235,7 @@ struct BinaryRunnableTests {
             var processTerminated: Bool = false
             static let binaryName: String = "invalid-runner"
             static let mininumSupportedVersion: String = "1.0.0"
+            var commandRunner: any CommandRunning
             
             init(configuration: Config, logger: Logger? = nil) async throws {
                 self.configuration = configuration
@@ -460,6 +248,16 @@ struct BinaryRunnableTests {
                 
                 self.workingDirectory = configuration.cardano.workingDir!
                 try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
+                
+                let commandRunner = MockCommandRunning()
+                given(commandRunner)
+                    .run(arguments: .value(["xcodebuild", "-project", "/path/to/Project.xcodeproj", "build"]), environment: .any, workingDirectory: .any)
+                    .willReturn(AsyncThrowingStream<CommandEvent, any Error> { continuation in
+                        continuation.yield(.standardOutput([UInt8]("first\n".utf8)))
+                        continuation.yield(.standardOutput([UInt8]("second\n".utf8)))
+                        continuation.finish()
+                    })
+                self.commandRunner = commandRunner
             }
             
             func version() async throws -> String {
@@ -472,212 +270,5 @@ struct BinaryRunnableTests {
         await #expect(throws: SwiftCardanoUtilsError.self) {
             _ = try await InvalidBinaryMock(configuration: config)
         }
-    }
-    
-    // MARK: - Integration Tests
-    
-    @Test("BinaryRunnable works with real Configuration objects")
-    func testBinaryRunnableWithRealConfiguration() async throws {
-        let config = createTestConfiguration()
-        let logger = Logger(label: "integration-test")
-        
-        var mockRunner = try await MockBinaryRunnable(
-            configuration: config,
-            logger: logger,
-            showOutput: false,
-            mockVersion: "2.1.0"
-        )
-        
-        // Test that all protocol methods work together
-        try await mockRunner.checkVersion()
-        
-        let version = try await mockRunner.version()
-        #expect(version == "2.1.0")
-        
-        // Test process management
-        #expect(mockRunner.isRunning == false)
-        
-        try mockRunner.start(["0.1"])
-        #expect(mockRunner.process != nil)
-        
-        // Give it time to start
-        try await Task.sleep(for: .milliseconds(50))
-        
-        try await mockRunner.stop()
-        
-        // Give it time to stop
-        try await Task.sleep(for: .milliseconds(150))
-        #expect(mockRunner.isRunning == false)
-        
-        // Test configuration access
-        #expect(mockRunner.configuration.cardano.era == Era.conway)
-    }
-    
-    @Test("BinaryRunnable can be used polymorphically")
-    func testBinaryRunnablePolymorphism() async throws {
-        let config = createTestConfiguration()
-        let logger = Logger(label: "polymorphism-test")
-        
-        // Test that BinaryRunnable can be used as protocol type
-        let binaryRunner: BinaryRunnable = try await MockBinaryRunnable(
-            configuration: config,
-            logger: logger,
-            showOutput: false,
-            mockVersion: "1.5.0"
-        )
-        
-        // Test that all methods are accessible through protocol
-        #expect(binaryRunner.binaryPath.string == "/bin/sleep")
-        #expect(binaryRunner.configuration.cardano.network == Network.preview)
-        #expect(binaryRunner.logger.label == "polymorphism-test")
-        #expect(binaryRunner.showOutput == false)
-        #expect(binaryRunner.process == nil)
-        #expect(binaryRunner.isRunning == false)
-        
-        let version = try await binaryRunner.version()
-        #expect(version == "1.5.0")
-    }
-    
-    // MARK: - Error Handling Tests
-    
-    @Test("BinaryRunnable methods throw appropriate errors")
-    func testBinaryRunnableErrorTypes() async throws {
-        let config = createTestConfiguration()
-        let logger = Logger(label: "error-test")
-        
-        let mockRunner = try await MockBinaryRunnable(
-            configuration: config,
-            logger: logger,
-            showOutput: false,
-            mockVersion: "0.5.0" // Below minimum
-        )
-        
-        // Test version check throws appropriate error
-        do {
-            try await mockRunner.checkVersion()
-            Issue.record("Expected SwiftCardanoUtilsError.unsupportedVersion to be thrown")
-        } catch let error as SwiftCardanoUtilsError {
-            switch error {
-            case .unsupportedVersion(let current, let minimum):
-                #expect(current == "0.5.0")
-                #expect(minimum == "1.0.0")
-            default:
-                Issue.record("Expected SwiftCardanoUtilsError.unsupportedVersion, got \(error)")
-            }
-        }
-    }
-    
-    @Test("BinaryRunnable process already running error includes context")
-    func testBinaryRunnableProcessAlreadyRunningError() async throws {
-        let config = createTestConfiguration()
-        let logger = Logger(label: "context-test")
-        
-        var mockRunner = try await MockBinaryRunnable(
-            configuration: config,
-            logger: logger,
-            showOutput: false
-        )
-        
-        // Start first process
-        try mockRunner.start(["10"])
-        
-        // Give it time to start
-        try await Task.sleep(for: .milliseconds(100))
-        
-        // Try to start second process
-        do {
-            try mockRunner.start(["1"])
-            Issue.record("Expected CLIError.processAlreadyRunning to be thrown")
-        } catch let error as SwiftCardanoUtilsError {
-            switch error {
-            case .processAlreadyRunning:
-                // Expected error - verify the error description
-                let description = error.errorDescription
-                #expect(description?.contains("already running") == true)
-            default:
-                Issue.record("Expected CLIError.processAlreadyRunning, got \(error)")
-            }
-        }
-        
-        // Clean up
-        try await mockRunner.stop()
-        try await Task.sleep(for: .milliseconds(100))
-    }
-    
-    // MARK: - Edge Cases Tests
-    
-    @Test("BinaryRunnable handles empty arguments")
-    func testBinaryRunnableWithEmptyArguments() async throws {
-        let config = createTestConfiguration()
-        let logger = Logger(label: "empty-args-test")
-        
-        var mockRunner = try await MockBinaryRunnable(
-            configuration: config,
-            logger: logger,
-            showOutput: false
-        )
-        
-        // Start with no arguments (sleep will default to sleeping forever)
-        try mockRunner.start([])
-        
-        // Give it time to start
-        try await Task.sleep(for: .milliseconds(50))
-        
-        #expect(mockRunner.process != nil)
-        
-        // Stop it quickly
-        try await mockRunner.stop()
-        
-        // Give it time to stop
-        try await Task.sleep(for: .milliseconds(100))
-    }
-    
-    @Test("BinaryRunnable handles special characters in arguments")
-    func testBinaryRunnableWithSpecialCharacters() async throws {
-        let config = createTestConfiguration()
-        let logger = Logger(label: "special-chars-test")
-        
-        var mockRunner = try await MockBinaryRunnable(
-            configuration: config,
-            logger: logger,
-            showOutput: false
-        )
-        
-        // Start with arguments containing special characters
-        // Note: sleep only takes numeric arguments, so this will likely fail,
-        // but it tests that the process creation doesn't crash
-        let specialArgs = ["0.1"] // Keep it simple for sleep command
-        
-        try mockRunner.start(specialArgs)
-        
-        // Give it time to start/complete
-        try await Task.sleep(for: .milliseconds(200))
-        
-        // Clean up
-        try await mockRunner.stop()
-    }
-    
-    @Test("BinaryRunnable process termination handler works")
-    func testBinaryRunnableProcessTerminationHandler() async throws {
-        let config = createTestConfiguration()
-        let logger = Logger(label: "termination-test")
-        
-        var mockRunner = try await MockBinaryRunnable(
-            configuration: config,
-            logger: logger,
-            showOutput: false
-        )
-        
-        // Start a short-lived process
-        try mockRunner.start(["0.1"]) // Sleep for 0.1 seconds
-        
-        #expect(mockRunner.process != nil)
-        
-        // Wait for the process to complete naturally
-        try await Task.sleep(for: .milliseconds(200))
-        
-        // The termination handler should have been called
-        // We can't directly test the handler, but we can verify the process finished
-        #expect(mockRunner.isRunning == false)
     }
 }

@@ -7,23 +7,23 @@ import SwiftCardanoCore
 /// Kupo configuration
 public struct KupoConfig: Codable, Sendable {
     @FilePathCodable public var binary: FilePath?
-    public let host: String?
-    public let port: Int?
-    public let since: String?
-    public let matches: [String]?
-    public let deferDbIndexes: Bool?
-    public let pruneUTxO: Bool?
-    public let gcInterval: Int?
-    public let maxConcurrency: Int?
-    public let inMemory: Bool?
-    public let logLevel: String?
-    public let logLevelHttpServer: String?
-    public let logLevelDatabase: String?
-    public let logLevelConsumer: String?
-    public let logLevelGarbageCollector: String?
-    public let logLevelConfiguration: String?
+    public var host: String?
+    public var port: Int?
+    public var since: String?
+    public var matches: [String]?
+    public var deferDbIndexes: Bool?
+    public var pruneUTxO: Bool?
+    public var gcInterval: Int?
+    public var maxConcurrency: Int?
+    public var inMemory: Bool?
+    public var logLevel: String?
+    public var logLevelHttpServer: String?
+    public var logLevelDatabase: String?
+    public var logLevelConsumer: String?
+    public var logLevelGarbageCollector: String?
+    public var logLevelConfiguration: String?
     @FilePathCodable public var workingDir: FilePath?
-    public let showOutput: Bool?
+    public var showOutput: Bool?
     
     public init(
         binary: FilePath,

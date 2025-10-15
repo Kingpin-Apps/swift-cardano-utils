@@ -1,5 +1,5 @@
 {
-  "originHash" : "fb5deb1dab91c4d15c314f00a8f75f818152404301bf79cfed453fd9ee4dadc9",
+  "originHash" : "53f3b7bd6754e0479d6e4b1fbbbb60d301bbf413c4f2651f40a344d447f02881",
   "pins" : [
     {
       "identity" : "base32",
@@ -20,6 +20,15 @@
       }
     },
     {
+      "identity" : "command",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/tuist/Command.git",
+      "state" : {
+        "revision" : "079a7803b581d3022469b3a331bccd51d48d2fc0",
+        "version" : "0.13.0"
+      }
+    },
+    {
       "identity" : "cryptoswift",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/krzyzanowskim/CryptoSwift.git",
@@ -35,6 +44,24 @@
       "state" : {
         "revision" : "936ae66adccf1c91bcaeeb9c0cddde78a13695c3",
         "version" : "1.1.1"
+      }
+    },
+    {
+      "identity" : "mockable",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Kolos65/Mockable",
+      "state" : {
+        "revision" : "0a822d53fa7516abe659b44a9c508b8eb9b666bd",
+        "version" : "0.4.1"
+      }
+    },
+    {
+      "identity" : "path",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/tuist/Path",
+      "state" : {
+        "revision" : "7c74ac435e03a927c3a73134c48b61e60221abcb",
+        "version" : "0.3.8"
       }
     },
     {
@@ -168,8 +195,17 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swift-server/swift-service-lifecycle",
       "state" : {
-        "revision" : "e7187309187695115033536e8fc9b2eb87fd956d",
-        "version" : "2.8.0"
+        "revision" : "0fcc4c9c2d58dd98504c06f7308c86de775396ff",
+        "version" : "2.9.0"
+      }
+    },
+    {
+      "identity" : "swift-syntax",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swiftlang/swift-syntax.git",
+      "state" : {
+        "revision" : "4799286537280063c85a32f09884cfbca301b1a1",
+        "version" : "602.0.0"
       }
     },
     {
@@ -188,6 +224,15 @@
       "state" : {
         "revision" : "075344faec47dadba98bef6a319e310c98be0820",
         "version" : "0.2.1"
+      }
+    },
+    {
+      "identity" : "xctest-dynamic-overlay",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pointfreeco/xctest-dynamic-overlay",
+      "state" : {
+        "revision" : "4c27acf5394b645b70d8ba19dc249c0472d5f618",
+        "version" : "1.7.0"
       }
     }
   ],

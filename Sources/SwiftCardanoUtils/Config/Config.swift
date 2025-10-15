@@ -7,9 +7,9 @@ import SwiftCardanoCore
 
 /// Main configuration structure for SwiftCardanoUtils
 public struct Config: Codable, Sendable {
-    public let cardano: CardanoConfig
-    public let ogmios: OgmiosConfig?
-    public let kupo: KupoConfig?
+    public var cardano: CardanoConfig
+    public var ogmios: OgmiosConfig?
+    public var kupo: KupoConfig?
     
     public init(
         cardano: CardanoConfig,

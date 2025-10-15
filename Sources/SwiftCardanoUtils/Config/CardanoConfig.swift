@@ -20,13 +20,13 @@ public struct CardanoConfig: Codable, Sendable {
     @FilePathCodable public var immutableDatabase: FilePath?
     @FilePathCodable public var volatileDatabase: FilePath?
     
-    public let port: Int?
-    public let hostAddr: String?
-    public let hostIPv6Addr: String?
+    public var port: Int?
+    public var hostAddr: String?
+    public var hostIPv6Addr: String?
     
     // Node behavior flags
-    public let validateDb: Bool?
-    public let nonProducingNode: Bool?
+    public var validateDb: Bool?
+    public var nonProducingNode: Bool?
     
     // Tracer options
     @FilePathCodable public var tracerSocketPathAccept: FilePath?
@@ -41,19 +41,19 @@ public struct CardanoConfig: Codable, Sendable {
     @FilePathCodable public var bulkCredentialsFile: FilePath?
     
     // Shutdown options
-    public let shutdownIpc: Int?
-    public let shutdownOnSlotSynced: UInt64?
-    public let shutdownOnBlockSynced: String?
+    public var shutdownIpc: Int?
+    public var shutdownOnSlotSynced: UInt64?
+    public var shutdownOnBlockSynced: String?
     
     // Mempool options
-    public let mempoolCapacityOverride: Int?
-    public let noMempoolCapacityOverride: Bool?
+    public var mempoolCapacityOverride: Int?
+    public var noMempoolCapacityOverride: Bool?
     
-    public let network: Network
-    public let era: Era
-    public let ttlBuffer: Int
+    public var network: Network
+    public var era: Era
+    public var ttlBuffer: Int
     @FilePathCodable public var workingDir: FilePath?
-    public let showOutput: Bool?
+    public var showOutput: Bool?
     
     public init(
         cli: FilePath? = nil,

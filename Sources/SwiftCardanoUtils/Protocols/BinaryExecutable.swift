@@ -1,6 +1,8 @@
 import Foundation
+import Command
 import SystemPackage
 import Logging
+import Path
 
 
 public protocol BinaryExecutable: Sendable {
@@ -9,6 +11,7 @@ public protocol BinaryExecutable: Sendable {
     
     var configuration: Config { get }
     var logger: Logger { get }
+    var commandRunner: any CommandRunning { get }
     
     func version() async throws -> String
 }
@@ -19,9 +22,25 @@ extension BinaryExecutable {
     /// - Returns: URL to the  binary or nil if not found
     /// - Note: This method relies on the system's PATH environment variable
     public static func getBinaryPath() throws -> FilePath {
+        if let executablePath = try? Path.AbsolutePath(validating: Self.binaryName) {
+            return FilePath(executablePath.pathString)
+        }
+        
+        let command: String
+        let arguments: [String]
+        
+        #if os(Windows)
+        command = "C:\\Windows\\System32\\where.exe"
+        arguments = [Self.binaryName]
+        #else
+        command = "/usr/bin/which"
+        arguments = [Self.binaryName]
+        #endif
+        
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/which")
-        process.arguments = [Self.binaryName]
+        process.executableURL = URL(fileURLWithPath: command)
+        process.arguments = arguments
+        process.currentDirectoryURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         
         let outputPipe = Pipe()
         let errorPipe = Pipe()
@@ -72,6 +91,14 @@ extension BinaryExecutable {
             throw SwiftCardanoUtilsError.binaryNotFound("\(Self.binaryName) binary file is not executable: \(binary.string)")
         }
     }
+    
+//    public func version() async throws -> String {
+//        let version = try await commandRunner.run(
+//            arguments: [Self.binaryName, "--version"]
+//        ).concatenatedString().trimmingCharacters(in: .whitespacesAndNewlines)
+//        
+//        return version
+//    }
     
     /// Check if the node version is compatible with minimum requirements
     public func checkVersion() async throws {        

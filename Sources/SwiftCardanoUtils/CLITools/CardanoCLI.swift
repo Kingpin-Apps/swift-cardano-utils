@@ -4,6 +4,7 @@ import SwiftCardanoCore
 import Logging
 import PotentCodables
 import PotentCBOR
+import Command
 
 
 // MARK: - Main CardanoCLI Interface
@@ -17,10 +18,15 @@ public struct CardanoCLI: BinaryInterfaceable {
     
     public static let binaryName: String = "cardano-cli"
     public static let mininumSupportedVersion: String = "8.0.0"
-
+    
+    public let commandRunner: any CommandRunning
     
     /// Initialize with optional configuration
-    public init(configuration: Config, logger: Logger? = nil) async throws {
+    public init(
+        configuration: Config,
+        logger: Logging.Logger? = nil,
+        commandRunner: (any CommandRunning)? = nil
+    ) async throws {
         // Assign all let properties directly
         self.configuration = configuration
         
@@ -39,6 +45,9 @@ public struct CardanoCLI: BinaryInterfaceable {
         
         // Setup logger
         self.logger = logger ?? Logger(label: Self.binaryName)
+        
+        // Setup command runner
+        self.commandRunner = commandRunner ?? CommandRunner(logger: self.logger)
         
         // Setup node socket environment variable
         if let socket = configuration.cardano.socket {
@@ -102,7 +111,7 @@ public struct CardanoCLI: BinaryInterfaceable {
             }
             let syncProgress = syncProgressDouble
             if syncProgress < 100.0 {
-                logger.info("Node not fully synced!")
+                logger.warning("Node not fully synced!")
             }
             return Era(rawValue: chainTip.era)
         } catch {
