@@ -1,5 +1,6 @@
 import Foundation
 import SystemPackage
+import SwiftCardanoCore
 
 // MARK: - Cardano HW CLI Transaction Command Implementation
 

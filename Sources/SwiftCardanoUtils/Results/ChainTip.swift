@@ -2,12 +2,12 @@ import Foundation
 
 /// Structure representing the chain tip
 public struct ChainTip: Codable, Equatable {
-    let block: Int
-    let epoch: Int
-    let era: String
-    let hash: String
-    let slot: Int
-    let slotInEpoch: Int
-    let slotsToEpochEnd: Int
-    let syncProgress: String
+    public let block: Int
+    public let epoch: Int
+    public let era: String
+    public let hash: String
+    public let slot: Int
+    public let slotInEpoch: Int
+    public let slotsToEpochEnd: Int
+    public let syncProgress: String
 }

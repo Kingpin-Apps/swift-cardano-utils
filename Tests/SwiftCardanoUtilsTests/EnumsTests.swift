@@ -1,5 +1,6 @@
 import Testing
 import Foundation
+import SwiftCardanoCore
 @testable import SwiftCardanoUtils
 
 

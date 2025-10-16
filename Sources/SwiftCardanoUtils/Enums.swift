@@ -7,14 +7,8 @@ import SystemPackage
 // MARK: - Network Type Enum
 
 /// Supported Cardano networks
-public enum Network: CaseIterable, Sendable, Equatable, ExpressibleByConfigString {
-    case mainnet
-    case preprod
-    case preview
-    case guildnet
-    case sanchonet
-    case custom(Int)
-    
+extension Network: @retroactive CustomStringConvertible {}
+extension Network: @retroactive CaseIterable, @retroactive ExpressibleByConfigString {
     public static let allCases: [Network] = [
         .mainnet,
         .preprod,
@@ -49,43 +43,6 @@ public enum Network: CaseIterable, Sendable, Equatable, ExpressibleByConfigStrin
         }
     }
     
-    
-    /// Returns the testnet magic for the network
-    public var testnetMagic: Int? {
-        switch self {
-            case .mainnet:
-                return nil
-            case .preprod:
-                return 1
-            case .preview:
-                return 2
-            case .guildnet:
-                return 141
-            case .sanchonet:
-                return 4
-            case .custom(let magic):
-                return magic
-        }
-    }
-    
-    /// Returns the description for the network
-    public var description: String {
-        switch self {
-            case .mainnet:
-                return "mainnet"
-            case .preprod:
-                return "preprod"
-            case .preview:
-                return "preview"
-            case .guildnet:
-                return "guildnet"
-            case .sanchonet:
-                return "sanchonet"
-            case .custom(let magic):
-                return "custom(\(magic))"
-        }
-    }
-    
     /// Returns the command line arguments for the network
     public var arguments: [String] {
         switch self {
@@ -103,21 +60,13 @@ public enum Network: CaseIterable, Sendable, Equatable, ExpressibleByConfigStrin
                 return ["--testnet-magic", "\(magic)"]
         }
     }
-    
-    /// Returns the SwiftCardanoCore.Network for the network
-    public var network: SwiftCardanoCore.Network {
-        switch self {
-            case .mainnet:
-                return .mainnet
-            default:
-                return .testnet
-        }
-    }
 }
 
 // MARK: - Network Codable Implementation
 
-extension Network: Codable {
+extension Network: @retroactive Decodable {}
+extension Network: @retroactive Encodable {}
+extension Network {
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         if let stringValue = try? container.decode(String.self) {

@@ -1,4 +1,5 @@
 import Foundation
+import SwiftCardanoCore
 import SystemPackage
 
 // MARK: - Cardano HW CLI Vote Command Implementation
