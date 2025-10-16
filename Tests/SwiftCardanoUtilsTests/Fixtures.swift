@@ -473,6 +473,8 @@ struct CLICommands {
     static let stakePoolId = ["conway", "stake-pool", "id", "--cold-verification-key-file", "cold.vkey"]
     
     static let governanceDRepId = ["conway", "governance", "drep", "id", "--drep-verification-key-file", "drep.vkey"]
+    
+    static let stakeAddressInfo = ["conway", "query", "stake-address-info", "--address", "stake1u9mzj7z0thvn4r3ylxpd6tgl8wzpfp5dsfswmd4qdjz856g5wz62x",  "--out-file", "/dev/stdout", "--testnet-magic", "2"]
 }
 
 struct CLIResponse {
@@ -498,6 +500,21 @@ struct CLIResponse {
     static let stakePoolId = "pool1m5947rydk4n0ywe6ctlav0ztt632lcwjef7fsy93sflz7ctcx6z"
     
     static let governanceDRepId = "drep1kqhhkv66a0egfw7uyz7u8dv7fcvr4ck0c3ad9k9urx3yzhefup0"
+    
+    static let stakeAddressInfo = """
+        [
+            {
+                "address": "stake1u9mzj7z0thvn4r3ylxpd6tgl8wzpfp5dsfswmd4qdjz856g5wz62x",
+                "govActionDeposits": {
+                    "c832f194684d672316212e01efc6d28177e8965b7cd6956981fe37cc6715963e#0": 100000000000
+                },
+                "rewardAccountBalance": 100000000000,
+                "stakeDelegation": "pool1m5947rydk4n0ywe6ctlav0ztt632lcwjef7fsy93sflz7ctcx6z",
+                "stakeRegistrationDeposit": 2000000,
+                "voteDelegation": "keyHash-b02f7b335aebf284bbdc20bdc3b59e4e183ae2cfc47ad2d8bc19a241"
+            }
+        ]
+        """
 }
 
 // MARK: - Helper Test Handler
