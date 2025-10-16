@@ -1,3 +1,9 @@
+## 0.1.9 (2025-10-16)
+
+### Fix
+
+- update core and add proper test for stake address info
+
 ## 0.1.8 (2025-10-15)
 
 ### Fix
