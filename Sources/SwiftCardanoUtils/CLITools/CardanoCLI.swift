@@ -349,13 +349,12 @@ public struct CardanoCLI: BinaryInterfaceable {
             }
             
             // Handle datum
-            var datum: Datum? = nil
+            var datumOption: DatumOption? = nil
             if let datumStr = utxo["datum"] as? String, let datumData = Data(hexString: datumStr) {
-                datum = .cbor(CBOR(datumData))
-            } else if let inlineDatum = utxo["inlineDatum"] as? [AnyValue: AnyValue] {
-                // Convert inline datum dictionary to RawPlutusData
-                // This would require proper implementation of RawPlutusData.fromDict
-                datum = .dict(inlineDatum)
+                datumOption = try DatumOption.fromCBOR(data: datumData)
+            } else if let inlineDatum = utxo["inlineDatum"] as? [AnyHashable: Any] {
+                let plutusData = try PlutusData.fromDict(inlineDatum)
+                datumOption = DatumOption(datum: plutusData)
             }
             
             // Handle reference script
@@ -371,7 +370,7 @@ public struct CardanoCLI: BinaryInterfaceable {
                 address: address,
                 amount: value,
                 datumHash: datumHash,
-                datum: datum,
+                datumOption: datumOption,
                 script: script
             )
             
