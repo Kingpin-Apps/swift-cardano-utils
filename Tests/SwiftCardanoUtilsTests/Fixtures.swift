@@ -258,7 +258,7 @@ func createMockCardanoCLI(withResponses responses: [String: String] = [:]) -> St
     
     # Handle version command (default)
     if [[ "$1" == "--version" ]]; then
-        echo "cardano-cli 8.20.3 - macos-x86_64 - ghc-9.2"
+        echo "cardano-cli 10.1.4 - macos-x86_64 - ghc-9.2"
         exit 0
     fi
     

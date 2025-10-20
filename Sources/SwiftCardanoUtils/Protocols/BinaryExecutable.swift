@@ -92,14 +92,6 @@ extension BinaryExecutable {
         }
     }
     
-//    public func version() async throws -> String {
-//        let version = try await commandRunner.run(
-//            arguments: [Self.binaryName, "--version"]
-//        ).concatenatedString().trimmingCharacters(in: .whitespacesAndNewlines)
-//        
-//        return version
-//    }
-    
     /// Check if the node version is compatible with minimum requirements
     public func checkVersion() async throws {        
         let currentVersion = try await version()

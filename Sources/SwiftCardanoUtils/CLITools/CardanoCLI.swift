@@ -17,7 +17,7 @@ public struct CardanoCLI: BinaryInterfaceable {
     public let logger: Logging.Logger
     
     public static let binaryName: String = "cardano-cli"
-    public static let mininumSupportedVersion: String = "8.0.0"
+    public static let mininumSupportedVersion: String = "10.0.0"
     
     public let commandRunner: any CommandRunning
     
@@ -90,8 +90,12 @@ public struct CardanoCLI: BinaryInterfaceable {
             let chainTip = try await query.tip()
             
             // Convert string syncProgress to Double (already in percentage format)
-            guard let syncProgressDouble = Double(chainTip.syncProgress) else {
-                throw SwiftCardanoUtilsError.invalidOutput("Could not parse syncProgress as Double: \(chainTip.syncProgress)")
+            guard let syncProgress = chainTip.syncProgress,
+                  let syncProgressDouble = Double(syncProgress) else {
+                throw SwiftCardanoUtilsError
+                    .invalidOutput(
+                        "Could not parse syncProgress as Double: \(String(describing: chainTip.syncProgress))"
+                    )
             }
             return syncProgressDouble
         } catch {
@@ -105,15 +109,26 @@ public struct CardanoCLI: BinaryInterfaceable {
         do {
             let chainTip = try await query.tip()
             
-            guard let syncProgressDouble = Double(chainTip.syncProgress) else {
-                logger.warning("Could not parse syncProgress as Double: \(chainTip.syncProgress)")
-                return Era(rawValue: chainTip.era)
+            guard let syncProgress = chainTip.syncProgress,
+                  let syncProgressDouble = Double(syncProgress) else {
+                throw SwiftCardanoUtilsError
+                    .invalidOutput(
+                        "Could not parse syncProgress as Double: \(String(describing: chainTip.syncProgress))"
+                    )
             }
-            let syncProgress = syncProgressDouble
-            if syncProgress < 100.0 {
+            
+            guard let era = chainTip.era else {
+                throw SwiftCardanoUtilsError
+                    .invalidOutput(
+                        "Could not parse era: \(String(describing: chainTip.era))"
+                    )
+            }
+            
+            if syncProgressDouble < 100.0 {
                 logger.warning("Node not fully synced!")
             }
-            return Era(rawValue: chainTip.era)
+            
+            return Era(rawValue: era)
         } catch {
             logger.info("Unable to check era. Node may not be fully synced. \(error)")
             return nil
@@ -125,15 +140,26 @@ public struct CardanoCLI: BinaryInterfaceable {
         do {
             let chainTip = try await query.tip()
             
-            guard let syncProgressDouble = Double(chainTip.syncProgress) else {
-                throw SwiftCardanoUtilsError.invalidOutput("Could not parse syncProgress as Double: \(chainTip.syncProgress)")
-            }
-            let syncProgress = syncProgressDouble
-            if syncProgress < 100.0 {
-                throw SwiftCardanoUtilsError.nodeNotSynced(syncProgress)
+            guard let syncProgress = chainTip.syncProgress,
+                  let syncProgressDouble = Double(syncProgress) else {
+                throw SwiftCardanoUtilsError
+                    .invalidOutput(
+                        "Could not parse syncProgress as Double: \(String(describing: chainTip.syncProgress))"
+                    )
             }
             
-            return chainTip.epoch
+            if syncProgressDouble < 100.0 {
+                throw SwiftCardanoUtilsError.nodeNotSynced(syncProgressDouble)
+            }
+            
+            guard let epoch = chainTip.epoch else {
+                throw SwiftCardanoUtilsError
+                    .invalidOutput(
+                        "Could not parse epoch: \(String(describing: chainTip.epoch))"
+                    )
+            }
+            
+            return epoch
         } catch let error as SwiftCardanoUtilsError {
             throw error
         } catch {
@@ -178,16 +204,26 @@ public struct CardanoCLI: BinaryInterfaceable {
     public func getTip() async throws -> Int {
         let chainTip = try await query.tip()
         
-        guard let syncProgressDouble = Double(chainTip.syncProgress) else {
-            logger.warning("Could not parse syncProgress as Double: \(chainTip.syncProgress), proceeding anyway")
-            return chainTip.slot
+        guard let syncProgress = chainTip.syncProgress,
+              let syncProgressDouble = Double(syncProgress) else {
+            throw SwiftCardanoUtilsError
+                .invalidOutput(
+                    "Could not parse syncProgress as Double: \(String(describing: chainTip.syncProgress))"
+                )
         }
-        let syncProgress = syncProgressDouble // Already a percentage
-        if syncProgress < 100.0 {
+        
+        if syncProgressDouble < 100.0 {
             logger.info("Node not fully synced!")
         }
         
-        return chainTip.slot
+        guard let slot = chainTip.slot else {
+            throw SwiftCardanoUtilsError
+                .invalidOutput(
+                    "Could not parse slot: \(String(describing: chainTip.slot))"
+                )
+        }
+        
+        return slot
     }
     
     /// Calculate the current TTL (Time To Live) for transactions
