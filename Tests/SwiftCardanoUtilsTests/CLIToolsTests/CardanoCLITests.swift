@@ -586,10 +586,10 @@ struct CardanoCLITests {
         #expect(stakeAddressInfo[0].address == "stake1u9mzj7z0thvn4r3ylxpd6tgl8wzpfp5dsfswmd4qdjz856g5wz62x")
         #expect(stakeAddressInfo[0].govActionDeposits!.isEmpty == false)
         #expect(stakeAddressInfo[0].rewardAccountBalance == 100000000000)
-        #expect(stakeAddressInfo[0].stakeDelegation?.bech32 == "pool1m5947rydk4n0ywe6ctlav0ztt632lcwjef7fsy93sflz7ctcx6z")
+        #expect(try stakeAddressInfo[0].stakeDelegation?.id() == "pool1m5947rydk4n0ywe6ctlav0ztt632lcwjef7fsy93sflz7ctcx6z")
         #expect(stakeAddressInfo[0].stakeRegistrationDeposit == 2000000)
-        #expect(try stakeAddressInfo[0].voteDelegation?.id(.cip105) == "drep1kqhhkv66a0egfw7uyz7u8dv7fcvr4ck0c3ad9k9urx3yzhefup0")
-        #expect(try stakeAddressInfo[0].voteDelegation?.id(.cip129) == "drep1y2cz77entt4l9p9mmsstmsa4ne8pswhzelz845kchsv6ysgdhay86")
+        #expect(try stakeAddressInfo[0].voteDelegation?.id() == "drep1kqhhkv66a0egfw7uyz7u8dv7fcvr4ck0c3ad9k9urx3yzhefup0")
+        #expect(try stakeAddressInfo[0].voteDelegation?.id((.bech32, .cip129)) == "drep1y2cz77entt4l9p9mmsstmsa4ne8pswhzelz845kchsv6ysgdhay86")
     }
     
     // MARK: - Environment and Configuration Tests
