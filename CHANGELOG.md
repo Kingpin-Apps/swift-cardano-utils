@@ -1,3 +1,9 @@
+## 0.1.15 (2025-10-26)
+
+### Fix
+
+- bump to latest core version
+
 ## 0.1.14 (2025-10-23)
 
 ### Fix
