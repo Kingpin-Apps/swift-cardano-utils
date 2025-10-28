@@ -389,7 +389,8 @@ public struct CardanoCLI: BinaryInterfaceable {
             if let datumStr = utxo["datum"] as? String, let datumData = Data(hexString: datumStr) {
                 datumOption = try DatumOption.fromCBOR(data: datumData)
             } else if let inlineDatum = utxo["inlineDatum"] as? [AnyHashable: Any] {
-                let plutusData = try PlutusData.fromDict(inlineDatum)
+                let primitiveDict = try Primitive.fromAny(inlineDatum)
+                let plutusData = try PlutusData.fromDict(primitiveDict)
                 datumOption = DatumOption(datum: plutusData)
             }
             
