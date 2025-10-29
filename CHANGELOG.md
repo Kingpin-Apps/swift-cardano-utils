@@ -1,3 +1,9 @@
+## 0.1.17 (2025-10-28)
+
+### Fix
+
+- handle plutus data dict and add tests for utxos
+
 ## 0.1.16 (2025-10-28)
 
 ### Fix
