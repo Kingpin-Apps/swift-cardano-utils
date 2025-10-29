@@ -475,6 +475,8 @@ struct CLICommands {
     static let governanceDRepId = ["conway", "governance", "drep", "id", "--drep-verification-key-file", "drep.vkey"]
     
     static let stakeAddressInfo = ["conway", "query", "stake-address-info", "--address", "stake1u9mzj7z0thvn4r3ylxpd6tgl8wzpfp5dsfswmd4qdjz856g5wz62x",  "--out-file", "/dev/stdout", "--testnet-magic", "2"]
+    
+    static let utxos = ["conway", "query", "utxo", "--address", "addr_test1qp4kux2v7xcg9urqssdffff5p0axz9e3hcc43zz7pcuyle0e20hkwsu2ndpd9dh9anm4jn76ljdz0evj22stzrw9egxqmza5y3", "--out-file",  "/dev/stdout", "--testnet-magic", "2"]
 }
 
 struct CLIResponse {
@@ -515,6 +517,72 @@ struct CLIResponse {
             }
         ]
         """
+    
+    static var utxos: String {
+        let dictionary = [
+            "39a7a284c2a0948189dc45dec670211cd4d72f7b66c5726c08d9b3df11e44d58#0": [
+                "address": "addr_test1qp4kux2v7xcg9urqssdffff5p0axz9e3hcc43zz7pcuyle0e20hkwsu2ndpd9dh9anm4jn76ljdz0evj22stzrw9egxqmza5y3",
+                "datum": nil,
+                "inlineDatum": [
+                    "constructor": 0,
+                    "fields": [
+                        [
+                            "constructor": 0,
+                            "fields": [
+                                ["bytes": "2e11e7313e00ccd086cfc4f1c3ebed4962d31b481b6a153c23601c0f"],
+                                ["bytes": "636861726c69335f6164615f6e6674"]
+                            ]
+                        ],
+                        [
+                            "constructor": 0,
+                            "fields": [
+                                ["bytes": ""],
+                                ["bytes": ""]
+                            ]
+                        ],
+                        [
+                            "constructor": 0,
+                            "fields": [
+                                ["bytes": "8e51398904a5d3fc129fbf4f1589701de23c7824d5c90fdb9490e15a"],
+                                ["bytes": "434841524c4933"]
+                            ]
+                        ],
+                        [
+                            "constructor": 0,
+                            "fields": [
+                                ["bytes": "d8d46a3e430fab5dc8c5a0a7fc82abbf4339a89034a8c804bb7e6012"],
+                                ["bytes": "636861726c69335f6164615f6c71"]
+                            ]
+                        ],
+                        ["int": 997],
+                        [
+                            "list": [
+                                ["bytes": "4dd98a2ef34bc7ac3858bbcfdf94aaa116bb28ca7e01756140ba4d19"]
+                            ]
+                        ],
+                        ["int": 10000000000]
+                    ]
+                ],
+                "inlineDatumhash": "c56003cba9cfcf2f73cf6a5f4d6354d03c281bcd2bbd7a873d7475faa10a7123",
+                "referenceScript": nil,
+                "value": [
+                    "2e11e7313e00ccd086cfc4f1c3ebed4962d31b481b6a153c23601c0f": [
+                        "636861726c69335f6164615f6e6674": 1
+                    ],
+                    "8e51398904a5d3fc129fbf4f1589701de23c7824d5c90fdb9490e15a": [
+                        "434841524c4933": 1367726755
+                    ],
+                    "d8d46a3e430fab5dc8c5a0a7fc82abbf4339a89034a8c804bb7e6012": [
+                        "636861726c69335f6164615f6c71": 9223372035870126880
+                    ],
+                    "lovelace": 708864940
+                ]
+            ]
+        ]
+        
+        let jsonData = try! JSONSerialization.data(withJSONObject: dictionary, options: [])
+        return String(data: jsonData, encoding: .utf8)!
+    }
 }
 
 // MARK: - Helper Test Handler

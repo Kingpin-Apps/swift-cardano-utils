@@ -364,7 +364,41 @@ struct CardanoCLITests {
         #expect(ttl == 123456789 + 3600) // tip + ttlBuffer
     }
     
-    
+    @Test("CardanoCLI get utxos")
+    func testUTxOs() async throws {
+        let config = createMockConfig()
+        let runner = createCardaonCLIMockCommandRunner(config: config)
+        
+        given(runner)
+            .run(
+                arguments: .value([config.cardano.cli!.string] + CLICommands.utxos),
+                environment: .any,
+                workingDirectory: .any
+            )
+            .willReturn(
+                AsyncThrowingStream<CommandEvent, any Error> { continuation in
+                    continuation.yield(
+                        .standardOutput([UInt8](CLIResponse.utxos.utf8))
+                    )
+                    continuation.finish()
+                }
+            )
+        
+        let cli = try await CardanoCLI(configuration: config, commandRunner: runner)
+        
+        let address = try Address(
+            from: .string(
+                "addr_test1qp4kux2v7xcg9urqssdffff5p0axz9e3hcc43zz7pcuyle0e20hkwsu2ndpd9dh9anm4jn76ljdz0evj22stzrw9egxqmza5y3"
+            )
+        )
+        
+        let utxos = try await cli.utxos(address: address)
+        
+        #expect(
+            utxos[0].input.transactionId.payload.toHex == "39a7a284c2a0948189dc45dec670211cd4d72f7b66c5726c08d9b3df11e44d58"
+        )
+    }
+        
     // MARK: - Protocol Parameters Tests
     
     @Test("CardanoCLI get protocol parameters online mode")
