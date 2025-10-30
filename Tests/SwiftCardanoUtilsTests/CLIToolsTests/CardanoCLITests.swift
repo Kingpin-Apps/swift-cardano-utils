@@ -13,9 +13,9 @@ struct CardanoCLITests {
     
     @Test("Command initialization")
     func testCommandInitialization() async throws {
-        // Test that we can initialize the CLI with mock config
-        let mockConfig = createMockConfiguration()
-        let cli = try await CardanoCLI(configuration: mockConfig)
+        let config = createTestConfiguration()
+        let runner = createCardanoCLIMockCommandRunner(config: config)
+        let cli = try await CardanoCLI(configuration: config, commandRunner: runner)
         
         // Verify that all command groups are accessible (by accessing them)
         _ = cli.address
@@ -37,46 +37,25 @@ struct CardanoCLITests {
         #expect(Bool(true))
     }
     
-    @Test("Command types access")
-    func testCommandTypes() async throws {
-        let mockConfig = createMockConfiguration()
-        let cli = try await CardanoCLI(configuration: mockConfig)
-        
-        // Verify the command instances can be accessed without error
-        // We won't actually execute commands in tests to avoid dependencies
-        _ = cli.address
-        _ = cli.key  
-        _ = cli.node
-        _ = cli.transaction
-        _ = cli.query
-        _ = cli.stakeAddress
-        _ = cli.stakePool
-        _ = cli.genesis
-        _ = cli.governance
-        _ = cli.textView
-        _ = cli.debug
-        
-        // If we reach here, all command accessors work correctly
-        #expect(Bool(true))
-    }
-    
     @Test("Configuration defaults")
     func testConfigurationDefaults() async throws {
-        let mockConfig = createMockConfiguration()
-        let cli = try await CardanoCLI(configuration: mockConfig)
-        let config = cli.configuration.cardano
+        let config = createTestConfiguration()
+        let runner = createCardanoCLIMockCommandRunner(config: config)
+        let cli = try await CardanoCLI(configuration: config, commandRunner: runner)
+        
+        let cardanoConfig = cli.configuration.cardano
         
         // Test configuration values
-        #expect(config.network == Network.preview)
-        #expect(config.era == Era.conway)
+        #expect(cardanoConfig.network == Network.preview)
+        #expect(cardanoConfig.era == Era.conway)
     }
     
     // MARK: - Version and Compatibility Tests
     
     @Test("CardanoCLI version parsing")
     func testVersion() async throws {
-        let config = createMockConfig()
-        let runner = createCardaonCLIMockCommandRunner(config: config)
+        let config = createTestConfiguration()
+        let runner = createCardanoCLIMockCommandRunner(config: config)
         
         given(runner)
             .run(
@@ -103,8 +82,8 @@ struct CardanoCLITests {
     
     @Test("CardanoCLI get sync progress with fully synced node")
     func testGetSyncProgressFullySynced() async throws {
-        let config = createMockConfig()
-        let runner = createCardaonCLIMockCommandRunner(config: config)
+        let config = createTestConfiguration()
+        let runner = createCardanoCLIMockCommandRunner(config: config)
         
         given(runner)
             .run(
@@ -129,8 +108,8 @@ struct CardanoCLITests {
     
     @Test("CardanoCLI get sync progress with partially synced node")
     func testGetSyncProgressPartiallySynced() async throws {
-        let config = createMockConfig()
-        let runner = createCardaonCLIMockCommandRunner(config: config)
+        let config = createTestConfiguration()
+        let runner = createCardanoCLIMockCommandRunner(config: config)
         
         given(runner)
             .run(
@@ -156,8 +135,8 @@ struct CardanoCLITests {
     
     @Test("CardanoCLI get sync progress with error fallback")
     func testGetSyncProgressWithError() async throws {
-        let config = createMockConfig()
-        let runner = createCardaonCLIMockCommandRunner(config: config)
+        let config = createTestConfiguration()
+        let runner = createCardanoCLIMockCommandRunner(config: config)
         
         given(runner)
             .run(
@@ -180,8 +159,8 @@ struct CardanoCLITests {
     
     @Test("CardanoCLI check online with unsynced node")
     func testCheckOnlineWithUnsyncedNode() async throws {
-        let config = createMockConfig()
-        let runner = createCardaonCLIMockCommandRunner(config: config)
+        let config = createTestConfiguration()
+        let runner = createCardanoCLIMockCommandRunner(config: config)
         
         given(runner)
             .run(
@@ -207,8 +186,8 @@ struct CardanoCLITests {
     
     @Test("CardanoCLI get current era")
     func testGetCurrentEra() async throws {
-        let config = createMockConfig()
-        let runner = createCardaonCLIMockCommandRunner(config: config)
+        let config = createTestConfiguration()
+        let runner = createCardanoCLIMockCommandRunner(config: config)
         
         given(runner)
             .run(
@@ -234,8 +213,8 @@ struct CardanoCLITests {
     
     @Test("CardanoCLI get current era with error fallback")
     func testGetCurrentEraWithError() async throws {
-        let config = createMockConfig()
-        let runner = createCardaonCLIMockCommandRunner(config: config)
+        let config = createTestConfiguration()
+        let runner = createCardanoCLIMockCommandRunner(config: config)
         
         given(runner)
             .run(
@@ -258,8 +237,8 @@ struct CardanoCLITests {
     
     @Test("CardanoCLI get current epoch")
     func testGetCurrentEpoch() async throws {
-        let config = createMockConfig()
-        let runner = createCardaonCLIMockCommandRunner(config: config)
+        let config = createTestConfiguration()
+        let runner = createCardanoCLIMockCommandRunner(config: config)
         
         given(runner)
             .run(
@@ -285,8 +264,8 @@ struct CardanoCLITests {
     
     @Test("CardanoCLI get epoch with unsynced node throws error")
     func testGetEpochWithUnsyncedNode() async throws {
-        let config = createMockConfig()
-        let runner = createCardaonCLIMockCommandRunner(config: config)
+        let config = createTestConfiguration()
+        let runner = createCardanoCLIMockCommandRunner(config: config)
         
         given(runner)
             .run(
@@ -312,8 +291,8 @@ struct CardanoCLITests {
     
     @Test("CardanoCLI get current tip")
     func testGetCurrentTip() async throws {
-        let config = createMockConfig()
-        let runner = createCardaonCLIMockCommandRunner(config: config)
+        let config = createTestConfiguration()
+        let runner = createCardanoCLIMockCommandRunner(config: config)
         
         given(runner)
             .run(
@@ -339,8 +318,8 @@ struct CardanoCLITests {
     
     @Test("CardanoCLI get current TTL")
     func testGetCurrentTTL() async throws {
-        let config = createMockConfig()
-        let runner = createCardaonCLIMockCommandRunner(config: config)
+        let config = createTestConfiguration()
+        let runner = createCardanoCLIMockCommandRunner(config: config)
         
         given(runner)
             .run(
@@ -366,8 +345,8 @@ struct CardanoCLITests {
     
     @Test("CardanoCLI get utxos")
     func testUTxOs() async throws {
-        let config = createMockConfig()
-        let runner = createCardaonCLIMockCommandRunner(config: config)
+        let config = createTestConfiguration()
+        let runner = createCardanoCLIMockCommandRunner(config: config)
         
         given(runner)
             .run(
@@ -403,8 +382,8 @@ struct CardanoCLITests {
     
     @Test("CardanoCLI get protocol parameters online mode")
     func testGetProtocolParametersOnline() async throws {
-        let config = createMockConfig()
-        let runner = createCardaonCLIMockCommandRunner(config: config)
+        let config = createTestConfiguration()
+        let runner = createCardanoCLIMockCommandRunner(config: config)
         
         given(runner)
             .run(
@@ -431,8 +410,8 @@ struct CardanoCLITests {
     
     @Test("CardanoCLI get protocol parameters with custom file")
     func testGetProtocolParametersWithCustomFile() async throws {
-        let config = createMockConfig()
-        let runner = createCardaonCLIMockCommandRunner(config: config)
+        let config = createTestConfiguration()
+        let runner = createCardanoCLIMockCommandRunner(config: config)
         let customFile = FileManager.default.temporaryDirectory
             .appendingPathComponent("custom-protocol.json")
         
@@ -482,8 +461,8 @@ struct CardanoCLITests {
     
     @Test("CardanoCLI query tip integration")
     func testQueryTipIntegration() async throws {
-        let config = createMockConfig()
-        let runner = createCardaonCLIMockCommandRunner(config: config)
+        let config = createTestConfiguration()
+        let runner = createCardanoCLIMockCommandRunner(config: config)
         
         let data = CLIResponse.tip100.data(using: .utf8)
         let expectedChainTip = try JSONDecoder().decode(ChainTip.self, from: data!)
@@ -512,8 +491,8 @@ struct CardanoCLITests {
     
     @Test("CardanoCLI address build integration")
     func testAddressBuildIntegration() async throws {
-        let config = createMockConfig()
-        let runner = createCardaonCLIMockCommandRunner(config: config)
+        let config = createTestConfiguration()
+        let runner = createCardanoCLIMockCommandRunner(config: config)
         
         given(runner)
             .run(
@@ -539,8 +518,8 @@ struct CardanoCLITests {
     
     @Test("CardanoCLI stake pool id integration")
     func testStakePoolIdIntegration() async throws {
-        let config = createMockConfig()
-        let runner = createCardaonCLIMockCommandRunner(config: config)
+        let config = createTestConfiguration()
+        let runner = createCardanoCLIMockCommandRunner(config: config)
         
         given(runner)
             .run(
@@ -566,8 +545,8 @@ struct CardanoCLITests {
     
     @Test("CardanoCLI governance drep id integration")
     func testGovernanceDrepIdIntegration() async throws {
-        let config = createMockConfig()
-        let runner = createCardaonCLIMockCommandRunner(config: config)
+        let config = createTestConfiguration()
+        let runner = createCardanoCLIMockCommandRunner(config: config)
         
         given(runner)
             .run(
@@ -593,8 +572,8 @@ struct CardanoCLITests {
     
     @Test("CardanoCLI stake address info integration")
     func testStakeAddressInfo() async throws {
-        let config = createMockConfig()
-        let runner = createCardaonCLIMockCommandRunner(config: config)
+        let config = createTestConfiguration()
+        let runner = createCardanoCLIMockCommandRunner(config: config)
         
         given(runner)
             .run(
@@ -630,12 +609,12 @@ struct CardanoCLITests {
     
     @Test("CardanoCLI sets environment variables correctly")
     func testEnvironmentVariableSetting() async throws {
-        let config = createAdvancedTestConfiguration()
+        let config = createTestConfiguration()
+        let runner = createCardanoCLIMockCommandRunner(config: config)
+        _ = try await CardanoCLI(configuration: config, commandRunner: runner)
         
         // Store original value to restore later
         let originalValue = ProcessInfo.processInfo.environment["CARDANO_SOCKET_PATH"]
-        
-        _ = try await CardanoCLI(configuration: config)
         
         // Check that CARDANO_NODE_SOCKET_PATH was set
         let socketPath = ProcessInfo.processInfo.environment["CARDANO_SOCKET_PATH"]
@@ -657,7 +636,7 @@ struct CardanoCLITests {
         let tempDir = FileManager.default.temporaryDirectory
             .appendingPathComponent("cardano-cli-test-\(UUID().uuidString)")
         
-        let config = createAdvancedTestConfiguration()
+        let config = createTestConfiguration()
         let modifiedConfig = Config(
             cardano: CardanoConfig(
                 cli: config.cardano.cli,
@@ -680,7 +659,9 @@ struct CardanoCLITests {
             kupo: config.kupo
         )
         
-        let cli = try await CardanoCLI(configuration: modifiedConfig)
+        let runner = createCardanoCLIMockCommandRunner(config: modifiedConfig)
+        
+        let cli = try await CardanoCLI(configuration: modifiedConfig, commandRunner: runner)
         
         // Verify working directory was created
         var isDirectory: ObjCBool = false
@@ -693,9 +674,11 @@ struct CardanoCLITests {
     
     @Test("CardanoCLI configuration property access")
     func testConfigurationPropertyAccess() async throws {
-        let config = createAdvancedTestConfiguration()
+        let config = createTestConfiguration()
         
-        let cli = try await CardanoCLI(configuration: config)
+        let runner = createCardanoCLIMockCommandRunner(config: config)
+        
+        let cli = try await CardanoCLI(configuration: config, commandRunner: runner)
         
         #expect(cli.configuration.cardano.network == Network.preview)
         #expect(cli.configuration.cardano.era == Era.conway)
