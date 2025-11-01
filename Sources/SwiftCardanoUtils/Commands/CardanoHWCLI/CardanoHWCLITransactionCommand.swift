@@ -89,9 +89,9 @@ extension CardanoHWCLI {
         /// - Throws: SwiftCardanoUtilsError if command execution fails
         public func witness(
             txFile: FilePath,
-            hwSigningFile: FilePath,
-            outFile: FilePath,
-            changeOutputKeyFile: FilePath? = nil,
+            hwSigningFiles: [FilePath],
+            outFiles: [FilePath],
+            changeOutputKeyFiles: [FilePath]? = nil,
             derivationType: DerivationType? = nil,
             network: Network? = nil
         ) async throws -> String {
@@ -106,13 +106,21 @@ extension CardanoHWCLI {
             
             // Add required arguments
             args.append(contentsOf: ["--tx-file", txFile.string])
-            args.append(contentsOf: ["--hw-signing-file", hwSigningFile.string])
-            args.append(contentsOf: ["--out-file", outFile.string])
+            
+            for hwSigningFile in hwSigningFiles {
+                args.append(contentsOf: ["--hw-signing-file", hwSigningFile.string])
+            }
+            
+            for outFile in outFiles {
+                args.append(contentsOf: ["--out-file", outFile.string])
+            }
             
             // Add optional change output key file
-            if let changeOutputKeyFile = changeOutputKeyFile {
-                args.append(contentsOf: ["--change-output-key-file", changeOutputKeyFile.string])
-            }
+            if let changeOutputKeyFiles = changeOutputKeyFiles {
+                for changeOutputKeyFile in changeOutputKeyFiles {
+                    args.append(contentsOf: ["--change-output-key-file", changeOutputKeyFile.string])
+                }
+            } 
             
             // Add optional derivation type
             if let derivationType = derivationType {
