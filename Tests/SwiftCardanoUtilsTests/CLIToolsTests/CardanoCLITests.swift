@@ -614,11 +614,11 @@ struct CardanoCLITests {
         _ = try await CardanoCLI(configuration: config, commandRunner: runner)
         
         // Store original value to restore later
-        let originalValue = ProcessInfo.processInfo.environment["CARDANO_SOCKET_PATH"]
+        let originalValue = ProcessInfo.processInfo.environment["CARDANO_NODE_SOCKET_PATH"]
         
         // Check that CARDANO_NODE_SOCKET_PATH was set
-        let socketPath = ProcessInfo.processInfo.environment["CARDANO_SOCKET_PATH"]
-        #expect(socketPath != nil, "CARDANO_SOCKET_PATH should be set")
+        let socketPath = ProcessInfo.processInfo.environment["CARDANO_NODE_SOCKET_PATH"]
+        #expect(socketPath != nil, "CARDANO_NODE_SOCKET_PATH should be set")
         
         // In a test environment, the environment variable may already be set to a different value
         // The important thing is that CardanoCLI initialization completed successfully

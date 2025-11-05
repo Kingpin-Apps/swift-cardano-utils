@@ -13,6 +13,7 @@ public enum Environment: String, CaseIterable {
     case cardanoLogDir = "CARDANO_LOG_DIR"
     case cardanoPort = "CARDANO_PORT"
     case cardanoSocketPath = "CARDANO_SOCKET_PATH"
+    case cardanoNodeSocketPath = "CARDANO_NODE_SOCKET_PATH"
     case cardanoTopology = "CARDANO_TOPOLOGY"
     case cardanoShelleyKESKey = "CARDANO_SHELLEY_KES_KEY"
     case cardanoShelleyVRFKey = "CARDANO_SHELLEY_VRF_KEY"

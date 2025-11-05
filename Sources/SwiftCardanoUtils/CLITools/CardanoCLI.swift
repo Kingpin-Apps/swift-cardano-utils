@@ -51,7 +51,7 @@ public struct CardanoCLI: BinaryInterfaceable {
         
         // Setup node socket environment variable
         if let socket = configuration.cardano.socket {
-            Environment.set(.cardanoSocketPath, value: socket.string)
+            Environment.set(.cardanoNodeSocketPath, value: socket.string)
         }
         
         // Check the CLI version compatibility on initialization
