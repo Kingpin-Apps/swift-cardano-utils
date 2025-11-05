@@ -1,3 +1,9 @@
+## 0.1.21 (2025-11-05)
+
+### Fix
+
+- use coorect node socket env var
+
 ## 0.1.20 (2025-11-02)
 
 ### Fix
