@@ -1,6 +1,8 @@
+import Foundation
 import Configuration
 import SystemPackage
 import SwiftCardanoCore
+import Command
 
 extension Era: @retroactive ExpressibleByConfigString {
     public init(configString from: String) {

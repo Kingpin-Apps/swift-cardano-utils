@@ -427,12 +427,19 @@ public struct CardanoCLI: BinaryInterfaceable {
             "--address", address.toBech32(), "--out-file", "/dev/stdout"
         ])
         
-        let stakeAddressInfo = try JSONDecoder().decode(
-            [StakeAddressInfo].self,
-            from: results.toData
-        )
-        
-        return stakeAddressInfo
+        do {
+            let stakeAddressInfo = try JSONDecoder().decode(
+                [StakeAddressInfo].self,
+                from: results.toData
+            )
+            
+            return stakeAddressInfo
+        } catch {
+            throw SwiftCardanoUtilsError
+                .invalidOutput(
+                    "Could not decode stake address info: \(error)"
+                )
+        }
     }
     
     /// Sign a transaction with witness files (for multi-signature transactions)

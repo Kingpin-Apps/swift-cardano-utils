@@ -2,6 +2,7 @@ import Foundation
 import SystemPackage
 import Logging
 import Path
+import Command
 
 // MARK: - Base CLI Protocol
 
@@ -29,11 +30,17 @@ extension BinaryInterfaceable {
                 environment: Environment.getEnv(),
                 workingDirectory: try AbsolutePath(validating: self.workingDirectory.string)
             ).concatenatedString()
+        } catch CommandError.terminated(let status, let stderr) {
+            throw SwiftCardanoUtilsError
+                .commandFailed(
+                    fullCommand,
+                    "The command terminated with the code \(status). \n\(stderr)"
+                )
         } catch {
             throw SwiftCardanoUtilsError
                 .commandFailed(
                     fullCommand,
-                    error.localizedDescription
+                    "\(error)"
                 )
         }
     }

@@ -30,7 +30,7 @@ extension BinaryRunnable {
                 return try await output.awaitCompletion()
             }
         } catch {
-            logger.error("Process failed: \(error.localizedDescription)")
+            logger.error("Process failed: \(error)")
             throw SwiftCardanoUtilsError.commandFailed(fullCommand, error.localizedDescription)
         }
     }
