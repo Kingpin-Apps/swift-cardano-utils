@@ -1,3 +1,9 @@
+## 0.1.23 (2025-11-11)
+
+### Fix
+
+- lowercase era value and update core
+
 ## 0.1.22 (2025-11-10)
 
 ### Fix
