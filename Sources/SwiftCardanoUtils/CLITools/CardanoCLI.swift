@@ -128,7 +128,7 @@ public struct CardanoCLI: BinaryInterfaceable {
                 logger.warning("Node not fully synced!")
             }
             
-            return Era(rawValue: era)
+            return Era(rawValue: era.lowercased())
         } catch {
             logger.info("Unable to check era. Node may not be fully synced. \(error)")
             return nil
