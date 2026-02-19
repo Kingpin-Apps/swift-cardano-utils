@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "swift-cardano-utils",
+    name: "SwiftCardanoUtils",
     platforms: [
         .macOS(.v15)
     ],
