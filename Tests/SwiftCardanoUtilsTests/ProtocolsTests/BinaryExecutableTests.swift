@@ -15,6 +15,7 @@ struct BinaryExecutableTests {
     /// Mock implementation of BinaryExecutable for testing
     struct MockBinaryExecutable: BinaryExecutable {
         let configuration: Config
+        let cardanoConfig: CardanoConfig
         let logger: Logger
         static let binaryName: String = "test-binary"
         static let mininumSupportedVersion: String = "1.0.0"
@@ -24,6 +25,7 @@ struct BinaryExecutableTests {
         
         init(configuration: Config, logger: Logger, mockVersion: String = "1.0.0") {
             self.configuration = configuration
+            self.cardanoConfig = configuration.cardano!
             self.logger = logger
             self.mockVersion = mockVersion
             
@@ -262,7 +264,7 @@ struct BinaryExecutableTests {
         let mockBinary = MockBinaryExecutable(configuration: config, logger: logger)
         
         // Test that instance properties are accessible
-        #expect(mockBinary.configuration.cardano.network == Network.preview)
+        #expect(mockBinary.cardanoConfig.network == Network.preview)
         #expect(mockBinary.logger.label == "test")
         
         // Test that version method is callable
@@ -344,7 +346,7 @@ struct BinaryExecutableTests {
         #expect(version == "2.1.0")
         
         // Test configuration access
-        #expect(mockBinary.configuration.cardano.era == Era.conway)
+        #expect(mockBinary.cardanoConfig.era == Era.conway)
     }
     
     // MARK: - Edge Cases Tests

@@ -209,10 +209,9 @@ struct CardanoNodeTests {
     @Test("CardanoNode error scenarios are well-defined")
     func testErrorScenarios() throws {
         // Test that we understand what errors CardanoNode can throw
-        let testConfig = createTestConfiguration()
         let expectedErrorTypes: [SwiftCardanoUtilsError] = [
             .binaryNotFound("test"),
-            .configurationMissing(testConfig),
+            .configurationMissing("test configuration"),
             .invalidOutput("test"),
             .commandFailed([], "test"),
             .processAlreadyRunning,
@@ -290,19 +289,19 @@ struct CardanoNodeTests {
     @Test("CardanoNode integrates with Configuration properly")
     func testConfigurationIntegration() throws {
         let config = createTestConfiguration()
-        let cardanoConfig = config.cardano
+        let cardanoConfig = config.cardano!
         
         // Test that CardanoNode configuration fields are properly mapped
-        #expect(config.cardano.node?.string == cardanoConfig.node?.string)
-        #expect(config.cardano.socket?.string == cardanoConfig.socket?.string)
-        #expect(config.cardano.config?.string == cardanoConfig.config?.string)
-        #expect(config.cardano.workingDir == cardanoConfig.workingDir)
+        #expect(config.cardano!.node?.string == cardanoConfig.node?.string)
+        #expect(config.cardano!.socket?.string == cardanoConfig.socket?.string)
+        #expect(config.cardano!.config?.string == cardanoConfig.config?.string)
+        #expect(config.cardano!.workingDir == cardanoConfig.workingDir)
         
         // Verify optional fields
-        #expect(config.cardano.topology?.string == cardanoConfig.topology?.string)
-        #expect(config.cardano.database?.string == cardanoConfig.database?.string)
-        #expect(config.cardano.port == cardanoConfig.port)
-        #expect(config.cardano.hostAddr == cardanoConfig.hostAddr)
+        #expect(config.cardano!.topology?.string == cardanoConfig.topology?.string)
+        #expect(config.cardano!.database?.string == cardanoConfig.database?.string)
+        #expect(config.cardano!.port == cardanoConfig.port)
+        #expect(config.cardano!.hostAddr == cardanoConfig.hostAddr)
     }
     
     // MARK: - Network Configuration Tests

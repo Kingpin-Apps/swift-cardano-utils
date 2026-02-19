@@ -9,13 +9,13 @@ public struct Ogmios: BinaryRunnable {
     public let binaryPath: FilePath
     public let workingDirectory: FilePath
     public let configuration: Config
+    public let cardanoConfig: CardanoConfig
     public let logger: Logging.Logger
     
     public static let binaryName: String = "ogmios"
     public static let mininumSupportedVersion: String = "6.13.0"
     
     public let showOutput: Bool
-    public let cardanoConfig: CardanoConfig
     public let ogmiosConfig: OgmiosConfig
     
     public let commandRunner: any CommandRunning
@@ -25,20 +25,28 @@ public struct Ogmios: BinaryRunnable {
         logger: Logging.Logger? = nil,
         commandRunner: (any CommandRunning)? = nil
     ) async throws {
-        // Assign all let properties directly
-        self.configuration = configuration
-        self.cardanoConfig = configuration.cardano
-        self.showOutput = configuration.ogmios?.showOutput ?? true
+        guard let cardanoConfig = configuration.cardano else {
+            throw SwiftCardanoUtilsError.configurationMissing(
+                "Cardano configuration missing: \(configuration)"
+            )
+        }
         
         guard let ogmiosConfig = configuration.ogmios else {
-            throw SwiftCardanoUtilsError.configurationMissing(configuration)
+            throw SwiftCardanoUtilsError.configurationMissing(
+                "Ogmios configuration missing: \(configuration)"
+            )
         }
-        self.ogmiosConfig = ogmiosConfig
         
-        // Setup binary path
         guard let binaryPath = ogmiosConfig.binary else {
             throw SwiftCardanoUtilsError.valueError("Ogmios binary path is required")
         }
+        
+        self.configuration = configuration
+        self.cardanoConfig = cardanoConfig
+        self.ogmiosConfig = ogmiosConfig
+        self.showOutput = ogmiosConfig.showOutput ?? true
+        
+        // Setup binary path
         self.binaryPath = binaryPath
         try Self.checkBinary(binary: self.binaryPath)
         

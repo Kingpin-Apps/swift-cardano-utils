@@ -9,13 +9,13 @@ public struct CardanoNode: BinaryRunnable {
     public let binaryPath: FilePath
     public let workingDirectory: FilePath
     public let configuration: Config
+    public let cardanoConfig: CardanoConfig
     public let logger: Logging.Logger
     
     public static let binaryName: String = "cardano-node"
     public static let mininumSupportedVersion: String = "8.0.0"
     
     public let showOutput: Bool
-    public let cardanoConfig: CardanoConfig
     
     public let commandRunner: any CommandRunning
 
@@ -24,20 +24,27 @@ public struct CardanoNode: BinaryRunnable {
         logger: Logging.Logger? = nil,
         commandRunner: (any CommandRunning)? = nil
     ) async throws {
-        // Assign all let properties directly
-        self.configuration = configuration
-        self.cardanoConfig = configuration.cardano
-        self.showOutput = configuration.cardano.showOutput ?? true
+        guard let cardanoConfig = configuration.cardano else {
+            throw SwiftCardanoUtilsError.configurationMissing(
+                "Cardano configuration missing: \(configuration)"
+            )
+        }
         
-        // Setup binary path
-        guard let nodePath = configuration.cardano.node else {
+        guard let nodePath = cardanoConfig.node else {
             throw SwiftCardanoUtilsError.binaryNotFound("cardano-node path not configured")
         }
+        
+        // Assign all let properties directly
+        self.configuration = configuration
+        self.cardanoConfig = cardanoConfig
+        self.showOutput = cardanoConfig.showOutput ?? true
+        
+        // Setup binary path
         self.binaryPath = nodePath
         try Self.checkBinary(binary: self.binaryPath)
         
         // Setup working directory
-        self.workingDirectory = configuration.cardano.workingDir ?? FilePath(
+        self.workingDirectory = cardanoConfig.workingDir ?? FilePath(
             FileManager.default.currentDirectoryPath
         )
         try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
@@ -50,7 +57,7 @@ public struct CardanoNode: BinaryRunnable {
         
         // Setup node socket environment variable
         guard let socket = cardanoConfig.socket else {
-            throw SwiftCardanoUtilsError.configurationMissing(configuration)
+            throw SwiftCardanoUtilsError.configurationMissing("Cardano node socket path is required for cardano-node run: \(cardanoConfig)")
         }
         Environment.set(.cardanoSocketPath, value: socket.string)
         

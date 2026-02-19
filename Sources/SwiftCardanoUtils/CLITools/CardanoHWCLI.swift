@@ -10,6 +10,7 @@ public struct CardanoHWCLI: BinaryInterfaceable {
     public let binaryPath: FilePath
     public let workingDirectory: FilePath
     public let configuration: Config
+    public let cardanoConfig: CardanoConfig
     public let logger: Logger
     
     public static let binaryName: String = "cardano-hw-cli"
@@ -25,20 +26,26 @@ public struct CardanoHWCLI: BinaryInterfaceable {
         logger: Logging.Logger? = nil,
         commandRunner: (any CommandRunning)? = nil
     ) async throws {
-        // Assign all let properties directly
-        self.configuration = configuration
+        guard let cardanoConfig = configuration.cardano else {
+            throw SwiftCardanoUtilsError.configurationMissing(
+                "Cardano configuration missing: \(configuration)"
+            )
+        }
         
-        // Check for hardware CLI binary
-        guard let hwCliPath = configuration.cardano.hwCli else {
+        guard let hwCliPath = cardanoConfig.hwCli else {
             throw SwiftCardanoUtilsError.binaryNotFound("cardano-hw-cli path not configured")
         }
+        
+        // Assign all let properties directly
+        self.configuration = configuration
+        self.cardanoConfig = cardanoConfig
         
         // Setup binary path
         self.binaryPath = hwCliPath
         try Self.checkBinary(binary: self.binaryPath)
         
         // Setup working directory
-        self.workingDirectory = configuration.cardano.workingDir ?? FilePath(
+        self.workingDirectory = cardanoConfig.workingDir ?? FilePath(
             FileManager.default.currentDirectoryPath
         )
         try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)

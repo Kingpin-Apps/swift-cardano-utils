@@ -191,7 +191,7 @@ struct KupoTests {
     @Test("Kupo start arguments with minimal configuration")
     func testStartArgumentsMinimalConfig() throws {
         let testConfig = createTestConfiguration()
-        let cardanoConfig = testConfig.cardano
+        let cardanoConfig = testConfig.cardano!
         let kupoConfig = KupoConfig(
             binary: FilePath("/usr/local/bin/kupo"),
             host: nil,
@@ -480,10 +480,9 @@ struct KupoTests {
     @Test("Kupo error scenarios are well-defined")
     func testErrorScenarios() throws {
         // Test that we understand what errors Kupo can throw
-        let testConfig = createTestConfiguration()
         let expectedErrorTypes: [SwiftCardanoUtilsError] = [
             .binaryNotFound("test"),
-            .configurationMissing(testConfig),
+            .configurationMissing("test configuration"),
             .invalidOutput("test"),
             .commandFailed([], "test"),
             .processAlreadyRunning,

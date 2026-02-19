@@ -8,12 +8,12 @@ public struct Kupo: BinaryRunnable {
     public let binaryPath: FilePath
     public let workingDirectory: FilePath
     public let configuration: Config
+    public let cardanoConfig: CardanoConfig
     public let logger: Logging.Logger
     public static let binaryName: String = "kupo"
     public static let mininumSupportedVersion: String = "2.3.4"
     
     public let showOutput: Bool
-    public let cardanoConfig: CardanoConfig
     public let kupoConfig: KupoConfig
     
     public let commandRunner: any CommandRunning
@@ -23,13 +23,21 @@ public struct Kupo: BinaryRunnable {
         logger: Logging.Logger? = nil,
         commandRunner: (any CommandRunning)? = nil
     ) async throws {
+        guard let cardanoConfig = configuration.cardano else {
+            throw SwiftCardanoUtilsError.configurationMissing(
+                "Cardano configuration missing: \(configuration)"
+            )
+        }
+        
         // Assign all let properties directly
         self.configuration = configuration
-        self.cardanoConfig = configuration.cardano
+        self.cardanoConfig = cardanoConfig
         self.showOutput = configuration.kupo?.showOutput ?? true
         
         guard let kupoConfig = configuration.kupo else {
-            throw SwiftCardanoUtilsError.configurationMissing(configuration)
+            throw SwiftCardanoUtilsError.configurationMissing(
+                "Kupo configuration missing: \(configuration)"
+            )
         }
         self.kupoConfig = kupoConfig
         

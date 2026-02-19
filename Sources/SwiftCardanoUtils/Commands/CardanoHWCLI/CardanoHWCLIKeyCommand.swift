@@ -20,7 +20,7 @@ extension CardanoHWCLI {
         /// Get the verification key from a hardware signing file
         /// - Parameters:
         ///   - hwSigningFile: The path to the hardware signing file
-        ///   - outputFile: The path to write the verification key file
+        ///   - verificationKeyFile: The path to write the verification key file
         /// - Returns: The command output
         @discardableResult
         public func verificationKey(

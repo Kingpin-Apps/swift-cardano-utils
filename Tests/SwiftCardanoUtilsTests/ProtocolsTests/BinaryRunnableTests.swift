@@ -17,6 +17,7 @@ struct BinaryRunnableTests {
         let binaryPath: FilePath
         let workingDirectory: FilePath
         let configuration: Config
+        let cardanoConfig: CardanoConfig
         var logger: Logger
         let showOutput: Bool
         var process: Process?
@@ -30,6 +31,7 @@ struct BinaryRunnableTests {
         
         init(configuration: Config, logger: Logger?) async throws {
             self.configuration = configuration
+            self.cardanoConfig = configuration.cardano!
             self.logger = logger ?? Logger(label: Self.binaryName)
             self.showOutput = false // Default to not showing output for tests
             self.mockVersion = "1.0.0"
@@ -40,7 +42,7 @@ struct BinaryRunnableTests {
             try Self.checkBinary(binary: self.binaryPath)
             
             // Set up working directory
-            self.workingDirectory = configuration.cardano.workingDir!
+            self.workingDirectory = cardanoConfig.workingDir!
             try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
             
             self.logger = logger ?? Logger(label: Self.binaryName)
@@ -78,8 +80,8 @@ struct BinaryRunnableTests {
         
         // Test that all required properties are accessible
         #expect(mockRunner.binaryPath.string == "/bin/sleep")
-        #expect(mockRunner.workingDirectory == config.cardano.workingDir)
-        #expect(mockRunner.configuration.cardano.network == Network.preview)
+        #expect(mockRunner.workingDirectory == config.cardano!.workingDir)
+        #expect(mockRunner.cardanoConfig.network == Network.preview)
         #expect(mockRunner.logger.label == "test")
         #expect(mockRunner.showOutput == false)
         #expect(mockRunner.process == nil) // Should be nil initially
@@ -113,7 +115,7 @@ struct BinaryRunnableTests {
     func testShowOutputPropertyControlsOutputHandling() async throws {
         var config = createTestConfiguration()
         let logger = Logger(label: "test")
-        config.cardano.showOutput = false
+        config.cardano!.showOutput = false
         
         // Test with showOutput = false
         let mockRunnerNoOutput = try await MockBinaryRunnable(
@@ -160,10 +162,10 @@ struct BinaryRunnableTests {
             logger: logger
         )
         
-        #expect(mockRunner.configuration.cardano.cli == config.cardano.cli)
+        #expect(mockRunner.cardanoConfig.cli == config.cardano!.cli)
         #expect(mockRunner.logger.label == "custom-test")
         #expect(mockRunner.binaryPath.string == "/bin/sleep")
-        #expect(mockRunner.workingDirectory == config.cardano.workingDir)
+        #expect(mockRunner.workingDirectory == config.cardano!.workingDir)
         #expect(mockRunner.process == nil)
     }
     
@@ -229,6 +231,7 @@ struct BinaryRunnableTests {
             let binaryPath: FilePath
             let workingDirectory: FilePath
             let configuration: Config
+            let cardanoConfig: CardanoConfig
             let logger: Logger
             let showOutput: Bool
             var process: Process?
@@ -239,6 +242,7 @@ struct BinaryRunnableTests {
             
             init(configuration: Config, logger: Logger? = nil) async throws {
                 self.configuration = configuration
+                self.cardanoConfig = configuration.cardano!
                 self.logger = logger ?? Logger(label: Self.binaryName)
                 self.showOutput = false
                 
@@ -246,7 +250,7 @@ struct BinaryRunnableTests {
                 self.binaryPath = FilePath("/path/to/nonexistent/binary")
                 try Self.checkBinary(binary: self.binaryPath)
                 
-                self.workingDirectory = configuration.cardano.workingDir!
+                self.workingDirectory = cardanoConfig.workingDir!
                 try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
                 
                 let commandRunner = MockCommandRunning()

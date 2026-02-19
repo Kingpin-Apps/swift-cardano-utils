@@ -6,11 +6,13 @@ enum SwiftCardanoUtilsError: Error, LocalizedError {
     case binaryNotFound(String)
     case commandFailed([String], String)
     case processAlreadyRunning
-    case configurationMissing(Config)
+    case configurationMissing(String)
     case deviceError(String)
     case invalidOutput(String)
     case invalidParameters(String)
     case nodeNotSynced(Double)
+    case networkError(String)
+    case unsupportedNetwork(String)
     case unsupportedVersion(String, String)
     case invalidMultiSigConfig(String)
     case fileAlreadyExists(String)
@@ -26,8 +28,8 @@ enum SwiftCardanoUtilsError: Error, LocalizedError {
                 return "Command failed: \(command.joined(separator: " ")). Error: \(error)"
             case .processAlreadyRunning:
                 return "Process is already running"
-            case .configurationMissing(let config):
-                return "Configuration is missing or invalid: \(config)"
+            case .configurationMissing(let message):
+                return "Configuration is missing or invalid: \(message)"
             case .deviceError(let message):
                 return "Hardware wallet device error: \(message)"
             case .invalidOutput(let message):
@@ -36,6 +38,10 @@ enum SwiftCardanoUtilsError: Error, LocalizedError {
                 return "Invalid parameters: \(message)"
             case .nodeNotSynced(let progress):
                 return "Node is not fully synced. Current sync progress: \(progress)%"
+            case .networkError(let message):
+                return "Network error: \(message)"
+            case .unsupportedNetwork(let message):
+                return "Unsupported network: \(message)"
             case .unsupportedVersion(let current, let minimum):
                 return "Unsupported version: \(current). Minimum required: \(minimum)"
             case .invalidMultiSigConfig(let message):

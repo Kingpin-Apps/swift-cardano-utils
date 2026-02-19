@@ -7,13 +7,13 @@ import SwiftCardanoCore
 
 /// Main configuration structure for SwiftCardanoUtils
 public struct Config: Codable, Sendable {
-    public var cardano: CardanoConfig
+    public var cardano: CardanoConfig?
+    public var mithril: MithrilConfig?
     public var ogmios: OgmiosConfig?
     public var kupo: KupoConfig?
-    public var mithril: MithrilConfig?
     
     public init(
-        cardano: CardanoConfig,
+        cardano: CardanoConfig? = nil,
         ogmios: OgmiosConfig? = nil,
         kupo: KupoConfig? = nil,
         mithril: MithrilConfig? = nil
@@ -28,7 +28,7 @@ public struct Config: Codable, Sendable {
     ///
     /// - Parameter config: The config reader to read configuration values from.
     public init(config: ConfigReader) throws {
-        self.cardano = CardanoConfig(config: config)
+        self.cardano = try CardanoConfig(config: config)
         self.ogmios = try OgmiosConfig(config: config)
         self.kupo = try KupoConfig(config: config)
         self.mithril = try MithrilConfig(config: config)
@@ -36,7 +36,7 @@ public struct Config: Codable, Sendable {
     
     public static func `default`() throws -> Config {
         return Config(
-            cardano: try CardanoConfig.default(),
+            cardano: try? CardanoConfig.default(),
             ogmios: try? OgmiosConfig.default(),
             kupo: try? KupoConfig.default(),
             mithril: try? MithrilConfig.default()

@@ -43,7 +43,7 @@ struct CardanoCLITests {
         let runner = createCardanoCLIMockCommandRunner(config: config)
         let cli = try await CardanoCLI(configuration: config, commandRunner: runner)
         
-        let cardanoConfig = cli.configuration.cardano
+        let cardanoConfig = cli.configuration.cardano!
         
         // Test configuration values
         #expect(cardanoConfig.network == Network.preview)
@@ -59,7 +59,7 @@ struct CardanoCLITests {
         
         given(runner)
             .run(
-                arguments: .value([config.cardano.cli!.string, "--version"]),
+                arguments: .value([config.cardano!.cli!.string, "--version"]),
                 environment: .any,
                 workingDirectory: .any
             )
@@ -87,7 +87,7 @@ struct CardanoCLITests {
         
         given(runner)
             .run(
-                arguments: .value([config.cardano.cli!.string] + CLICommands.queryTip),
+                arguments: .value([config.cardano!.cli!.string] + CLICommands.queryTip),
                 environment: .any,
                 workingDirectory: .any
             )
@@ -113,7 +113,7 @@ struct CardanoCLITests {
         
         given(runner)
             .run(
-                arguments: .value([config.cardano.cli!.string] + CLICommands.queryTip),
+                arguments: .value([config.cardano!.cli!.string] + CLICommands.queryTip),
                 environment: .any,
                 workingDirectory: .any
             )
@@ -140,7 +140,7 @@ struct CardanoCLITests {
         
         given(runner)
             .run(
-                arguments: .value([config.cardano.cli!.string] + CLICommands.queryTip),
+                arguments: .value([config.cardano!.cli!.string] + CLICommands.queryTip),
                 environment: .any,
                 workingDirectory: .any
             )
@@ -164,7 +164,7 @@ struct CardanoCLITests {
         
         given(runner)
             .run(
-                arguments: .value([config.cardano.cli!.string] + CLICommands.queryTip),
+                arguments: .value([config.cardano!.cli!.string] + CLICommands.queryTip),
                 environment: .any,
                 workingDirectory: .any
             )
@@ -191,7 +191,7 @@ struct CardanoCLITests {
         
         given(runner)
             .run(
-                arguments: .value([config.cardano.cli!.string] + CLICommands.queryTip),
+                arguments: .value([config.cardano!.cli!.string] + CLICommands.queryTip),
                 environment: .any,
                 workingDirectory: .any
             )
@@ -218,7 +218,7 @@ struct CardanoCLITests {
         
         given(runner)
             .run(
-                arguments: .value([config.cardano.cli!.string] + CLICommands.queryTip),
+                arguments: .value([config.cardano!.cli!.string] + CLICommands.queryTip),
                 environment: .any,
                 workingDirectory: .any
             )
@@ -242,7 +242,7 @@ struct CardanoCLITests {
         
         given(runner)
             .run(
-                arguments: .value([config.cardano.cli!.string] + CLICommands.queryTip),
+                arguments: .value([config.cardano!.cli!.string] + CLICommands.queryTip),
                 environment: .any,
                 workingDirectory: .any
             )
@@ -269,7 +269,7 @@ struct CardanoCLITests {
         
         given(runner)
             .run(
-                arguments: .value([config.cardano.cli!.string] + CLICommands.queryTip),
+                arguments: .value([config.cardano!.cli!.string] + CLICommands.queryTip),
                 environment: .any,
                 workingDirectory: .any
             )
@@ -296,7 +296,7 @@ struct CardanoCLITests {
         
         given(runner)
             .run(
-                arguments: .value([config.cardano.cli!.string] + CLICommands.queryTip),
+                arguments: .value([config.cardano!.cli!.string] + CLICommands.queryTip),
                 environment: .any,
                 workingDirectory: .any
             )
@@ -323,7 +323,7 @@ struct CardanoCLITests {
         
         given(runner)
             .run(
-                arguments: .value([config.cardano.cli!.string] + CLICommands.queryTip),
+                arguments: .value([config.cardano!.cli!.string] + CLICommands.queryTip),
                 environment: .any,
                 workingDirectory: .any
             )
@@ -350,7 +350,7 @@ struct CardanoCLITests {
         
         given(runner)
             .run(
-                arguments: .value([config.cardano.cli!.string] + CLICommands.utxos),
+                arguments: .value([config.cardano!.cli!.string] + CLICommands.utxos),
                 environment: .any,
                 workingDirectory: .any
             )
@@ -387,7 +387,7 @@ struct CardanoCLITests {
         
         given(runner)
             .run(
-                arguments: .value([config.cardano.cli!.string, "conway", "query", "protocol-parameters", "--out-file", "/dev/stdout", "--testnet-magic", "2"]),
+                arguments: .value([config.cardano!.cli!.string, "conway", "query", "protocol-parameters", "--out-file", "/dev/stdout", "--testnet-magic", "2"]),
                 environment: .any,
                 workingDirectory: .any
             )
@@ -420,7 +420,7 @@ struct CardanoCLITests {
                 arguments:
                         .value(
                             [
-                                config.cardano.cli!.string,
+                                config.cardano!.cli!.string,
                                 "conway",
                                 "query",
                                 "protocol-parameters",
@@ -469,7 +469,7 @@ struct CardanoCLITests {
         
         given(runner)
             .run(
-                arguments: .value([config.cardano.cli!.string] + CLICommands.queryTip),
+                arguments: .value([config.cardano!.cli!.string] + CLICommands.queryTip),
                 environment: .any,
                 workingDirectory: .any
             )
@@ -496,7 +496,7 @@ struct CardanoCLITests {
         
         given(runner)
             .run(
-                arguments: .value([config.cardano.cli!.string] + CLICommands.addressBuild),
+                arguments: .value([config.cardano!.cli!.string] + CLICommands.addressBuild),
                 environment: .any,
                 workingDirectory: .any
             )
@@ -523,7 +523,7 @@ struct CardanoCLITests {
         
         given(runner)
             .run(
-                arguments: .value([config.cardano.cli!.string] + CLICommands.stakePoolId),
+                arguments: .value([config.cardano!.cli!.string] + CLICommands.stakePoolId),
                 environment: .any,
                 workingDirectory: .any
             )
@@ -550,7 +550,7 @@ struct CardanoCLITests {
         
         given(runner)
             .run(
-                arguments: .value([config.cardano.cli!.string] + CLICommands.governanceDRepId),
+                arguments: .value([config.cardano!.cli!.string] + CLICommands.governanceDRepId),
                 environment: .any,
                 workingDirectory: .any
             )
@@ -577,7 +577,7 @@ struct CardanoCLITests {
         
         given(runner)
             .run(
-                arguments: .value([config.cardano.cli!.string] + CLICommands.stakeAddressInfo),
+                arguments: .value([config.cardano!.cli!.string] + CLICommands.stakeAddressInfo),
                 environment: .any,
                 workingDirectory: .any
             )
@@ -639,21 +639,21 @@ struct CardanoCLITests {
         let config = createTestConfiguration()
         let modifiedConfig = Config(
             cardano: CardanoConfig(
-                cli: config.cardano.cli,
-                node: config.cardano.node,
-                hwCli: config.cardano.hwCli,
-                signer: config.cardano.signer,
-                socket: config.cardano.socket,
-                config: config.cardano.config,
-                topology: config.cardano.topology,
-                database: config.cardano.database,
-                port: config.cardano.port,
-                hostAddr: config.cardano.hostAddr,
-                network: config.cardano.network,
-                era: config.cardano.era,
-                ttlBuffer: config.cardano.ttlBuffer,
+                cli: config.cardano!.cli,
+                node: config.cardano!.node,
+                hwCli: config.cardano!.hwCli,
+                signer: config.cardano!.signer,
+                socket: config.cardano!.socket,
+                config: config.cardano!.config,
+                topology: config.cardano!.topology,
+                database: config.cardano!.database,
+                port: config.cardano!.port,
+                hostAddr: config.cardano!.hostAddr,
+                network: config.cardano!.network,
+                era: config.cardano!.era,
+                ttlBuffer: config.cardano!.ttlBuffer,
                 workingDir: FilePath(tempDir.path),
-                showOutput: config.cardano.showOutput
+                showOutput: config.cardano!.showOutput
             ),
             ogmios: config.ogmios,
             kupo: config.kupo
@@ -680,9 +680,9 @@ struct CardanoCLITests {
         
         let cli = try await CardanoCLI(configuration: config, commandRunner: runner)
         
-        #expect(cli.configuration.cardano.network == Network.preview)
-        #expect(cli.configuration.cardano.era == Era.conway)
-        #expect(cli.configuration.cardano.ttlBuffer == 3600)
+        #expect(cli.configuration.cardano!.network == Network.preview)
+        #expect(cli.configuration.cardano!.era == Era.conway)
+        #expect(cli.configuration.cardano!.ttlBuffer == 3600)
     }
 }
 

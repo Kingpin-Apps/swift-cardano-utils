@@ -83,8 +83,8 @@ struct ConfigurationTests {
             kupo: kupoConfig
         )
         
-        #expect(configuration.cardano.cli == cardanoConfig.cli)
-        #expect(configuration.cardano.node == cardanoConfig.node)
+        #expect(configuration.cardano!.cli == cardanoConfig.cli)
+        #expect(configuration.cardano!.node == cardanoConfig.node)
         #expect(configuration.ogmios?.binary == ogmiosConfig.binary)
         #expect(configuration.kupo?.binary == kupoConfig.binary)
     }
@@ -99,7 +99,7 @@ struct ConfigurationTests {
             kupo: nil
         )
         
-        #expect(configuration.cardano.cli == cardanoConfig.cli)
+        #expect(configuration.cardano!.cli == cardanoConfig.cli)
         #expect(configuration.ogmios == nil)
         #expect(configuration.kupo == nil)
     }
@@ -311,8 +311,8 @@ struct ConfigurationTests {
         let decoder = JSONDecoder()
         let decodedConfig = try decoder.decode(Config.self, from: data)
         
-        #expect(decodedConfig.cardano.cli == originalConfig.cardano.cli)
-        #expect(decodedConfig.cardano.network == originalConfig.cardano.network)
+        #expect(decodedConfig.cardano!.cli == originalConfig.cardano!.cli)
+        #expect(decodedConfig.cardano!.network == originalConfig.cardano!.network)
         #expect(decodedConfig.ogmios?.binary == originalConfig.ogmios?.binary)
         #expect(decodedConfig.kupo?.binary == originalConfig.kupo?.binary)
     }
@@ -379,8 +379,8 @@ struct ConfigurationTests {
             kupo: kupoConfig
         )
         
-        #expect(configuration.cardano.port == 0)
-        #expect(configuration.cardano.ttlBuffer == 0)
+        #expect(configuration.cardano!.port == 0)
+        #expect(configuration.cardano!.ttlBuffer == 0)
         #expect(configuration.ogmios?.port == 0)
         #expect(configuration.ogmios?.timeout == 0)
         #expect(configuration.kupo?.port == 0)

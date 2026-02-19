@@ -87,7 +87,3 @@ print("Current tip: \(tip)")
 - ``StakePoolCommandImpl``
 - ``GenesisCommandImpl``
 
-### Tutorials
-
-- <doc:MintingNativeTokenWithHardwareWallet>
-- <doc:BuildingDAppBackendWithOgmios>

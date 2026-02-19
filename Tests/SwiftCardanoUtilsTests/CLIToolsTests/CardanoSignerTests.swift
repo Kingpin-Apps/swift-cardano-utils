@@ -35,21 +35,21 @@ struct CardanoSignerTests {
         // Create config without signer path
         let configWithoutSigner = Config(
             cardano: CardanoConfig(
-                cli: testConfig.cardano.cli,
-                node: testConfig.cardano.node,
-                hwCli: testConfig.cardano.hwCli,
+                cli: testConfig.cardano!.cli,
+                node: testConfig.cardano!.node,
+                hwCli: testConfig.cardano!.hwCli,
                 signer: nil, // Missing signer configuration should cause failure
-                socket: testConfig.cardano.socket,
-                config: testConfig.cardano.config,
-                topology: testConfig.cardano.topology,
-                database: testConfig.cardano.database,
-                port: testConfig.cardano.port,
-                hostAddr: testConfig.cardano.hostAddr,
-                network: testConfig.cardano.network,
-                era: testConfig.cardano.era,
-                ttlBuffer: testConfig.cardano.ttlBuffer,
-                workingDir: testConfig.cardano.workingDir,
-                showOutput: testConfig.cardano.showOutput
+                socket: testConfig.cardano!.socket,
+                config: testConfig.cardano!.config,
+                topology: testConfig.cardano!.topology,
+                database: testConfig.cardano!.database,
+                port: testConfig.cardano!.port,
+                hostAddr: testConfig.cardano!.hostAddr,
+                network: testConfig.cardano!.network,
+                era: testConfig.cardano!.era,
+                ttlBuffer: testConfig.cardano!.ttlBuffer,
+                workingDir: testConfig.cardano!.workingDir,
+                showOutput: testConfig.cardano!.showOutput
             ),
             ogmios: nil,
             kupo: nil
@@ -67,21 +67,21 @@ struct CardanoSignerTests {
         // Create config with invalid signer path
         let configWithInvalidSigner = Config(
             cardano: CardanoConfig(
-                cli: testConfig.cardano.cli,
-                node: testConfig.cardano.node,
-                hwCli: testConfig.cardano.hwCli,
+                cli: testConfig.cardano!.cli,
+                node: testConfig.cardano!.node,
+                hwCli: testConfig.cardano!.hwCli,
                 signer: FilePath("/nonexistent/path"), // Invalid binary path
-                socket: testConfig.cardano.socket,
-                config: testConfig.cardano.config,
-                topology: testConfig.cardano.topology,
-                database: testConfig.cardano.database,
-                port: testConfig.cardano.port,
-                hostAddr: testConfig.cardano.hostAddr,
-                network: testConfig.cardano.network,
-                era: testConfig.cardano.era,
-                ttlBuffer: testConfig.cardano.ttlBuffer,
-                workingDir: testConfig.cardano.workingDir,
-                showOutput: testConfig.cardano.showOutput
+                socket: testConfig.cardano!.socket,
+                config: testConfig.cardano!.config,
+                topology: testConfig.cardano!.topology,
+                database: testConfig.cardano!.database,
+                port: testConfig.cardano!.port,
+                hostAddr: testConfig.cardano!.hostAddr,
+                network: testConfig.cardano!.network,
+                era: testConfig.cardano!.era,
+                ttlBuffer: testConfig.cardano!.ttlBuffer,
+                workingDir: testConfig.cardano!.workingDir,
+                showOutput: testConfig.cardano!.showOutput
             ),
             ogmios: nil,
             kupo: nil
@@ -248,10 +248,9 @@ struct CardanoSignerTests {
     @Test("CardanoSigner error scenarios are well-defined")
     func testErrorScenarios() throws {
         // Test that we understand what errors CardanoSigner can throw
-        let testConfig = createTestConfiguration()
         let expectedErrorTypes: [SwiftCardanoUtilsError] = [
             .binaryNotFound("test"),
-            .configurationMissing(testConfig),
+            .configurationMissing("test configuration"),
             .invalidOutput("test"),
             .commandFailed([], "test"),
             .unsupportedVersion("1.0.0", "1.17.0")
@@ -299,29 +298,29 @@ struct CardanoSignerTests {
         let signerPath = FilePath("/usr/local/bin/cardano-signer")
         
         let cardanoConfig = CardanoConfig(
-            cli: testConfig.cardano.cli,
-            node: testConfig.cardano.node,
-            hwCli: testConfig.cardano.hwCli,
+            cli: testConfig.cardano!.cli,
+            node: testConfig.cardano!.node,
+            hwCli: testConfig.cardano!.hwCli,
             signer: signerPath, // Add signer path
-            socket: testConfig.cardano.socket,
-            config: testConfig.cardano.config,
-            topology: testConfig.cardano.topology,
-            database: testConfig.cardano.database,
-            port: testConfig.cardano.port,
-            hostAddr: testConfig.cardano.hostAddr,
-            network: testConfig.cardano.network,
-            era: testConfig.cardano.era,
-            ttlBuffer: testConfig.cardano.ttlBuffer,
-            workingDir: testConfig.cardano.workingDir,
-            showOutput: testConfig.cardano.showOutput
+            socket: testConfig.cardano!.socket,
+            config: testConfig.cardano!.config,
+            topology: testConfig.cardano!.topology,
+            database: testConfig.cardano!.database,
+            port: testConfig.cardano!.port,
+            hostAddr: testConfig.cardano!.hostAddr,
+            network: testConfig.cardano!.network,
+            era: testConfig.cardano!.era,
+            ttlBuffer: testConfig.cardano!.ttlBuffer,
+            workingDir: testConfig.cardano!.workingDir,
+            showOutput: testConfig.cardano!.showOutput
         )
         
         let config = Config(cardano: cardanoConfig, ogmios: nil, kupo: nil)
         
         // Test that CardanoSigner configuration fields are properly accessible
-        #expect(config.cardano.signer != nil)
-        #expect(config.cardano.signer?.string == signerPath.string)
-        #expect(config.cardano.cli!.string == testConfig.cardano.cli!.string)
-        #expect(config.cardano.workingDir == testConfig.cardano.workingDir)
+        #expect(config.cardano!.signer != nil)
+        #expect(config.cardano!.signer?.string == signerPath.string)
+        #expect(config.cardano!.cli!.string == testConfig.cardano!.cli!.string)
+        #expect(config.cardano!.workingDir == testConfig.cardano!.workingDir)
     }
 }

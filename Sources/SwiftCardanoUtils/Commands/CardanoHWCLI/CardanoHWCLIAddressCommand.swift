@@ -19,9 +19,9 @@ extension CardanoHWCLI {
         
         /// Generate hardware wallet signing files and verification keys from derivation paths
         /// - Parameters:
-        ///   - paths: Array of derivation paths (e.g., ["1852'/1815'/0'/0/0"])
-        ///   - hwFiles: Array of output file paths for hardware signing files
-        ///   - vkeyFiles: Array of output file paths for verification key files
+        ///   - path: Array of derivation paths (e.g., ["1852'/1815'/0'/0/0"])
+        ///   - hwFile: Array of output file paths for hardware signing files
+        ///   - vkeyFile: Array of output file paths for verification key files
         ///   - derivationType: Optional derivation type (defaults to ICARUS_TREZOR)
         /// - Throws: SwiftCardanoUtilsError if validation fails or command execution fails
         @discardableResult

@@ -925,6 +925,6 @@ cardano-hw-cli address show --payment-path "1852'/1815'/0'/0/0"
 
 This guide covers secure hardware wallet integration with CardanoCLI. For related functionality:
 
-- <doc:CardanoCLI> - Basic CLI operations and transaction building
-- <doc:CardanoSigner> - Advanced signing without hardware wallets 
-- <doc:CardanoNode> - Node management and stake pool operations
+- <doc:CardanoCLI>
+- <doc:CardanoSigner>
+- <doc:CardanoNode>

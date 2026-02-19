@@ -6,13 +6,15 @@ import SwiftCardanoCore
 /// Implementation of tools commands for Mithril client
 public struct ToolsCommandImpl: MithrilCommandProtocol {
     var baseCLI: any BinaryInterfaceable
+    var mithrilConfig: MithrilConfig
     
     var baseCommand: [String] {
         ["tools"]
     }
     
-    init(baseCLI: any BinaryInterfaceable) {
+    init(baseCLI: any BinaryInterfaceable, mithrilConfig: MithrilConfig) {
         self.baseCLI = baseCLI
+        self.mithrilConfig = mithrilConfig
     }
     
     /// Convert UTXO-HD ledger state snapshot to a different format

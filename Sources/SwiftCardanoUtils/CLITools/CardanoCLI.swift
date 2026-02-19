@@ -14,6 +14,7 @@ public struct CardanoCLI: BinaryInterfaceable {
     public let binaryPath: FilePath
     public let workingDirectory: FilePath
     public let configuration: Config
+    public let cardanoConfig: CardanoConfig
     public let logger: Logging.Logger
     
     public static let binaryName: String = "cardano-cli"
@@ -27,18 +28,25 @@ public struct CardanoCLI: BinaryInterfaceable {
         logger: Logging.Logger? = nil,
         commandRunner: (any CommandRunning)? = nil
     ) async throws {
-        // Assign all let properties directly
-        self.configuration = configuration
+        guard let cardanoConfig = configuration.cardano else {
+            throw SwiftCardanoUtilsError.configurationMissing(
+                "Cardano configuration missing: \(configuration)"
+            )
+        }
         
-        // Setup binary path
-        guard let cliPath = configuration.cardano.cli else {
+        guard let cliPath = cardanoConfig.cli else {
             throw SwiftCardanoUtilsError.binaryNotFound("cardano-cli path not configured")
         }
+        
+        self.configuration = configuration
+        self.cardanoConfig = cardanoConfig
+        
+        // Setup binary path
         self.binaryPath = cliPath
         try Self.checkBinary(binary: self.binaryPath)
         
         // Setup working directory
-        self.workingDirectory = configuration.cardano.workingDir ?? FilePath(
+        self.workingDirectory = cardanoConfig.workingDir ?? FilePath(
             FileManager.default.currentDirectoryPath
         )
         try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
@@ -50,7 +58,7 @@ public struct CardanoCLI: BinaryInterfaceable {
         self.commandRunner = commandRunner ?? CommandRunner(logger: self.logger)
         
         // Setup node socket environment variable
-        if let socket = configuration.cardano.socket {
+        if let socket = cardanoConfig.socket {
             Environment.set(.cardanoNodeSocketPath, value: socket.string)
         }
         
@@ -169,7 +177,7 @@ public struct CardanoCLI: BinaryInterfaceable {
     
     /// Calculate current epoch from genesis.json offline
     public func calculateEpochOffline() async throws -> UInt32 {
-        guard let configPath = configuration.cardano.config else {
+        guard let configPath = cardanoConfig.config else {
             throw SwiftCardanoUtilsError.valueError("Cardano node config path is required for offline epoch calculation")
         }
         
@@ -228,7 +236,7 @@ public struct CardanoCLI: BinaryInterfaceable {
     
     /// Calculate the current TTL (Time To Live) for transactions
     public func getCurrentTTL() async throws -> Int {
-        return try await getTip() + configuration.cardano.ttlBuffer
+        return try await getTip() + cardanoConfig.ttlBuffer
     }
     
     /// Get protocol parameters from the Cardano node or offline file
@@ -483,7 +491,7 @@ public struct CardanoCLI: BinaryInterfaceable {
             // Sign the transaction
             var args = ["--tx-body-file", txFile.string]
             args.append(contentsOf: signingKeyArgs)
-            args.append(contentsOf: configuration.cardano.network.arguments)
+            args.append(contentsOf: cardanoConfig.network.arguments)
             args.append(contentsOf: ["--out-file", signedTxFile.string])
             
             _ = try await transaction.sign(arguments: args)

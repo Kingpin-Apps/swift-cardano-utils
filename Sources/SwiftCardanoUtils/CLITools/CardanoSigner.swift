@@ -10,6 +10,7 @@ public struct CardanoSigner: BinaryInterfaceable {
     public let binaryPath: FilePath
     public let workingDirectory: FilePath
     public let configuration: Config
+    public let cardanoConfig: CardanoConfig
     public let logger: Logger
     
     public static let binaryName: String = "cardano-signer"
@@ -23,20 +24,25 @@ public struct CardanoSigner: BinaryInterfaceable {
         logger: Logging.Logger? = nil,
         commandRunner: (any CommandRunning)? = nil
     ) async throws {
-        // Assign all let properties directly
-        self.configuration = configuration
+        guard let cardanoConfig = configuration.cardano else {
+            throw SwiftCardanoUtilsError.configurationMissing(
+                "Cardano configuration missing: \(configuration)"
+            )
+        }
         
-        // Check for signer binary
-        guard let signerPath = configuration.cardano.signer else {
+        guard let signerPath = cardanoConfig.signer else {
             throw SwiftCardanoUtilsError.binaryNotFound("cardano-signer path not configured")
         }
+        
+        self.configuration = configuration
+        self.cardanoConfig = cardanoConfig
         
         // Setup binary path
         self.binaryPath = signerPath
         try Self.checkBinary(binary: self.binaryPath)
         
         // Setup working directory
-        self.workingDirectory = configuration.cardano.workingDir ?? FilePath(
+        self.workingDirectory = cardanoConfig.workingDir ?? FilePath(
             FileManager.default.currentDirectoryPath
         )
         try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)

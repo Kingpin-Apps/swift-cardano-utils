@@ -6,13 +6,15 @@ import SwiftCardanoCore
 /// Implementation of cardano-db commands for Mithril client (alias: cdb)
 public struct CardanoDbCommandImpl: MithrilCommandProtocol {
     var baseCLI: any BinaryInterfaceable
+    var mithrilConfig: MithrilConfig
     
     var baseCommand: [String] {
         ["cardano-db"]
     }
     
-    init(baseCLI: any BinaryInterfaceable) {
+    init(baseCLI: any BinaryInterfaceable, mithrilConfig: MithrilConfig) {
         self.baseCLI = baseCLI
+        self.mithrilConfig = mithrilConfig
     }
     
     // MARK: - Snapshot Commands
@@ -23,7 +25,9 @@ public struct CardanoDbCommandImpl: MithrilCommandProtocol {
     }
     
     /// Show detailed information about a specific Cardano database snapshot
-    /// - Parameter digest: The snapshot digest to show details for
+    /// - Parameters:
+    ///   - digest: The snapshot digest to show details for
+    ///   - arguments: Additional arguments for the show command
     public func snapshotShow(digest: String, arguments: [String] = []) async throws -> String {
         return try await executeCommand("snapshot", arguments: ["show", digest] + arguments)
     }
@@ -54,6 +58,39 @@ public struct CardanoDbCommandImpl: MithrilCommandProtocol {
             args.append("--include-ancillary")
             if let key = ancillaryVerificationKey {
                 args.append(contentsOf: ["--ancillary-verification-key", key])
+            } else if let key = mithrilConfig.ancillaryVerificationKey {
+                args.append(contentsOf: ["--ancillary-verification-key", key])
+            } else if let key = Environment.get(.ancillaryVerificationKey) {
+                args.append(contentsOf: ["--ancillary-verification-key", key])
+            } else {
+                let ancillaryKeyURL: URL
+                switch baseCLI.cardanoConfig.network {
+                    case .mainnet:
+                        ancillaryKeyURL = URL(
+                            string: "https://raw.githubusercontent.com/input-output-hk/mithril/main/mithril-infra/configuration/release-mainnet/ancillary.vkey"
+                        )!
+                    case .preprod:
+                        ancillaryKeyURL = URL(
+                            string: "https://raw.githubusercontent.com/input-output-hk/mithril/main/mithril-infra/configuration/release-preprod/ancillary.vkey"
+                        )!
+                    case .preview:
+                        ancillaryKeyURL = URL(
+                            string: "https://raw.githubusercontent.com/input-output-hk/mithril/main/mithril-infra/configuration/pre-release-preview/ancillary.vkey"
+                        )!
+                    default:
+                        throw SwiftCardanoUtilsError
+                            .unsupportedNetwork(
+                                "Ancillary verification key is required for ancillary snapshot download, but not configured for the current network"
+                            )
+                }
+                
+                let (key, response) = try await URLSession.shared.data(from: ancillaryKeyURL)
+                guard let httpResponse = response as? HTTPURLResponse,
+                      (200...299).contains(httpResponse.statusCode)
+                else {
+                    throw SwiftCardanoUtilsError.networkError("Failed to fetch ancillary verification key from URL: \(ancillaryKeyURL)")
+                }
+                args.append(contentsOf: ["--ancillary-verification-key", key.toString])
             }
         }
         

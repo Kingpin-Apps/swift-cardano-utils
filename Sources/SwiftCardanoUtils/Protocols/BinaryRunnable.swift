@@ -10,7 +10,6 @@ public protocol BinaryRunnable: BinaryInterfaceable {
 extension BinaryRunnable {
     /// Start the binary process with the given arguments
     /// - Parameter arguments: Array of command line arguments
-    /// - Returns: Void
     /// - Throws: SwiftCardanoUtilsError if the command fails
     public func start(_ arguments: [String] = []) async throws -> Void {
         let fullCommand = [binaryPath.string] + arguments

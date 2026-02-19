@@ -10,6 +10,7 @@ public protocol BinaryExecutable: Sendable {
     static var mininumSupportedVersion: String { get }
     
     var configuration: Config { get }
+    var cardanoConfig: CardanoConfig { get }
     var logger: Logger { get }
     var commandRunner: any CommandRunning { get }
     

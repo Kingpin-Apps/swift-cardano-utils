@@ -191,7 +191,7 @@ struct OgmiosTests {
     @Test("Ogmios start arguments with individual log levels")
     func testStartArgumentsWithIndividualLogLevels() throws {
         let testConfig = createTestConfiguration()
-        let cardanoConfig = testConfig.cardano
+        let cardanoConfig = testConfig.cardano!
         
         let ogmiosConfig = OgmiosConfig(
             binary: FilePath("/usr/local/bin/ogmios"),
@@ -253,7 +253,7 @@ struct OgmiosTests {
     @Test("Ogmios start arguments with minimal configuration")
     func testStartArgumentsMinimalConfig() throws {
         let testConfig = createTestConfiguration()
-        let cardanoConfig = testConfig.cardano
+        let cardanoConfig = testConfig.cardano!
         let ogmiosConfig = OgmiosConfig(
             binary: FilePath("/usr/local/bin/ogmios"),
             host: nil,
@@ -389,10 +389,9 @@ struct OgmiosTests {
     @Test("Ogmios error scenarios are well-defined")
     func testErrorScenarios() throws {
         // Test that we understand what errors Ogmios can throw
-        let testConfig = createTestConfiguration()
         let expectedErrorTypes: [SwiftCardanoUtilsError] = [
             .binaryNotFound("test"),
-            .configurationMissing(testConfig),
+            .configurationMissing("test configuration"),
             .invalidOutput("test"),
             .commandFailed([], "test"),
             .processAlreadyRunning,

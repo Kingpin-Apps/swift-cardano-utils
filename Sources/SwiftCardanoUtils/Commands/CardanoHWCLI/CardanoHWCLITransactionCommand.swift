@@ -80,9 +80,9 @@ extension CardanoHWCLI {
         /// Generate witness for a transaction using hardware wallet
         /// - Parameters:
         ///   - txFile: File path to the transaction body file
-        ///   - hwSigningFile: Hardware wallet signing file
-        ///   - outFile: Output file path for the witness
-        ///   - changeOutputKeyFile: Optional change output key file
+        ///   - hwSigningFiles: Hardware wallet signing files
+        ///   - outFiles: Output file paths for the witnesses
+        ///   - changeOutputKeyFiles: Optional change output key files
         ///   - derivationType: Optional derivation type
         ///   - network: Network specification (mainnet/testnet)
         /// - Returns: Command output as a String

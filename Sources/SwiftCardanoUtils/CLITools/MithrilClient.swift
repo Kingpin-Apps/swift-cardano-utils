@@ -17,6 +17,7 @@ public struct MithrilClient: BinaryInterfaceable {
     public let binaryPath: FilePath
     public let workingDirectory: FilePath
     public let configuration: Config
+    public let cardanoConfig: CardanoConfig
     public let logger: Logging.Logger
     
     public static let binaryName: String = "mithril-client"
@@ -24,24 +25,38 @@ public struct MithrilClient: BinaryInterfaceable {
     
     public let commandRunner: any CommandRunning
     
+    public let mithrilConfig: MithrilConfig
+    
     /// Initialize with optional configuration
     public init(
         configuration: Config,
         logger: Logging.Logger? = nil,
         commandRunner: (any CommandRunning)? = nil
     ) async throws {
-        // Assign all let properties directly
+        guard let cardanoConfig = configuration.cardano else {
+            throw SwiftCardanoUtilsError.configurationMissing(
+                "Cardano configuration missing: \(configuration)"
+            )
+        }
+        guard let mithrilConfig = configuration.mithril else {
+            throw SwiftCardanoUtilsError.configurationMissing(
+                "Mithril configuration missing: \(configuration)"
+            )
+        }
+        
         self.configuration = configuration
+        self.cardanoConfig = cardanoConfig
+        self.mithrilConfig = mithrilConfig
         
         // Setup binary path
-        guard let mithrilPath = configuration.mithril?.binary else {
+        guard let mithrilPath = mithrilConfig.binary else {
             throw SwiftCardanoUtilsError.binaryNotFound("mithril-client path not configured")
         }
         self.binaryPath = mithrilPath
         try Self.checkBinary(binary: self.binaryPath)
         
         // Setup working directory
-        self.workingDirectory = configuration.mithril?.workingDir ?? configuration.cardano.workingDir ?? FilePath(
+        self.workingDirectory = mithrilConfig.workingDir ?? cardanoConfig.workingDir ?? FilePath(
             FileManager.default.currentDirectoryPath
         )
         try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
@@ -87,8 +102,8 @@ public struct MithrilClient: BinaryInterfaceable {
         downloadDir: String? = nil,
         includeAncillary: Bool = true
     ) async throws -> String {
-        let dir = downloadDir ?? configuration.mithril?.downloadDir?.string ?? configuration.cardano.database?.string
-        let ancillaryKey = configuration.mithril?.ancillaryVerificationKey
+        let dir = downloadDir ?? mithrilConfig.downloadDir?.string ?? cardanoConfig.database?.string
+        let ancillaryKey = mithrilConfig.ancillaryVerificationKey
         
         return try await cardanoDb.download(
             digest: "latest",
@@ -102,7 +117,7 @@ public struct MithrilClient: BinaryInterfaceable {
     /// - Parameter downloadDir: Optional directory to download the snapshot to
     /// - Returns: The command output
     public func downloadLatestSnapshotFast(downloadDir: String? = nil) async throws -> String {
-        let dir = downloadDir ?? configuration.mithril?.downloadDir?.string ?? configuration.cardano.database?.string
+        let dir = downloadDir ?? mithrilConfig.downloadDir?.string ?? cardanoConfig.database?.string
         
         return try await cardanoDb.downloadSkipAncillary(
             digest: "latest",
@@ -130,26 +145,41 @@ extension MithrilClient {
     
     /// Access to cardano-db commands (alias: cdb)
     public var cardanoDb: CardanoDbCommandImpl {
-        return CardanoDbCommandImpl(baseCLI: self)
+        return CardanoDbCommandImpl(
+            baseCLI: self,
+            mithrilConfig: self.mithrilConfig
+        )
     }
     
     /// Access to mithril-stake-distribution commands (alias: msd)
     public var mithrilStakeDistribution: MithrilStakeDistributionCommandImpl {
-        return MithrilStakeDistributionCommandImpl(baseCLI: self)
+        return MithrilStakeDistributionCommandImpl(
+            baseCLI: self,
+            mithrilConfig: self.mithrilConfig
+        )
     }
     
     /// Access to cardano-transaction commands (alias: ctx)
     public var cardanoTransaction: CardanoTransactionCommandImpl {
-        return CardanoTransactionCommandImpl(baseCLI: self)
+        return CardanoTransactionCommandImpl(
+            baseCLI: self,
+            mithrilConfig: self.mithrilConfig
+        )
     }
     
     /// Access to cardano-stake-distribution commands (alias: csd)
     public var cardanoStakeDistribution: CardanoStakeDistributionCommandImpl {
-        return CardanoStakeDistributionCommandImpl(baseCLI: self)
+        return CardanoStakeDistributionCommandImpl(
+            baseCLI: self,
+            mithrilConfig: self.mithrilConfig
+        )
     }
     
     /// Access to tools commands
     public var tools: ToolsCommandImpl {
-        return ToolsCommandImpl(baseCLI: self)
+        return ToolsCommandImpl(
+            baseCLI: self,
+            mithrilConfig: self.mithrilConfig
+        )
     }
 }

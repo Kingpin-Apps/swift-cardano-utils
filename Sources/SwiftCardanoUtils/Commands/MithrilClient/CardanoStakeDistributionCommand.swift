@@ -6,13 +6,15 @@ import SwiftCardanoCore
 /// Implementation of cardano-stake-distribution commands for Mithril client (alias: csd)
 public struct CardanoStakeDistributionCommandImpl: MithrilCommandProtocol {
     var baseCLI: any BinaryInterfaceable
+    var mithrilConfig: MithrilConfig
     
     var baseCommand: [String] {
         ["cardano-stake-distribution"]
     }
     
-    init(baseCLI: any BinaryInterfaceable) {
+    init(baseCLI: any BinaryInterfaceable, mithrilConfig: MithrilConfig) {
         self.baseCLI = baseCLI
+        self.mithrilConfig = mithrilConfig
     }
     
     /// List available Cardano stake distributions

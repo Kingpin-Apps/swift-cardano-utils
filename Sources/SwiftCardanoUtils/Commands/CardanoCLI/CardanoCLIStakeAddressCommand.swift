@@ -14,10 +14,6 @@ public struct StakeAddressCommandImpl: CommandProtocol {
         self.baseCLI = baseCLI
     }
     
-    private var networkArgs: [String] {
-        return baseCLI.configuration.cardano.network.arguments
-    }
-    
     /// Create a stake address key pair
     public func keyGen(arguments: [String]) async throws -> String {
         return try await executeCommand("key-gen", arguments: arguments)

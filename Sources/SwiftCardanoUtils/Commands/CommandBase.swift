@@ -14,11 +14,11 @@ protocol CommandProtocol {
 /// Base class for all command implementations
 extension CommandProtocol {
     var era: Era {
-        return baseCLI.configuration.cardano.era
+        return baseCLI.cardanoConfig.era
     }
     
     var networkArgs: [String] {
-        return baseCLI.configuration.cardano.network.arguments
+        return baseCLI.cardanoConfig.network.arguments
     }
     
     func executeCommand(_ subcommand: String, arguments: [String] = []) async throws -> String {

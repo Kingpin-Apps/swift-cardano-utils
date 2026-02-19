@@ -81,7 +81,7 @@ func createCardanoCLIMockCommandRunner(
     let commandRunner = MockCommandRunning()
     given(commandRunner)
         .run(
-            arguments: .value([config.cardano.cli!.string, "--version"]),
+            arguments: .value([config.cardano!.cli!.string, "--version"]),
             environment: .any,
             workingDirectory: .any
         )

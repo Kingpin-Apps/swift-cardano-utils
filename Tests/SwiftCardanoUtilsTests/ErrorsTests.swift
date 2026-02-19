@@ -103,10 +103,10 @@ struct SwiftCardanoUtilsErrorTests {
     
     @Test("configurationMissing error case")
     func testConfigurationMissingError() {
-        let config = createTestConfiguration()
-        let error = SwiftCardanoUtilsError.configurationMissing(config)
+        let message = "cardano configuration is missing"
+        let error = SwiftCardanoUtilsError.configurationMissing(message)
         
-        let expectedDescription = "Configuration is missing or invalid: \(config)"
+        let expectedDescription = "Configuration is missing or invalid: \(message)"
         #expect(error.errorDescription == expectedDescription)
     }
     
@@ -131,14 +131,14 @@ struct SwiftCardanoUtilsErrorTests {
             showOutput: false
         )
         
-        let configuration = Config(
+        _ = Config(
             cardano: minimalCardanoConfig,
             ogmios: nil,
             kupo: nil
         )
         
-        let error = SwiftCardanoUtilsError.configurationMissing(configuration)
-        let expectedDescription = "Configuration is missing or invalid: \(configuration)"
+        let error = SwiftCardanoUtilsError.configurationMissing("minimal configuration")
+        let expectedDescription = "Configuration is missing or invalid: minimal configuration"
         #expect(error.errorDescription == expectedDescription)
     }
     
@@ -389,7 +389,7 @@ struct SwiftCardanoUtilsErrorTests {
             .binaryNotFound("/test/binary"),
             .commandFailed(["test", "command"], "test error"),
             .processAlreadyRunning,
-            .configurationMissing(createTestConfiguration()),
+            .configurationMissing("test configuration"),
             .deviceError("test device error"),
             .invalidOutput("test invalid output"),
             .invalidParameters("test invalid parameters"),
@@ -436,11 +436,13 @@ struct SwiftCardanoUtilsErrorTests {
             .binaryNotFound("/test/binary"),
             .commandFailed(["test"], "error"),
             .processAlreadyRunning,
-            .configurationMissing(createTestConfiguration()),
+            .configurationMissing("test configuration"),
             .deviceError("test"),
             .invalidOutput("test"),
             .invalidParameters("test"),
             .nodeNotSynced(50.0),
+            .networkError("test"),
+            .unsupportedNetwork("test"),
             .unsupportedVersion("1.0", "2.0"),
             .invalidMultiSigConfig("test"),
             .fileNotFound("/test/file"),
@@ -468,6 +470,10 @@ struct SwiftCardanoUtilsErrorTests {
             case .invalidParameters:
                 patternMatchCount += 1
             case .nodeNotSynced:
+                patternMatchCount += 1
+            case .networkError:
+                patternMatchCount += 1
+            case .unsupportedNetwork:
                 patternMatchCount += 1
             case .unsupportedVersion:
                 patternMatchCount += 1
@@ -534,7 +540,7 @@ struct SwiftCardanoUtilsErrorTests {
             (.binaryNotFound("test"), "Binary not found at:"),
             (.commandFailed(["test"], "error"), "Command failed:"),
             (.processAlreadyRunning, "Process is already running"),
-            (.configurationMissing(createTestConfiguration()), "Configuration is missing or invalid:"),
+            (.configurationMissing("test configuration"), "Configuration is missing or invalid:"),
             (.deviceError("test"), "Hardware wallet device error:"),
             (.invalidOutput("test"), "Invalid CLI output:"),
             (.invalidParameters("test"), "Invalid parameters:"),

@@ -6,13 +6,15 @@ import SwiftCardanoCore
 /// Implementation of cardano-transaction commands for Mithril client (alias: ctx)
 public struct CardanoTransactionCommandImpl: MithrilCommandProtocol {
     var baseCLI: any BinaryInterfaceable
+    var mithrilConfig: MithrilConfig
     
     var baseCommand: [String] {
         ["cardano-transaction"]
     }
     
-    init(baseCLI: any BinaryInterfaceable) {
+    init(baseCLI: any BinaryInterfaceable, mithrilConfig: MithrilConfig) {
         self.baseCLI = baseCLI
+        self.mithrilConfig = mithrilConfig
     }
     
     // MARK: - Snapshot Commands
@@ -23,7 +25,9 @@ public struct CardanoTransactionCommandImpl: MithrilCommandProtocol {
     }
     
     /// Show detailed information about a specific Cardano transaction snapshot
-    /// - Parameter hash: The transaction snapshot hash to show details for
+    /// - Parameters:
+    ///  - hash: The snapshot hash to show details for
+    ///  - arguments: Additional arguments for the show command
     public func snapshotShow(hash: String, arguments: [String] = []) async throws -> String {
         return try await executeCommand("snapshot", arguments: ["show", hash] + arguments)
     }

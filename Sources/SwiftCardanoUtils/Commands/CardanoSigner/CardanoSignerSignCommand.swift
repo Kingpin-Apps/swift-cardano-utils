@@ -146,7 +146,6 @@ extension CardanoSigner {
         
         /// Sign payload in CIP-8/CIP-30 mode (COSE_Sign1)
         /// - Parameters:
-        ///   - mode: CIP mode (.cip8 or .cip30)
         ///   - dataHex: Data in hexadecimal format (mutually exclusive with other data inputs)
         ///   - dataText: Data as text string (mutually exclusive with other data inputs)
         ///   - dataFile: Path to file containing data (mutually exclusive with other data inputs)

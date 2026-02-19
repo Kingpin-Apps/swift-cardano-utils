@@ -91,8 +91,8 @@ struct ConfigTests {
             kupo: kupoConfig
         )
         
-        #expect(config.cardano.cli == cardanoConfig.cli)
-        #expect(config.cardano.node == cardanoConfig.node)
+        #expect(config.cardano!.cli == cardanoConfig.cli)
+        #expect(config.cardano!.node == cardanoConfig.node)
         #expect(config.ogmios?.binary == ogmiosConfig.binary)
         #expect(config.kupo?.binary == kupoConfig.binary)
     }
@@ -107,7 +107,7 @@ struct ConfigTests {
             kupo: nil
         )
         
-        #expect(config.cardano.cli == cardanoConfig.cli)
+        #expect(config.cardano!.cli == cardanoConfig.cli)
         #expect(config.ogmios == nil)
         #expect(config.kupo == nil)
     }
@@ -123,7 +123,7 @@ struct ConfigTests {
             kupo: nil
         )
         
-        #expect(config.cardano.cli == cardanoConfig.cli)
+        #expect(config.cardano!.cli == cardanoConfig.cli)
         #expect(config.ogmios?.binary == ogmiosConfig.binary)
         #expect(config.kupo == nil)
     }
@@ -139,7 +139,7 @@ struct ConfigTests {
             kupo: kupoConfig
         )
         
-        #expect(config.cardano.cli == cardanoConfig.cli)
+        #expect(config.cardano!.cli == cardanoConfig.cli)
         #expect(config.ogmios == nil)
         #expect(config.kupo?.binary == kupoConfig.binary)
     }
@@ -187,8 +187,8 @@ struct ConfigTests {
         let decoder = JSONDecoder()
         let decodedConfig = try decoder.decode(Config.self, from: data)
         
-        #expect(decodedConfig.cardano.cli == originalConfig.cardano.cli)
-        #expect(decodedConfig.cardano.network == originalConfig.cardano.network)
+        #expect(decodedConfig.cardano!.cli == originalConfig.cardano!.cli)
+        #expect(decodedConfig.cardano!.network == originalConfig.cardano!.network)
         #expect(decodedConfig.ogmios?.binary == originalConfig.ogmios?.binary)
         #expect(decodedConfig.kupo?.binary == originalConfig.kupo?.binary)
     }
@@ -243,7 +243,7 @@ struct ConfigTests {
             path: FilePath(configPath)
         )   
         
-        #expect(loadedConfig.cardano.cli == FilePath("cardano-cli"))
+        #expect(loadedConfig.cardano!.cli == FilePath("cardano-cli"))
         #expect(loadedConfig.ogmios?.binary == FilePath("ogmios"))
         #expect(loadedConfig.kupo?.binary == FilePath("kupo"))
     }
@@ -294,9 +294,9 @@ struct ConfigTests {
         
         let config = try Config(config: configReader)
         
-        #expect(config.cardano.cli?.string == "/usr/local/bin/cardano-cli")
-        #expect(config.cardano.network == .preview)
-        #expect(config.cardano.ttlBuffer == 7200)
+        #expect(config.cardano!.cli?.string == "/usr/local/bin/cardano-cli")
+        #expect(config.cardano!.network == .preview)
+        #expect(config.cardano!.ttlBuffer == 7200)
         #expect(config.ogmios?.binary?.string == "/usr/local/bin/ogmios")
         #expect(config.ogmios?.host == "127.0.0.1")
         #expect(config.kupo?.binary?.string == "/usr/local/bin/kupo")
@@ -310,10 +310,10 @@ struct ConfigTests {
             let config = try Config.default()
             
             // Cardano config should always be present
-            #expect(config.cardano.network == .mainnet)
-            #expect(config.cardano.era == .conway)
-            #expect(config.cardano.ttlBuffer > 0)
-            #expect(config.cardano.workingDir!.string.isEmpty == false)
+            #expect(config.cardano!.network == .mainnet)
+            #expect(config.cardano!.era == .conway)
+            #expect(config.cardano!.ttlBuffer > 0)
+            #expect(config.cardano!.workingDir!.string.isEmpty == false)
         }
     }
     

@@ -17,6 +17,7 @@ struct BinaryInterfaceableTests {
         let binaryPath: FilePath
         let workingDirectory: FilePath
         let configuration: Config
+        let cardanoConfig: CardanoConfig
         let logger: Logger
         static let binaryName: String = "echo"
         static let mininumSupportedVersion: String = "1.0.0"
@@ -27,6 +28,7 @@ struct BinaryInterfaceableTests {
         
         init(configuration: Config, logger: Logger?) async throws {
             self.configuration = configuration
+            self.cardanoConfig = configuration.cardano!
             self.logger = logger ?? Logger(label: Self.binaryName)
             self.mockVersion = "1.0.0"
             
@@ -37,7 +39,7 @@ struct BinaryInterfaceableTests {
             try Self.checkBinary(binary: self.binaryPath)
             
             // Set up working directory
-            self.workingDirectory = configuration.cardano.workingDir!
+            self.workingDirectory = cardanoConfig.workingDir!
             try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
             
             let commandRunner = MockCommandRunning()
@@ -82,6 +84,7 @@ struct BinaryInterfaceableTests {
             let binaryPath: FilePath
             let workingDirectory: FilePath
             let configuration: Config
+            let cardanoConfig: CardanoConfig
             let logger: Logger
             static let binaryName: String = "nonexistent-binary-xyz123"
             static let mininumSupportedVersion: String = "1.0.0"
@@ -89,9 +92,10 @@ struct BinaryInterfaceableTests {
             
             init(configuration: Config, logger: Logger?) async throws {
                 self.configuration = configuration
+                self.cardanoConfig = configuration.cardano!
                 self.logger = logger ?? Logger(label: Self.binaryName)
                 self.binaryPath = try Self.getBinaryPath()
-                self.workingDirectory = configuration.cardano.workingDir!
+                self.workingDirectory = cardanoConfig.workingDir!
                 try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
                 
                 let commandRunner = MockCommandRunning()
@@ -122,6 +126,7 @@ struct BinaryInterfaceableTests {
             let binaryPath: FilePath
             let workingDirectory: FilePath
             let configuration: Config
+            let cardanoConfig: CardanoConfig
             let logger: Logger
             static let binaryName: String = ""
             static let mininumSupportedVersion: String = "1.0.0"
@@ -129,9 +134,10 @@ struct BinaryInterfaceableTests {
             
             init(configuration: Config, logger: Logger?) async throws {
                 self.configuration = configuration
+                self.cardanoConfig = configuration.cardano!
                 self.logger = logger ?? Logger(label: "empty-binary")
                 self.binaryPath = try Self.getBinaryPath()
-                self.workingDirectory = configuration.cardano.workingDir!
+                self.workingDirectory = cardanoConfig.workingDir!
                 try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
                 
                 let commandRunner = MockCommandRunning()
@@ -186,10 +192,10 @@ struct BinaryInterfaceableTests {
             logger: logger
         )
         
-        #expect(mockBinary.configuration.cardano.cli == config.cardano.cli)
+        #expect(mockBinary.cardanoConfig.cli == config.cardano!.cli)
         #expect(mockBinary.logger.label == "custom-test")
         #expect(mockBinary.binaryPath.string == "/bin/echo")
-        #expect(mockBinary.workingDirectory == config.cardano.workingDir)
+        #expect(mockBinary.workingDirectory == config.cardano!.workingDir)
     }
     
     @Test("BinaryInterfaceable uses default logger when none provided")
@@ -254,6 +260,7 @@ struct BinaryInterfaceableTests {
             let binaryPath: FilePath
             let workingDirectory: FilePath
             let configuration: Config
+            let cardanoConfig: CardanoConfig
             let logger: Logger
             static let binaryName: String = "invalid-binary"
             static let mininumSupportedVersion: String = "1.0.0"
@@ -261,13 +268,14 @@ struct BinaryInterfaceableTests {
             
             init(configuration: Config, logger: Logger? = nil) async throws {
                 self.configuration = configuration
+                self.cardanoConfig = configuration.cardano!
                 self.logger = logger ?? Logger(label: Self.binaryName)
                 
                 // Try to use a non-existent binary
                 self.binaryPath = FilePath("/path/to/nonexistent/binary")
                 try Self.checkBinary(binary: self.binaryPath)
                 
-                self.workingDirectory = configuration.cardano.workingDir!
+                self.workingDirectory = cardanoConfig.workingDir!
                 try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
                 
                 let commandRunner = MockCommandRunning()

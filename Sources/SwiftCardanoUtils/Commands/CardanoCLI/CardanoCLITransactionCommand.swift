@@ -21,7 +21,6 @@ public struct TransactionCommandImpl: CommandProtocol {
     
     /// Build a balanced transaction (automatically calculates fees) - returns fee amount
     public func build(arguments: [String]) async throws -> Int {
-        let networkArgs = baseCLI.configuration.cardano.network.arguments
         let result = try await executeCommand("build", arguments: arguments + networkArgs)
         return Int(result.components(separatedBy: .whitespaces).last ?? "0") ?? 0
     }
@@ -38,7 +37,6 @@ public struct TransactionCommandImpl: CommandProtocol {
     
     /// Calculate the minimum fee for a transaction - returns fee amount
     public func calculateMinFee(arguments: [String]) async throws -> Int {
-        let networkArgs = baseCLI.configuration.cardano.network.arguments
         let result = try await executeCommand("calculate-min-fee", arguments: arguments + networkArgs)
         return Int(result.components(separatedBy: .whitespaces).first ?? "0") ?? 0
     }
@@ -56,19 +54,16 @@ public struct TransactionCommandImpl: CommandProtocol {
     
     /// Sign a transaction
     public func sign(arguments: [String]) async throws -> String {
-        let networkArgs = baseCLI.configuration.cardano.network.arguments
         return try await executeCommand("sign", arguments: arguments + networkArgs)
     }
     
     /// Create a transaction witness
     public func witness(arguments: [String]) async throws -> String {
-        let networkArgs = baseCLI.configuration.cardano.network.arguments
         return try await executeCommand("witness", arguments: arguments + networkArgs)
     }
     
     /// Submit a transaction to the local node
     public func submit(arguments: [String]) async throws -> String {
-        let networkArgs = baseCLI.configuration.cardano.network.arguments
         return try await executeCommand("submit", arguments: arguments + networkArgs)
     }
     

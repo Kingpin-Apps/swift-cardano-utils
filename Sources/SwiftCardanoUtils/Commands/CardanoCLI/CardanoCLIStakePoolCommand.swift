@@ -14,10 +14,6 @@ public struct StakePoolCommandImpl: CommandProtocol {
         self.baseCLI = baseCLI
     }
     
-    private var networkArgs: [String] {
-        return baseCLI.configuration.cardano.network.arguments
-    }
-    
     /// Calculate the hash of a stake pool metadata file
     public func metadataHash(arguments: [String]) async throws -> String {
         return try await executeCommand("metadata-hash", arguments: arguments)
