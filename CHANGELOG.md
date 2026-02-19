@@ -1,3 +1,9 @@
+## 0.2.1 (2026-02-19)
+
+### Fix
+
+- make cardano config optional
+
 ## 0.2.0 (2026-02-18)
 
 ### Feat
