@@ -1,6 +1,6 @@
 # ``SwiftCardanoUtils``
 
-A comprehensive Swift package providing convenient interfaces for interacting with Cardano CLI tools, including cardano-cli, cardano-node, Ogmios, Kupo, hardware wallets, and advanced signing operations.
+A comprehensive Swift package providing convenient interfaces for interacting with Cardano CLI tools, including cardano-cli, cardano-node, Ogmios, Kupo, Mithril, hardware wallets, and advanced signing operations.
 
 ## Overview
 
@@ -15,6 +15,7 @@ SwiftCardanoUtils is a Swift package that provides type-safe, async/await-based 
 - **Node management** - Start and manage Cardano nodes programmatically
 - **Real-time data** - WebSocket integration with Ogmios
 - **UTxO indexing** - Kupo integration for efficient chain queries
+- **Fast node bootstrap** - Mithril integration for certified snapshot downloads
 - **Multi-network support** - Mainnet, testnet, and custom networks
 - **Comprehensive error handling** - Detailed error types and recovery strategies
 
@@ -31,7 +32,7 @@ SwiftCardanoUtils is a Swift package that provides type-safe, async/await-based 
 - **macOS 14.0+**
 - **Swift 6.0+**
 - **Cardano CLI 8.0.0+** (installed separately)
-- Optional: cardano-node, cardano-hw-cli, cardano-signer, Ogmios, Kupo
+- Optional: cardano-node, cardano-hw-cli, cardano-signer, Ogmios, Kupo, mithril-client
 
 ## Quick Start
 
@@ -65,6 +66,7 @@ print("Current tip: \(tip)")
 - <doc:CardanoNode>
 - <doc:Ogmios>
 - <doc:Kupo>
+- <doc:MithrilClient>
 
 ### Configuration
 
@@ -72,6 +74,7 @@ print("Current tip: \(tip)")
 - ``CardanoConfig``
 - ``OgmiosConfig``
 - ``KupoConfig``
+- ``MithrilConfig``
 
 ### Command Groups
 

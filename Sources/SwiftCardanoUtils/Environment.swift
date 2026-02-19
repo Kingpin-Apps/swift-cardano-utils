@@ -19,6 +19,11 @@ public enum Environment: String, CaseIterable {
     case cardanoShelleyVRFKey = "CARDANO_SHELLEY_VRF_KEY"
     case cardanoShelleyOperationalCertificate = "CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE"
     
+    // Mithril environment variables
+    case aggregatorEndpoint = "AGGREGATOR_ENDPOINT"
+    case genesisVerificationKey = "GENESIS_VERIFICATION_KEY"
+    case ancillaryVerificationKey = "ANCILLARY_VERIFICATION_KEY"
+    
     static func get(_ name: Environment) -> String? {
         guard let cString = getenv(name.rawValue) else {
             return nil

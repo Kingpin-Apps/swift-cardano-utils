@@ -10,15 +10,18 @@ public struct Config: Codable, Sendable {
     public var cardano: CardanoConfig
     public var ogmios: OgmiosConfig?
     public var kupo: KupoConfig?
+    public var mithril: MithrilConfig?
     
     public init(
         cardano: CardanoConfig,
         ogmios: OgmiosConfig? = nil,
-        kupo: KupoConfig? = nil
+        kupo: KupoConfig? = nil,
+        mithril: MithrilConfig? = nil
     ) {
         self.cardano = cardano
         self.ogmios = ogmios
         self.kupo = kupo
+        self.mithril = mithril
     }
     
     /// Creates a new Config using values from the provided reader.
@@ -28,13 +31,15 @@ public struct Config: Codable, Sendable {
         self.cardano = CardanoConfig(config: config)
         self.ogmios = try OgmiosConfig(config: config)
         self.kupo = try KupoConfig(config: config)
+        self.mithril = try MithrilConfig(config: config)
     }
     
     public static func `default`() throws -> Config {
         return Config(
             cardano: try CardanoConfig.default(),
             ogmios: try? OgmiosConfig.default(),
-            kupo: try? KupoConfig.default()
+            kupo: try? KupoConfig.default(),
+            mithril: try? MithrilConfig.default()
         )
     }
     
