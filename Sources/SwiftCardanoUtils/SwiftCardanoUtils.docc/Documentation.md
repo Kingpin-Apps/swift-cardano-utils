@@ -10,6 +10,7 @@ SwiftCardanoUtils is a Swift package that provides type-safe, async/await-based 
 
 - **Type-safe CLI interactions** - Strongly-typed Swift interfaces for all Cardano CLI tools
 - **Async/await support** - Modern Swift concurrency for all operations
+- **Container support** - Run any tool inside Docker or Apple Container; no local installs required
 - **Hardware wallet integration** - Support for Ledger and Trezor devices
 - **Advanced signing** - CIP-8, CIP-30, and CIP-36 compliance
 - **Node management** - Start and manage Cardano nodes programmatically
@@ -75,6 +76,14 @@ print("Current tip: \(tip)")
 - ``OgmiosConfig``
 - ``KupoConfig``
 - ``MithrilConfig``
+- ``ContainerConfig``
+- ``ContainerRuntime``
+
+### Container Support
+
+- <doc:ContainerSupport>
+- ``ContainerizedCommandRunner``
+- ``ContainerChecks``
 
 ### Command Groups
 

@@ -234,3 +234,11 @@ public enum CipSignMode: String {
     /// CIP-100 signing mode
     case cip100 = "--cip100"
 }
+
+
+public enum OfficialImage: String {
+    case cardanoNode = "ghcr.io/intersectmbo/cardano-node"
+    case ogmios = "cardanosolutions/ogmios"
+    case kupo = "cardanosolutions/kupo"
+    case mithril = "ghcr.io/input-output-hk/mithril-client"
+}

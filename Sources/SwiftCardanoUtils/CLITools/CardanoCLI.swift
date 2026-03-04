@@ -34,28 +34,75 @@ public struct CardanoCLI: BinaryInterfaceable {
             )
         }
         
-        guard let cliPath = cardanoConfig.cli else {
-            throw SwiftCardanoUtilsError.binaryNotFound("cardano-cli path not configured")
-        }
-        
         self.configuration = configuration
         self.cardanoConfig = cardanoConfig
-        
-        // Setup binary path
-        self.binaryPath = cliPath
-        try Self.checkBinary(binary: self.binaryPath)
-        
+
+        // Setup binary path and validate
+        if let container = cardanoConfig.container {
+            // Container mode.  The official IntersectMBO entrypoint script
+            // routes on $1, supporting two sub-modes:
+            //
+            //   Exec mode  (containerName is set):
+            //     `docker exec <name> cardano-cli <args>`
+            //     Bypasses the entrypoint and invokes the binary directly
+            //     inside an already-running node container.
+            //
+            //   Run mode  (no containerName):
+            //     `docker run <image> cli <args>`
+            //     Entrypoint routes $1=="cli" → run-client, which shifts the
+            //     "cli" prefix and delegates to `cardano-cli <remaining args>`.
+            //     Requires `detach: false` in ContainerConfig so that command
+            //     output is returned to the caller rather than a container ID.
+            if container.containerName != nil {
+                // Exec mode: use the binary path directly (entrypoint bypassed).
+                self.binaryPath = cardanoConfig.cli ?? FilePath(Self.binaryName)
+            } else {
+                // Run mode: "cli" is the entrypoint routing word, not a binary.
+                guard container.detach == false else {
+                    throw SwiftCardanoUtilsError.configurationMissing(
+                        "CardanoCLI container run mode requires 'detach: false' in ContainerConfig " +
+                        "so that command output is returned to the caller."
+                    )
+                }
+                self.binaryPath = FilePath("cli")
+            }
+            try ContainerChecks.checkImage(config: container)
+        } else {
+            guard let cliPath = cardanoConfig.cli else {
+                throw SwiftCardanoUtilsError.binaryNotFound("cardano-cli path not configured")
+            }
+            self.binaryPath = cliPath
+            try Self.checkBinary(binary: self.binaryPath)
+        }
+
         // Setup working directory
         self.workingDirectory = cardanoConfig.workingDir ?? FilePath(
             FileManager.default.currentDirectoryPath
         )
         try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
-        
+
         // Setup logger
         self.logger = logger ?? Logger(label: Self.binaryName)
-        
-        // Setup command runner
-        self.commandRunner = commandRunner ?? CommandRunner(logger: self.logger)
+
+        // Setup command runner.
+        // - Exec mode  (containerName set, or no container): existing behaviour.
+        // - Run mode   (container without containerName): launch a new ephemeral
+        //   container per command using the entrypoint's "cli" routing mode.
+        if let container = cardanoConfig.container, container.containerName == nil {
+            self.commandRunner = ContainerizedCommandRunner.resolve(
+                injected: commandRunner,
+                container: container,
+                mode: .run,
+                logger: self.logger
+            )
+        } else {
+            self.commandRunner = ContainerizedCommandRunner.resolve(
+                injected: commandRunner,
+                container: cardanoConfig.container,
+                mode: .exec,
+                logger: self.logger
+            )
+        }
         
         // Setup node socket environment variable
         if let socket = cardanoConfig.socket {

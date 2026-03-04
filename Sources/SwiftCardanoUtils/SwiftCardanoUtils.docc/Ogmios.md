@@ -93,4 +93,26 @@ do {
 }
 ```
 
+## Container Mode
+
+Run Ogmios inside Docker or Apple Container instead of a locally-installed binary. See <doc:ContainerSupport> for full details.
+
+```swift
+let container = ContainerConfig(
+    runtime: .docker,
+    imageName: "cardanosolutions/ogmios:v6.13",
+    containerName: "ogmios",
+    volumes: ["/ipc:/ipc"],
+    ports: ["1337:1337"],
+    restart: "unless-stopped",
+    detach: true
+)
+
+let ogmiosConfig = OgmiosConfig(
+    host: "0.0.0.0",
+    port: 1337,
+    container: container
+)
+```
+
 Ogmios provides WebSocket API access to blockchain data. For blockchain operations, see <doc:CardanoCLI>. For node management, see <doc:CardanoNode>.

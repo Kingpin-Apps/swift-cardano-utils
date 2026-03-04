@@ -2,6 +2,7 @@ import Foundation
 import SystemPackage
 import Logging
 import Command
+import Path
 
 
 /// Cardano Node binary runner
@@ -30,44 +31,72 @@ public struct CardanoNode: BinaryRunnable {
             )
         }
         
-        guard let nodePath = cardanoConfig.node else {
-            throw SwiftCardanoUtilsError.binaryNotFound("cardano-node path not configured")
-        }
-        
         // Assign all let properties directly
         self.configuration = configuration
         self.cardanoConfig = cardanoConfig
         self.showOutput = cardanoConfig.showOutput ?? true
-        
-        // Setup binary path
-        self.binaryPath = nodePath
-        try Self.checkBinary(binary: self.binaryPath)
-        
+
+        // Setup binary path and validate
+        if let container = cardanoConfig.container {
+            // Container mode: the official IntersectMBO entrypoint script routes on $1:
+            //   $1 == "run" → /usr/local/bin/run-node "$@" → cardano-node run <flags>
+            // We set binaryPath to "run" so the CMD sent to the container is
+            //   ["run", "--config", ...] and NOT ["cardano-node", "run", ...]
+            // which would fall through to the entrypoint's error branch.
+            self.binaryPath = FilePath("run")
+            try ContainerChecks.checkImage(config: container)
+        } else {
+            guard let nodePath = cardanoConfig.node else {
+                throw SwiftCardanoUtilsError.binaryNotFound("cardano-node path not configured")
+            }
+            self.binaryPath = nodePath
+            try Self.checkBinary(binary: self.binaryPath)
+        }
+
         // Setup working directory
         self.workingDirectory = cardanoConfig.workingDir ?? FilePath(
             FileManager.default.currentDirectoryPath
         )
         try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
-        
+
         // Setup logger
         self.logger = logger ?? Logger(label: Self.binaryName)
-        
-        // Setup command runner
-        self.commandRunner = commandRunner ?? CommandRunner(logger: self.logger)
-        
+
+        // Setup command runner — inject ContainerizedCommandRunner when container is configured
+        self.commandRunner = ContainerizedCommandRunner.resolve(
+            injected: commandRunner,
+            container: cardanoConfig.container,
+            mode: .run,
+            logger: self.logger
+        )
+
         // Setup node socket environment variable
-        guard let socket = cardanoConfig.socket else {
-            throw SwiftCardanoUtilsError.configurationMissing("Cardano node socket path is required for cardano-node run: \(cardanoConfig)")
+        if let socket = cardanoConfig.socket {
+            Environment.set(.cardanoSocketPath, value: socket.string)
         }
-        Environment.set(.cardanoSocketPath, value: socket.string)
-        
-        // Check the version compatibility on initialization
-        try await checkVersion()
+
+        // Version check is skipped in container run-mode because the container
+        // has not been launched yet — call start() first.
+        if cardanoConfig.container == nil {
+            guard cardanoConfig.socket != nil else {
+                throw SwiftCardanoUtilsError.configurationMissing(
+                    "Cardano node socket path is required for cardano-node run: \(cardanoConfig)"
+                )
+            }
+            try await checkVersion()
+        } else {
+            self.logger.info("\(Self.binaryName): skipping version check in container run-mode")
+        }
     }
     
     /// Start the cardano-node process
-    public func start() async throws -> Void {
-        var arguments: [String] = ["run"]
+    public func start(useDefaultEntrypoint: Bool = false) async throws -> Void {
+        
+        // In non-container (binary) mode the first positional argument to
+         // cardano-node is "run".  In container mode "run" is already captured
+        // in binaryPath (the entrypoint routing word), so we must NOT repeat
+        // it here — that would produce ["run", "run", "--config", ...].
+        var arguments: [String] = cardanoConfig.container == nil ? ["run"] : []
         
         // Add required arguments
         guard let nodeConfig = cardanoConfig.config else {
@@ -165,7 +194,12 @@ public struct CardanoNode: BinaryRunnable {
             arguments.append("--no-mempool-capacity-override")
         }
         
-        return try await self.start(arguments)
+        
+        if cardanoConfig.container != nil {
+            return try await self.start(useDefaultEntrypoint ? [] : arguments)
+        } else {
+            return try await self.start(arguments)
+        }
     }
     
     public func version() async throws -> String {

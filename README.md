@@ -1,20 +1,21 @@
 # SwiftCardanoUtils
 
-A Swift package providing a convenient interface for interacting with Cardano CLI tools, including cardano-cli, cardano-node, Ogmios, and Kupo.
+A Swift package providing a convenient interface for interacting with Cardano CLI tools, including cardano-cli, cardano-node, Ogmios, Kupo, and Mithril — with optional Docker and Apple Container support.
 
 [![Swift](https://img.shields.io/badge/Swift-6.0+-orange.svg)](https://swift.org)
 [![Platform](https://img.shields.io/badge/Platform-macOS%2014+-blue.svg)](https://developer.apple.com/macos/)
-[![Tests](https://img.shields.io/badge/Tests-293%20passing-green.svg)](#testing)
+[![Tests](https://img.shields.io/badge/Tests-368%20passing-green.svg)](#testing)
 
 
 ## Requirements
 
 - **macOS 14.0+**
 - **Swift 6.0+**
-- **cardano-cli 8.0.0+** (installed separately)
-- **cardano-node** (for socket connection)
+- **cardano-cli 8.0.0+** (installed separately, or via Docker/Apple Container)
+- **cardano-node** (for socket connection, or via Docker/Apple Container)
 - **cardano-hw-cli** (optional, for hardware wallet support)
 - **cardano-signer** (optional, for advanced signing operations)
+- **Docker** or **[Apple Container](https://github.com/apple/container)** (optional, for container mode)
 
 ## Installation
 
@@ -427,6 +428,174 @@ try await kupo.start()
 // Check if services are running
 print("Ogmios running: \(ogmios.isRunning)")
 print("Kupo running: \(kupo.isRunning)")
+```
+
+## Container Support
+
+All CLI tools support running inside **Docker** or **[Apple Container](https://github.com/apple/container)** — no local binary installations required. Attach a `ContainerConfig` to any service configuration to route commands through the container runtime.
+
+### Execution Modes
+
+| Mode | Tools | Docker Command |
+|------|-------|----------------|
+| **Run** (daemon) | CardanoNode, Ogmios, Kupo | `docker run [flags] <image>` |
+| **Exec** (one-shot) | CardanoCLI, CardanoHWCLI, CardanoSigner, MithrilClient | `docker exec <name> <binary>` |
+
+Run-mode tools launch a fresh container on each `start()` call (defaults to `--detach`). Exec-mode tools issue commands against a *running* named container (`containerName` is required).
+
+### Run-Mode Example (Daemons)
+
+```swift
+// Run CardanoNode inside Docker
+let container = ContainerConfig(
+    runtime: .docker,
+    imageName: "ghcr.io/intersectmbo/cardano-node:10.0.0",
+    containerName: "cardano-node",
+    volumes: ["/data/cardano-node:/data", "/ipc:/ipc"],
+    environment: ["NETWORK=preview"],
+    network: "host",
+    restart: "unless-stopped",
+    detach: true
+)
+
+let cardanoConfig = CardanoConfig(
+    socket: FilePath("/ipc/node.socket"),
+    config: FilePath("/data/config/config.json"),
+    network: .preview,
+    era: .conway,
+    ttlBuffer: 3600,
+    container: container   // <-- attach container config
+)
+
+let node = try await CardanoNode(configuration: Config(cardano: cardanoConfig))
+try await node.start()  // → docker run --detach --name cardano-node ...
+```
+
+The same pattern works for Ogmios and Kupo:
+
+```swift
+let ogmiosConfig = OgmiosConfig(
+    host: "0.0.0.0",
+    port: 1337,
+    container: ContainerConfig(
+        runtime: .docker,
+        imageName: "cardanosolutions/ogmios:v6.13",
+        containerName: "ogmios",
+        volumes: ["/ipc:/ipc"],
+        ports: ["1337:1337"],
+        detach: true
+    )
+)
+
+let kupoConfig = KupoConfig(
+    host: "0.0.0.0",
+    port: 1442,
+    container: ContainerConfig(
+        runtime: .docker,
+        imageName: "cardanosolutions/kupo:v2.10",
+        containerName: "kupo",
+        volumes: ["/data:/db", "/ipc:/ipc"],
+        ports: ["1442:1442"],
+        detach: true
+    )
+)
+```
+
+### Exec-Mode Example (CLI Tools)
+
+Exec-mode tools assume the container is already running. Start it with `CardanoNode` (run-mode) first, then issue commands into it:
+
+```swift
+// Assumes "cardano-node" container is running (started above)
+let container = ContainerConfig(
+    runtime: .docker,
+    imageName: "ghcr.io/intersectmbo/cardano-node:10.0.0",
+    containerName: "cardano-node"  // Must match the running container name
+)
+
+let cardanoConfig = CardanoConfig(
+    socket: FilePath("/ipc/node.socket"),
+    config: FilePath("/data/config/config.json"),
+    network: .preview,
+    era: .conway,
+    ttlBuffer: 3600,
+    container: container
+)
+
+let cli = try await CardanoCLI(configuration: Config(cardano: cardanoConfig))
+let tip = try await cli.getTip()  // → docker exec cardano-node cardano-cli query tip ...
+```
+
+### Apple Container Runtime
+
+Replace `.docker` with `.appleContainer` to use the `container` CLI. Start the daemon first if it isn't already running:
+
+```bash
+container system start   # start the Apple Container virtualization service
+container system status  # verify it is running
+```
+
+```swift
+let container = ContainerConfig(
+    runtime: .appleContainer,      // Uses 'container' instead of 'docker'
+    imageName: "ghcr.io/intersectmbo/cardano-node:10.0.0",
+    containerName: "cardano-node",
+    detach: true
+)
+```
+
+### JSON Configuration
+
+Container config is embedded inside any service block using `snake_case` keys:
+
+```json
+{
+  "cardano": {
+    "socket": "/ipc/node.socket",
+    "config": "/data/config/config.json",
+    "network": "preview",
+    "era": "conway",
+    "ttl_buffer": 3600,
+    "container": {
+      "runtime": "docker",
+      "image_name": "ghcr.io/intersectmbo/cardano-node:10.0.0",
+      "container_name": "cardano-node",
+      "volumes": ["/data:/data", "/ipc:/ipc"],
+      "network": "host",
+      "restart": "unless-stopped",
+      "detach": true
+    }
+  },
+  "ogmios": {
+    "host": "0.0.0.0",
+    "port": 1337,
+    "container": {
+      "runtime": "docker",
+      "image_name": "cardanosolutions/ogmios:v6.13",
+      "container_name": "ogmios",
+      "ports": ["1337:1337"],
+      "detach": true
+    }
+  }
+}
+```
+
+### Pre-Flight Image Check
+
+On initialisation, container-mode tools verify the image exists locally before starting:
+
+```bash
+# Docker
+docker pull ghcr.io/intersectmbo/cardano-node:10.0.0
+docker pull cardanosolutions/ogmios:v6.13
+docker pull cardanosolutions/kupo:v2.10
+docker pull ghcr.io/input-output-hk/mithril-client:latest
+
+# Apple Container (start the service first if needed)
+container system start
+container pull ghcr.io/intersectmbo/cardano-node:10.0.0
+container pull cardanosolutions/ogmios:v6.13
+container pull cardanosolutions/kupo:v2.10
 ```
 
 ## Error Handling

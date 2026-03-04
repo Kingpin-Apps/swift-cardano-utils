@@ -47,28 +47,42 @@ public struct MithrilClient: BinaryInterfaceable {
         self.configuration = configuration
         self.cardanoConfig = cardanoConfig
         self.mithrilConfig = mithrilConfig
-        
-        // Setup binary path
-        guard let mithrilPath = mithrilConfig.binary else {
-            throw SwiftCardanoUtilsError.binaryNotFound("mithril-client path not configured")
+
+        // Setup binary path and validate
+        if let container = mithrilConfig.container {
+            // Container mode: binary lives inside the container image.
+            self.binaryPath = mithrilConfig.binary ?? FilePath(Self.binaryName)
+            try ContainerChecks.checkImage(config: container)
+        } else {
+            guard let mithrilPath = mithrilConfig.binary else {
+                throw SwiftCardanoUtilsError.binaryNotFound("mithril-client path not configured")
+            }
+            self.binaryPath = mithrilPath
+            try Self.checkBinary(binary: self.binaryPath)
         }
-        self.binaryPath = mithrilPath
-        try Self.checkBinary(binary: self.binaryPath)
-        
+
         // Setup working directory
         self.workingDirectory = mithrilConfig.workingDir ?? cardanoConfig.workingDir ?? FilePath(
             FileManager.default.currentDirectoryPath
         )
         try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
-        
+
         // Setup logger
         self.logger = logger ?? Logger(label: Self.binaryName)
-        
-        // Setup command runner
-        self.commandRunner = commandRunner ?? CommandRunner(logger: self.logger)
-        
-        // Check the CLI version compatibility on initialization
-        try await checkVersion()
+
+        // Setup command runner — inject ContainerizedCommandRunner when container is configured
+        self.commandRunner = ContainerizedCommandRunner.resolve(
+            injected: commandRunner,
+            container: mithrilConfig.container,
+            mode: .exec,
+            logger: self.logger
+        )
+
+        if mithrilConfig.container == nil {
+            try await checkVersion()
+        } else {
+            self.logger.info("\(Self.binaryName): skipping version check in container mode")
+        }
     }
     
     // MARK: - Version and Help

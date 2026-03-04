@@ -688,4 +688,31 @@ class WalletSigningService {
 }
 ```
 
+## Container Mode
+
+Run CardanoSigner commands inside a running Docker container instead of a locally-installed binary. CardanoSigner uses **exec mode** — commands are dispatched via `docker exec` against a pre-existing named container. See <doc:ContainerSupport> for full details.
+
+```swift
+let container = ContainerConfig(
+    runtime: .docker,
+    imageName: "ghcr.io/gitmachtl/cardano-signer:latest",
+    containerName: "cardano-signer"   // Required for exec mode
+)
+
+let cardanoConfig = CardanoConfig(
+    network: .mainnet,
+    era: .conway,
+    ttlBuffer: 3600,
+    container: container
+)
+
+let signer = try await CardanoSigner(configuration: Config(cardano: cardanoConfig))
+let signature = try await signer.signCIP8(
+    dataText: "Hello, Cardano!",
+    secretKey: "ed25519_sk1...",
+    address: "addr1...",
+    outputFormat: .json
+)
+```
+
 CardanoSigner provides the cryptographic foundation for secure Cardano applications. For basic blockchain operations, see <doc:CardanoCLI>. For hardware wallet integration, see <doc:CardanoHWCLI>.

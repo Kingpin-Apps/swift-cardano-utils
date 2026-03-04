@@ -54,6 +54,7 @@ public struct CardanoConfig: Codable, Sendable {
     public var ttlBuffer: Int
     @FilePathCodable public var workingDir: FilePath?
     public var showOutput: Bool?
+    public var container: ContainerConfig?
     
     public init(
         cli: FilePath? = nil,
@@ -88,7 +89,8 @@ public struct CardanoConfig: Codable, Sendable {
         era: Era,
         ttlBuffer: Int,
         workingDir: FilePath? = nil,
-        showOutput: Bool? = nil
+        showOutput: Bool? = nil,
+        container: ContainerConfig? = nil
     ) {
         self.cli = cli
         self.node = node
@@ -123,8 +125,9 @@ public struct CardanoConfig: Codable, Sendable {
         self.ttlBuffer = ttlBuffer
         self.workingDir = workingDir
         self.showOutput = showOutput
+        self.container = container
     }
-    
+
     enum CodingKeys: String, CodingKey {
         case cli
         case node
@@ -159,6 +162,7 @@ public struct CardanoConfig: Codable, Sendable {
         case era
         case ttlBuffer = "ttl_buffer"
         case workingDir = "working_dir"
+        case container
     }
     
     /// Creates a new Config using values from the provided reader.
@@ -282,8 +286,9 @@ public struct CardanoConfig: Codable, Sendable {
             default: FilePath(FileManager.default.currentDirectoryPath)
         )
         self.showOutput = config.bool(forKey: key(.showOutput))
+        self.container = try ContainerConfig.tryInit(config: config, namespace: "cardano.container")
     }
-    
+
     public static func `default`() throws -> CardanoConfig {
         return CardanoConfig(
             cli: try? CardanoCLI.getBinaryPath(),

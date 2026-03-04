@@ -24,9 +24,10 @@ public struct KupoConfig: Codable, Sendable {
     public var logLevelConfiguration: String?
     @FilePathCodable public var workingDir: FilePath?
     public var showOutput: Bool?
-    
+    public var container: ContainerConfig?
+
     public init(
-        binary: FilePath,
+        binary: FilePath? = nil,
         host: String? = nil,
         port: Int? = nil,
         since: String? = nil,
@@ -43,7 +44,8 @@ public struct KupoConfig: Codable, Sendable {
         logLevelGarbageCollector: String? = nil,
         logLevelConfiguration: String? = nil,
         workingDir: FilePath? = nil,
-        showOutput: Bool? = nil
+        showOutput: Bool? = nil,
+        container: ContainerConfig? = nil
     ) {
         self.binary = binary
         self.host = host
@@ -63,8 +65,9 @@ public struct KupoConfig: Codable, Sendable {
         self.logLevelConfiguration = logLevelConfiguration
         self.workingDir = workingDir
         self.showOutput = showOutput
+        self.container = container
     }
-    
+
     enum CodingKeys: String, CodingKey {
         case binary
         case host
@@ -84,6 +87,7 @@ public struct KupoConfig: Codable, Sendable {
         case logLevelConfiguration = "log_level_configuration"
         case workingDir = "working_dir"
         case showOutput = "show_output"
+        case container
     }
     
     /// Creates a new KupoConfig using values from the provided reader.
@@ -94,10 +98,7 @@ public struct KupoConfig: Codable, Sendable {
             return "kupo.\(codingKey.rawValue)"
         }
         
-        self.binary = try config.requiredString(
-            forKey: key(.binary),
-            as: FilePath.self
-        )
+        self.binary = config.string(forKey: key(.binary), as: FilePath.self)
         self.host = config.string(forKey: key(.host))
         self.port = config.int(forKey: key(.port))
         self.since = config.string(forKey: key(.since))
@@ -115,11 +116,12 @@ public struct KupoConfig: Codable, Sendable {
         self.logLevelConfiguration = config.string(forKey: key(.logLevelConfiguration))
         self.workingDir = config.string(forKey: key(.workingDir), as: FilePath.self)
         self.showOutput = config.bool(forKey: key(.showOutput))
+        self.container = try ContainerConfig.tryInit(config: config, namespace: "kupo.container")
     }
-    
+
     public static func `default`() throws -> KupoConfig {
         return KupoConfig(
-            binary: try Kupo.getBinaryPath(),
+            binary: try? Kupo.getBinaryPath(),
             host: "0.0.0.0",
             port: 1442,
             since: "origin",

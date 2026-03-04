@@ -406,3 +406,25 @@ print("Node synced to slot: \(tip)")
 ```
 
 This enables rapid deployment of Cardano infrastructure with minimal sync time.
+
+## Container Mode
+
+Run MithrilClient inside Docker or Apple Container instead of a locally-installed binary. MithrilClient uses **exec mode** — commands are issued against a pre-existing named container. See <doc:ContainerSupport> for full details.
+
+```swift
+let container = ContainerConfig(
+    runtime: .docker,
+    imageName: "ghcr.io/input-output-hk/mithril-client:latest",
+    containerName: "mithril-client",  // Required for exec mode
+    volumes: ["/data:/data"]
+)
+
+let mithrilConfig = MithrilConfig(
+    aggregatorEndpoint: "https://aggregator.release-mainnet.api.mithril.network/aggregator",
+    downloadDir: FilePath("/data/db"),
+    container: container
+)
+
+let mithril = try await MithrilClient(configuration: config)
+try await mithril.downloadLatestSnapshot()  // Runs inside the container
+```

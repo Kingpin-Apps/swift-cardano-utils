@@ -93,4 +93,33 @@ do {
 }
 ```
 
+## Container Mode
+
+Run CardanoNode inside Docker or Apple Container instead of a locally-installed binary. See <doc:ContainerSupport> for full details.
+
+```swift
+let container = ContainerConfig(
+    runtime: .docker,
+    imageName: "ghcr.io/intersectmbo/cardano-node:10.0.0",
+    containerName: "cardano-node",
+    volumes: ["/data/cardano-node:/data", "/ipc:/ipc"],
+    environment: ["NETWORK=preview"],
+    network: "host",
+    restart: "unless-stopped",
+    detach: true
+)
+
+let cardanoConfig = CardanoConfig(
+    socket: FilePath("/ipc/node.socket"),
+    config: FilePath("/data/config/config.json"),
+    network: .preview,
+    era: .conway,
+    ttlBuffer: 3600,
+    container: container
+)
+
+let node = try await CardanoNode(configuration: Config(cardano: cardanoConfig))
+try await node.start()  // Runs: docker run --detach ... ghcr.io/intersectmbo/cardano-node:10.0.0
+```
+
 CardanoNode provides the foundation for blockchain infrastructure. For blockchain operations, see <doc:CardanoCLI>.

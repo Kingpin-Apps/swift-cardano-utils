@@ -22,14 +22,36 @@ extension BinaryInterfaceable {
     /// - Throws: CLIError if the command fails
     /// - Note: This method is thread-safe and uses a serial queue to prevent concurrent executions
     public func runCommand(_ arguments: [String]) async throws -> String {
-        let fullCommand = [binaryPath.string] + arguments
+        let fullCommand: [String]
+        
+        if cardanoConfig.container != nil {
+            fullCommand = arguments
+        } else {
+            fullCommand = [binaryPath.string] + arguments
+        }
         
         do {
-            return try await commandRunner.run(
-                arguments: fullCommand,
-                environment: Environment.getEnv(),
-                workingDirectory: try AbsolutePath(validating: self.workingDirectory.string)
-            ).concatenatedString()
+            
+            if let container = cardanoConfig.container {
+                let containerRunner = ContainerizedCommandRunner.resolve(
+                    injected: commandRunner,
+                    container: container,
+                    mode: .run,
+                    logger: self.logger
+                )
+                
+                return try await containerRunner.run(
+                    arguments: fullCommand,
+                    environment: Environment.getEnv()
+                ).concatenatedString()
+                
+            } else {
+                return try await commandRunner.run(
+                    arguments: fullCommand,
+                    environment: Environment.getEnv(),
+                    workingDirectory: try AbsolutePath(validating: self.workingDirectory.string)
+                ).concatenatedString()
+            }
         } catch CommandError.terminated(let status, let stderr) {
             throw SwiftCardanoUtilsError
                 .commandFailed(

@@ -923,8 +923,32 @@ cardano-hw-cli address show --payment-path "1852'/1815'/0'/0/0"
 
 ## See Also
 
+## Container Mode
+
+Run CardanoHWCLI commands inside a running Docker container instead of a locally-installed binary. CardanoHWCLI uses **exec mode** — commands are dispatched via `docker exec` against a pre-existing named container. See <doc:ContainerSupport> for full details.
+
+> Note: Hardware wallet device access (USB/HID) requires the container to be started with appropriate device passthrough flags, or the host `cardano-hw-cli` binary may be more practical for hardware wallet workflows.
+
+```swift
+let container = ContainerConfig(
+    runtime: .docker,
+    imageName: "ghcr.io/vacuumlabs/cardano-hw-cli:latest",
+    containerName: "hw-cli-container"   // Required for exec mode
+)
+
+let cardanoConfig = CardanoConfig(
+    network: .preview,
+    era: .conway,
+    ttlBuffer: 3600,
+    container: container
+)
+
+let hwCli = try await CardanoHWCLI(configuration: Config(cardano: cardanoConfig))
+```
+
 This guide covers secure hardware wallet integration with CardanoCLI. For related functionality:
 
 - <doc:CardanoCLI>
 - <doc:CardanoSigner>
+- <doc:ContainerSupport>
 - <doc:CardanoNode>

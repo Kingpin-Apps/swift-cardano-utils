@@ -32,33 +32,47 @@ public struct CardanoHWCLI: BinaryInterfaceable {
             )
         }
         
-        guard let hwCliPath = cardanoConfig.hwCli else {
-            throw SwiftCardanoUtilsError.binaryNotFound("cardano-hw-cli path not configured")
-        }
-        
         // Assign all let properties directly
         self.configuration = configuration
         self.cardanoConfig = cardanoConfig
-        
-        // Setup binary path
-        self.binaryPath = hwCliPath
-        try Self.checkBinary(binary: self.binaryPath)
-        
+
+        // Setup binary path and validate
+        if let container = cardanoConfig.container {
+            // Container mode: binary lives inside the container image.
+            self.binaryPath = cardanoConfig.hwCli ?? FilePath(Self.binaryName)
+            try ContainerChecks.checkImage(config: container)
+        } else {
+            guard let hwCliPath = cardanoConfig.hwCli else {
+                throw SwiftCardanoUtilsError.binaryNotFound("cardano-hw-cli path not configured")
+            }
+            self.binaryPath = hwCliPath
+            try Self.checkBinary(binary: self.binaryPath)
+        }
+
         // Setup working directory
         self.workingDirectory = cardanoConfig.workingDir ?? FilePath(
             FileManager.default.currentDirectoryPath
         )
         try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
-        
+
         // Setup logger
         self.logger = logger ?? Logger(label: "CardanoHWCLI")
-        
-        // Setup command runner
-        self.commandRunner = commandRunner ?? CommandRunner(logger: self.logger)
-        
-        try await checkVersion()
+
+        // Setup command runner — inject ContainerizedCommandRunner when container is configured
+        self.commandRunner = ContainerizedCommandRunner.resolve(
+            injected: commandRunner,
+            container: cardanoConfig.container,
+            mode: .exec,
+            logger: self.logger
+        )
+
+        if cardanoConfig.container == nil {
+            try await checkVersion()
+        } else {
+            self.logger.info("\(Self.binaryName): skipping version check in container exec-mode")
+        }
     }
-    
+
     /// Get the version of cardano-hw-cli
     public func version() async throws -> String {
         let output = try await runCommand(["version"])

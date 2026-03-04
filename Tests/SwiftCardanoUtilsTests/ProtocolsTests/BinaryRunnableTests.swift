@@ -4,14 +4,48 @@ import Logging
 import SystemPackage
 import Mockable
 import Command
+import Path
 import SwiftCardanoCore
 @testable import SwiftCardanoUtils
 
-@Suite("BinaryRunnable Protocol Tests")
+// MARK: - CapturingCommandRunner
+//
+// A lightweight CommandRunning that records the arguments it receives and
+// immediately finishes the stream — no Docker required.  Defined here
+// separately from the identical helper in ContainerRunnerTests (which is
+// `private` and therefore not visible cross-file).
+
+private final class CapturingCommandRunner: CommandRunning, @unchecked Sendable {
+
+    /// The most-recently-captured argument list.
+    private(set) var capturedArguments: [String] = []
+
+    func run(
+        arguments: [String],
+        environment: [String: String],
+        workingDirectory: AbsolutePath?
+    ) -> AsyncThrowingStream<CommandEvent, any Error> {
+        capturedArguments = arguments
+        return AsyncThrowingStream { $0.finish() }
+    }
+}
+
+// MARK: - BinaryRunnableTests
+//
+// NOTE: This suite is marked `.serialized` to prevent concurrent execution of
+// tests that all exercise `runWithSignalForwarding`.  That method installs
+// process-wide signal handlers (via `signal()`) and creates
+// `DispatchSource.makeSignalSource` handlers.  Apple's GCD documentation
+// states there should be only one dispatch signal source per signal number per
+// process.  Running two such tests in parallel can therefore produce undefined
+// behaviour — including timing anomalies that cause threshold assertions to
+// fail — so tests in this suite must run one at a time.
+
+@Suite("BinaryRunnable Protocol Tests", .serialized)
 struct BinaryRunnableTests {
-    
+
     // MARK: - Test Helper Structure
-    
+
     /// Mock implementation of BinaryRunnable for testing
     struct MockBinaryRunnable: BinaryRunnable {
         let binaryPath: FilePath
@@ -61,11 +95,39 @@ struct BinaryRunnableTests {
             self.commandRunner = commandRunner
         }
         
+        /// Initialiser for container-mode tests.
+        ///
+        /// Accepts a pre-built `commandRunner` instead of creating a
+        /// `MockCommandRunning` internally.  In container mode `binaryPath` is
+        /// never used in the command (only the `ContainerConfig` matters), so
+        /// `checkBinary` is skipped here.
+        init(
+            configuration: Config,
+            logger: Logger? = nil,
+            commandRunner injected: any CommandRunning
+        ) async throws {
+            self.configuration = configuration
+            self.cardanoConfig = configuration.cardano!
+            self.logger = logger ?? Logger(label: Self.binaryName)
+            self.showOutput = false
+            self.mockVersion = "1.0.0"
+            self.shouldFailOnStart = false
+
+            // binaryPath is unused in the container branch of start(); use
+            // /bin/sleep as a harmless placeholder.
+            self.binaryPath = FilePath("/bin/sleep")
+
+            self.workingDirectory = cardanoConfig.workingDir!
+            try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
+
+            self.commandRunner = injected
+        }
+
         func version() async throws -> String {
             return mockVersion
         }
     }
-    
+
     // MARK: - Protocol Properties Tests
     
     @Test("BinaryRunnable protocol requires necessary properties")
@@ -224,6 +286,143 @@ struct BinaryRunnableTests {
         #expect(mockRunner.workingDirectory.string == tempDir.path)
     }
     
+    // MARK: - Container Mode Tests
+
+    @Test("Container start() forces foreground mode — --detach absent from docker run args")
+    func testContainerStartForcesNonDetachedMode() async throws {
+        let capturing = CapturingCommandRunner()
+
+        // Configure container with detach: true — start() must override to false.
+        let containerConfig = ContainerConfig(
+            runtime: .docker,
+            imageName: "alpine:latest",
+            containerName: "test-node",
+            detach: true
+        )
+        let cardanoConfig = CardanoConfig(
+            network: .preview,
+            era: .conway,
+            ttlBuffer: 3600,
+            workingDir: FilePath(FileManager.default.temporaryDirectory.path),
+            container: containerConfig
+        )
+        let config = Config(cardano: cardanoConfig)
+        let mock = try await MockBinaryRunnable(
+            configuration: config,
+            commandRunner: capturing
+        )
+
+        try await mock.start([])
+
+        let args = capturing.capturedArguments
+        guard args.count >= 2 else {
+            Issue.record("Expected at least 2 args (docker run …), got: \(args)")
+            return
+        }
+        #expect(args[0] == "docker",
+                "Expected docker as the runtime binary")
+        #expect(args[1] == "run",
+                "Expected 'run' subcommand at index 1")
+        #expect(!args.contains("--detach"),
+                "Expected --detach to be absent: start() must force foreground mode")
+    }
+
+    @Test("Container start() passes arguments after image name in docker run")
+    func testContainerStartPassesArgumentsAfterImageName() async throws {
+        let capturing = CapturingCommandRunner()
+        let containerConfig = ContainerConfig(
+            runtime: .docker,
+            imageName: "cardanosolutions/cardano-node:10.2"
+        )
+        let cardanoConfig = CardanoConfig(
+            network: .preview,
+            era: .conway,
+            ttlBuffer: 3600,
+            workingDir: FilePath(FileManager.default.temporaryDirectory.path),
+            container: containerConfig
+        )
+        let config = Config(cardano: cardanoConfig)
+        let mock = try await MockBinaryRunnable(
+            configuration: config,
+            commandRunner: capturing
+        )
+
+        let nodeArgs = ["run", "--config", "/config.json", "--mainnet"]
+        try await mock.start(nodeArgs)
+
+        let args = capturing.capturedArguments
+        guard let imageIdx = args.firstIndex(of: "cardanosolutions/cardano-node:10.2") else {
+            Issue.record("Image name not found in captured args: \(args)")
+            return
+        }
+        #expect(Array(args.suffix(from: imageIdx + 1)) == nodeArgs,
+                "Original args must appear verbatim after the image name")
+    }
+
+    @Test("Container start() stream is cancelled when the enclosing task is cancelled")
+    func testContainerStartCancellationPropagates() async throws {
+        // A CommandRunning whose stream never finishes — simulates a running
+        // container.  Records whether the stream was cancelled by the consumer.
+        final class BlockingCommandRunner: CommandRunning, @unchecked Sendable {
+            private(set) var wasCancelled = false
+
+            func run(
+                arguments: [String],
+                environment: [String: String],
+                workingDirectory: AbsolutePath?
+            ) -> AsyncThrowingStream<CommandEvent, any Error> {
+                AsyncThrowingStream { continuation in
+                    continuation.onTermination = { [weak self] termination in
+                        if case .cancelled = termination {
+                            self?.wasCancelled = true
+                        }
+                    }
+                    // Never yields or finishes — the stream blocks until
+                    // the consumer task is cancelled.
+                }
+            }
+        }
+
+        let blocking = BlockingCommandRunner()
+        let containerConfig = ContainerConfig(
+            runtime: .docker,
+            imageName: "alpine:latest"
+        )
+        let cardanoConfig = CardanoConfig(
+            network: .preview,
+            era: .conway,
+            ttlBuffer: 3600,
+            workingDir: FilePath(FileManager.default.temporaryDirectory.path),
+            container: containerConfig
+        )
+        let config = Config(cardano: cardanoConfig)
+        let mock = try await MockBinaryRunnable(
+            configuration: config,
+            commandRunner: blocking
+        )
+
+        // Run start() in an unstructured task so we can cancel it externally.
+        let task = Task { try await mock.start([]) }
+
+        // Allow start() to enter the stream-consumption loop.
+        try await Task.sleep(nanoseconds: 100_000_000)  // 100 ms
+
+        task.cancel()
+
+        // Await completion — runWithSignalForwarding catches CancellationError
+        // and returns normally, so the task should succeed (not throw).
+        let result = await task.result
+        if case .failure(let error) = result, error is CancellationError {
+            Issue.record("CancellationError must not propagate out of start()")
+        }
+
+        // The CommandRunner's stream continuation must have received a
+        // .cancelled termination, proving signal forwarding would work in
+        // production (where the inner runner calls process.terminate()).
+        #expect(blocking.wasCancelled,
+                "Stream onTermination(.cancelled) must be triggered when the task is cancelled")
+    }
+
     @Test("BinaryRunnable throws error for invalid binary path")
     func testBinaryRunnableInitializationWithInvalidBinary() async throws {
         // Create a mock implementation that tries to use a non-existent binary

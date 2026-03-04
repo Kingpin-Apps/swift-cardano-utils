@@ -37,19 +37,24 @@ public struct Ogmios: BinaryRunnable {
             )
         }
         
-        guard let binaryPath = ogmiosConfig.binary else {
-            throw SwiftCardanoUtilsError.valueError("Ogmios binary path is required")
-        }
-        
         self.configuration = configuration
         self.cardanoConfig = cardanoConfig
         self.ogmiosConfig = ogmiosConfig
         self.showOutput = ogmiosConfig.showOutput ?? true
-        
-        // Setup binary path
-        self.binaryPath = binaryPath
-        try Self.checkBinary(binary: self.binaryPath)
-        
+
+        // Setup binary path and validate
+        if let container = ogmiosConfig.container {
+            // Container mode: binary lives inside the container image.
+            self.binaryPath = ogmiosConfig.binary ?? FilePath(Self.binaryName)
+            try ContainerChecks.checkImage(config: container)
+        } else {
+            guard let binaryPath = ogmiosConfig.binary else {
+                throw SwiftCardanoUtilsError.valueError("Ogmios binary path is required")
+            }
+            self.binaryPath = binaryPath
+            try Self.checkBinary(binary: self.binaryPath)
+        }
+
         // Setup working directory
         if ogmiosConfig.workingDir == nil {
             self.workingDirectory = .init(FileManager.default.currentDirectoryPath)
@@ -57,15 +62,25 @@ public struct Ogmios: BinaryRunnable {
             self.workingDirectory = ogmiosConfig.workingDir!
             try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
         }
-        
+
         // Setup logger
         self.logger = logger ?? Logger(label: Self.binaryName)
-        
-        // Setup command runner
-        self.commandRunner = commandRunner ?? CommandRunner(logger: self.logger)
-        
-        // Check the version compatibility on initialization
-        try await checkVersion()
+
+        // Setup command runner — inject ContainerizedCommandRunner when container is configured
+        self.commandRunner = ContainerizedCommandRunner.resolve(
+            injected: commandRunner,
+            container: ogmiosConfig.container,
+            mode: .run,
+            logger: self.logger
+        )
+
+        // Version check is skipped in container run-mode because the container
+        // has not been launched yet — call start() first.
+        if ogmiosConfig.container == nil {
+            try await checkVersion()
+        } else {
+            self.logger.info("\(Self.binaryName): skipping version check in container run-mode")
+        }
     }
     
     /// Start the ogmios process

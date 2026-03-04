@@ -45,3 +45,25 @@ print("Kupo running: \(kupo.isRunning)")
 kupo.stop()
 print("Kupo stopped")
 ```
+
+## Container Mode
+
+Run Kupo inside Docker or Apple Container instead of a locally-installed binary. See <doc:ContainerSupport> for full details.
+
+```swift
+let container = ContainerConfig(
+    runtime: .docker,
+    imageName: "cardanosolutions/kupo:v2.10",
+    containerName: "kupo",
+    volumes: ["/data:/db", "/ipc:/ipc"],
+    ports: ["1442:1442"],
+    restart: "unless-stopped",
+    detach: true
+)
+
+let kupoConfig = KupoConfig(
+    host: "0.0.0.0",
+    port: 1442,
+    container: container
+)
+```

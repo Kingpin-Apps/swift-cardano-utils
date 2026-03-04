@@ -59,4 +59,32 @@ let configuration = Configuration(
 )
 
 let cli = try await CardanoCLI(configuration: configuration)
+```
+
+## Container Mode
+
+Run CardanoCLI commands inside a running Docker container instead of a locally-installed binary. CardanoCLI uses **exec mode** — `docker exec` is called against a pre-existing named container. See <doc:ContainerSupport> for full details.
+
+> Important: `containerName` is **required**. Ensure the container is running before creating a `CardanoCLI` instance.
+
+```swift
+// Assumes a container named "cardano-node" is already running
+let container = ContainerConfig(
+    runtime: .docker,
+    imageName: "ghcr.io/intersectmbo/cardano-node:10.0.0",
+    containerName: "cardano-node"   // Required
+)
+
+let cardanoConfig = CardanoConfig(
+    socket: FilePath("/ipc/node.socket"),
+    config: FilePath("/data/config/config.json"),
+    network: .preview,
+    era: .conway,
+    ttlBuffer: 3600,
+    container: container
+)
+
+let cli = try await CardanoCLI(configuration: Config(cardano: cardanoConfig))
+let tip = try await cli.getTip()  // Runs: docker exec cardano-node cardano-cli query tip ...
+```
 

@@ -18,7 +18,8 @@ public struct OgmiosConfig: Codable, Sendable {
     public var logLevelOptions: String?
     @FilePathCodable public var workingDir: FilePath?
     public var showOutput: Bool?
-    
+    public var container: ContainerConfig?
+
     enum CodingKeys: String, CodingKey {
         case binary
         case host
@@ -33,10 +34,11 @@ public struct OgmiosConfig: Codable, Sendable {
         case logLevelOptions = "log_level_options"
         case workingDir = "working_dir"
         case showOutput = "show_output"
+        case container
     }
     
     public init(
-        binary: FilePath,
+        binary: FilePath? = nil,
         host: String? = nil,
         port: Int? = nil,
         timeout: Int? = nil,
@@ -48,7 +50,8 @@ public struct OgmiosConfig: Codable, Sendable {
         logLevelServer: String? = nil,
         logLevelOptions: String? = nil,
         workingDir: FilePath? = nil,
-        showOutput: Bool? = nil
+        showOutput: Bool? = nil,
+        container: ContainerConfig? = nil
     ) {
         self.binary = binary
         self.host = host
@@ -63,8 +66,9 @@ public struct OgmiosConfig: Codable, Sendable {
         self.logLevelOptions = logLevelOptions
         self.workingDir = workingDir
         self.showOutput = showOutput
+        self.container = container
     }
-    
+
     /// Creates a new OgmiosConfig using values from the provided reader.
     ///
     /// - Parameter config: The config reader to read configuration values from.
@@ -73,10 +77,7 @@ public struct OgmiosConfig: Codable, Sendable {
             return "ogmios.\(codingKey.rawValue)"
         }
         
-        self.binary = try config.requiredString(
-            forKey: key(.binary),
-            as: FilePath.self
-        )
+        self.binary = config.string(forKey: key(.binary), as: FilePath.self)
         self.host = config.string(forKey: key(.host))
         self.port = config.int(forKey: key(.port))
         self.timeout = config.int(forKey: key(.timeout))
@@ -89,11 +90,12 @@ public struct OgmiosConfig: Codable, Sendable {
         self.logLevelOptions = config.string(forKey: key(.logLevelOptions))
         self.workingDir = config.string(forKey: key(.workingDir), as: FilePath.self)
         self.showOutput = config.bool(forKey: key(.showOutput))
+        self.container = try ContainerConfig.tryInit(config: config, namespace: "ogmios.container")
     }
-    
+
     public static func `default`() throws -> OgmiosConfig {
         return OgmiosConfig(
-            binary: try Ogmios.getBinaryPath(),
+            binary: try? Ogmios.getBinaryPath(),
             host: "0.0.0.0",
             port: 1337,
             timeout: 30,

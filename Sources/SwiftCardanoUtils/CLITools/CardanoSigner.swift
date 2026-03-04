@@ -30,32 +30,46 @@ public struct CardanoSigner: BinaryInterfaceable {
             )
         }
         
-        guard let signerPath = cardanoConfig.signer else {
-            throw SwiftCardanoUtilsError.binaryNotFound("cardano-signer path not configured")
-        }
-        
         self.configuration = configuration
         self.cardanoConfig = cardanoConfig
-        
-        // Setup binary path
-        self.binaryPath = signerPath
-        try Self.checkBinary(binary: self.binaryPath)
-        
+
+        // Setup binary path and validate
+        if let container = cardanoConfig.container {
+            // Container mode: binary lives inside the container image.
+            self.binaryPath = cardanoConfig.signer ?? FilePath(Self.binaryName)
+            try ContainerChecks.checkImage(config: container)
+        } else {
+            guard let signerPath = cardanoConfig.signer else {
+                throw SwiftCardanoUtilsError.binaryNotFound("cardano-signer path not configured")
+            }
+            self.binaryPath = signerPath
+            try Self.checkBinary(binary: self.binaryPath)
+        }
+
         // Setup working directory
         self.workingDirectory = cardanoConfig.workingDir ?? FilePath(
             FileManager.default.currentDirectoryPath
         )
         try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
-        
+
         // Setup logger
         self.logger = logger ?? Logger(label: "CardanoSigner")
-        
-        // Setup command runner
-        self.commandRunner = commandRunner ?? CommandRunner(logger: self.logger)
-        
-        try await checkVersion()
+
+        // Setup command runner — inject ContainerizedCommandRunner when container is configured
+        self.commandRunner = ContainerizedCommandRunner.resolve(
+            injected: commandRunner,
+            container: cardanoConfig.container,
+            mode: .exec,
+            logger: self.logger
+        )
+
+        if cardanoConfig.container == nil {
+            try await checkVersion()
+        } else {
+            self.logger.info("\(Self.binaryName): skipping version check in container exec-mode")
+        }
     }
-    
+
     /// Get the version of cardano-signer
     public func version() async throws -> String {
         let output = try await runCommand(["help"])

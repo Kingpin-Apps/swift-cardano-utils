@@ -40,14 +40,20 @@ public struct Kupo: BinaryRunnable {
             )
         }
         self.kupoConfig = kupoConfig
-        
-        // Setup binary path
-        guard let binaryPath = kupoConfig.binary else {
-            throw SwiftCardanoUtilsError.valueError("Kupo binary path is required")
+
+        // Setup binary path and validate
+        if let container = kupoConfig.container {
+            // Container mode: binary lives inside the container image.
+            self.binaryPath = kupoConfig.binary ?? FilePath(Self.binaryName)
+            try ContainerChecks.checkImage(config: container)
+        } else {
+            guard let binaryPath = kupoConfig.binary else {
+                throw SwiftCardanoUtilsError.valueError("Kupo binary path is required")
+            }
+            self.binaryPath = binaryPath
+            try Self.checkBinary(binary: self.binaryPath)
         }
-        self.binaryPath = binaryPath
-        try Self.checkBinary(binary: self.binaryPath)
-        
+
         // Setup working directory
         if kupoConfig.workingDir == nil {
             self.workingDirectory = .init(FileManager.default.currentDirectoryPath)
@@ -55,15 +61,25 @@ public struct Kupo: BinaryRunnable {
             self.workingDirectory = kupoConfig.workingDir!
             try Self.checkWorkingDirectory(workingDirectory: self.workingDirectory)
         }
-        
+
         // Setup logger
         self.logger = logger ?? Logger(label: Self.binaryName)
-        
-        // Setup command runner
-        self.commandRunner = commandRunner ?? CommandRunner(logger: self.logger)
-        
-        // Check the version compatibility on initialization
-        try await checkVersion()
+
+        // Setup command runner — inject ContainerizedCommandRunner when container is configured
+        self.commandRunner = ContainerizedCommandRunner.resolve(
+            injected: commandRunner,
+            container: kupoConfig.container,
+            mode: .run,
+            logger: self.logger
+        )
+
+        // Version check is skipped in container run-mode because the container
+        // has not been launched yet — call start() first.
+        if kupoConfig.container == nil {
+            try await checkVersion()
+        } else {
+            self.logger.info("\(Self.binaryName): skipping version check in container run-mode")
+        }
     }
     
     /// Start the kupo process

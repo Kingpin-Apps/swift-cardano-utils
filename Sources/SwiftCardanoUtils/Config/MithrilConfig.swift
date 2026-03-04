@@ -12,7 +12,8 @@ public struct MithrilConfig: Codable, Sendable {
     @FilePathCodable public var downloadDir: FilePath?
     @FilePathCodable public var workingDir: FilePath?
     public var showOutput: Bool?
-    
+    public var container: ContainerConfig?
+
     enum CodingKeys: String, CodingKey {
         case binary
         case aggregatorEndpoint = "aggregator_endpoint"
@@ -21,6 +22,7 @@ public struct MithrilConfig: Codable, Sendable {
         case downloadDir = "download_dir"
         case workingDir = "working_dir"
         case showOutput = "show_output"
+        case container
     }
     
     public init(
@@ -30,7 +32,8 @@ public struct MithrilConfig: Codable, Sendable {
         ancillaryVerificationKey: String? = nil,
         downloadDir: FilePath? = nil,
         workingDir: FilePath? = nil,
-        showOutput: Bool? = nil
+        showOutput: Bool? = nil,
+        container: ContainerConfig? = nil
     ) {
         self.binary = binary
         self.aggregatorEndpoint = aggregatorEndpoint
@@ -39,8 +42,9 @@ public struct MithrilConfig: Codable, Sendable {
         self.downloadDir = downloadDir
         self.workingDir = workingDir
         self.showOutput = showOutput
+        self.container = container
     }
-    
+
     /// Creates a new MithrilConfig using values from the provided reader.
     ///
     /// - Parameter config: The config reader to read configuration values from.
@@ -59,8 +63,9 @@ public struct MithrilConfig: Codable, Sendable {
         self.downloadDir = config.string(forKey: key(.downloadDir), as: FilePath.self)
         self.workingDir = config.string(forKey: key(.workingDir), as: FilePath.self)
         self.showOutput = config.bool(forKey: key(.showOutput))
+        self.container = try ContainerConfig.tryInit(config: config, namespace: "mithril.container")
     }
-    
+
     public static func `default`() throws -> MithrilConfig {
         return MithrilConfig(
             binary: try? MithrilClient.getBinaryPath(),
