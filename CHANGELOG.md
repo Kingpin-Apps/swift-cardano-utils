@@ -1,3 +1,9 @@
+## 0.3.0 (2026-03-03)
+
+### Feat
+
+- Implement containerization support for CLI tools, introducing `ContainerConfig`, `ContainerizedCommandRunner`, and integrating with various CLI tool configurations and protocols.
+
 ## 0.2.2 (2026-02-19)
 
 ### Fix
