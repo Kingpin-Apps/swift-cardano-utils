@@ -115,6 +115,22 @@ public struct QueryCommandImpl: CommandProtocol {
     public func poolState(arguments: [String]) async throws -> String {
         return try await executeCommand("pool-state", arguments: arguments + networkArgs)
     }
+
+    /// Get the pool state for a specific pool as a typed ``PoolState`` object.
+    /// - Parameter pool: The pool operator to query. Pass `nil` to query all pools.
+    public func poolState(pool: PoolOperator? = nil) async throws -> PoolState {
+        var args = networkArgs
+        if let pool {
+            args = ["--stake-pool-id", try pool.toBech32()] + args
+        }
+        let result = try await executeCommand("pool-state", arguments: args)
+        guard let data = result.data(using: .utf8),
+              let poolState = try? JSONDecoder().decode(PoolState.self, from: data)
+        else {
+            throw DecodingError.valueNotFound(PoolState.self, DecodingError.Context(codingPath: [], debugDescription: "Failed to decode PoolState from JSON"))
+        }
+        return poolState
+    }
     
     /// Local Mempool info
     public func txMempool(arguments: [String]) async throws -> String {
