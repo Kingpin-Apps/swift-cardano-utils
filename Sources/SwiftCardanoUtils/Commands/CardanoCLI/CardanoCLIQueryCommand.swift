@@ -71,6 +71,17 @@ public struct QueryCommandImpl: CommandProtocol {
     public func protocolState(arguments: [String]) async throws -> String {
         return try await executeCommand("protocol-state", arguments: arguments + networkArgs)
     }
+
+    /// Get the current protocol state of the node as a typed ``ProtocolState`` object
+    public func protocolState() async throws -> ProtocolState {
+        let result = try await executeCommand("protocol-state", arguments: networkArgs)
+        guard let data = result.data(using: .utf8),
+              let protocolState = try? JSONDecoder().decode(ProtocolState.self, from: data)
+        else {
+            throw DecodingError.valueNotFound(ProtocolState.self, DecodingError.Context(codingPath: [], debugDescription: "Failed to decode ProtocolState from JSON"))
+        }
+        return protocolState
+    }
     
     /// Obtain the three stake snapshots for a pool (advanced command)
     public func stakeSnapshot(arguments: [String]) async throws -> String {
