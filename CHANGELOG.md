@@ -1,3 +1,11 @@
+## 0.3.1 (2026-03-06)
+
+### Fix
+
+- add PoolStateParams and typed query
+- add StakeSnapshot and typed query
+- add ProtocolState and typed query
+
 ## 0.3.0 (2026-03-03)
 
 ### Feat
