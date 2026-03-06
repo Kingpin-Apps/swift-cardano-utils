@@ -41,6 +41,15 @@ public struct QueryCommandImpl: CommandProtocol {
         return result.components(separatedBy: .newlines).filter { !$0.isEmpty }
     }
     
+    /// Get the node's current set of stake pool ids - returns array of `PoolOperator`
+    public func stakePools() async throws -> [PoolOperator] {
+        let result = try await executeCommand("stake-pools", arguments: networkArgs)
+        return try result
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+            .map { try PoolOperator(from: $0) }
+    }
+    
     /// Get the node's current tip (slot no, hash, block no) - returns JSON
     public func tip(arguments: [String] = []) async throws -> ChainTip {
         let result = try await executeCommand("tip", arguments: arguments + networkArgs)
