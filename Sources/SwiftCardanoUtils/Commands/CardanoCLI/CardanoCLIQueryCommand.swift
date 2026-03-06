@@ -87,6 +87,24 @@ public struct QueryCommandImpl: CommandProtocol {
     public func stakeSnapshot(arguments: [String]) async throws -> String {
         return try await executeCommand("stake-snapshot", arguments: arguments + networkArgs)
     }
+
+    /// Get the three stake snapshots for a specific pool as a typed ``StakeSnapshot`` object.
+    /// - Parameter pool: The pool operator to query. Pass `nil` to query all stake pools.
+    public func stakeSnapshot(pool: PoolOperator? = nil) async throws -> StakeSnapshot {
+        var args = networkArgs
+        if let pool {
+            args = ["--stake-pool-id", try pool.toBech32()] + args
+        } else {
+            args = ["--all-stake-pools"] + args
+        }
+        let result = try await executeCommand("stake-snapshot", arguments: args)
+        guard let data = result.data(using: .utf8),
+              let snapshot = try? JSONDecoder().decode(StakeSnapshot.self, from: data)
+        else {
+            throw DecodingError.valueNotFound(StakeSnapshot.self, DecodingError.Context(codingPath: [], debugDescription: "Failed to decode StakeSnapshot from JSON"))
+        }
+        return snapshot
+    }
     
     /// DEPRECATED. Use query pool-state instead
     public func poolParams(arguments: [String]) async throws -> String {
