@@ -1,3 +1,9 @@
+## 0.3.3 (2026-03-07)
+
+### Fix
+
+- update Command package and fix error handling
+
 ## 0.3.2 (2026-03-06)
 
 ### Fix
