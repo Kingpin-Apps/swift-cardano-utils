@@ -112,10 +112,10 @@ public struct ContainerizedCommandRunner: CommandRunning {
                 arguments: arguments,
                 environment: Environment.getEnv()
             ).concatenatedString()
-        } catch CommandError.terminated(let status, let stderr) {
+        } catch CommandError.terminated(let status, let stderr, let command) {
             throw SwiftCardanoUtilsError
                 .commandFailed(
-                    arguments,
+                    command,
                     "The command terminated with the code \(status). \n\(stderr)"
                 )
         } catch {

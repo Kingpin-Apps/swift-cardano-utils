@@ -52,10 +52,10 @@ extension BinaryInterfaceable {
                     workingDirectory: try AbsolutePath(validating: self.workingDirectory.string)
                 ).concatenatedString()
             }
-        } catch CommandError.terminated(let status, let stderr) {
+        } catch CommandError.terminated(let status, let stderr, let command) {
             throw SwiftCardanoUtilsError
                 .commandFailed(
-                    fullCommand,
+                    command,
                     "The command terminated with the code \(status). \n\(stderr)"
                 )
         } catch {
