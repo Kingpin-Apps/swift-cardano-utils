@@ -1,3 +1,9 @@
+## 0.3.4 (2026-03-07)
+
+### Fix
+
+- use latest Core to fetch pool metadata
+
 ## 0.3.3 (2026-03-07)
 
 ### Fix
