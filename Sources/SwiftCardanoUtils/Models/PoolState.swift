@@ -152,7 +152,7 @@ extension PoolStateParams {
     /// - Parameter poolOperator: The pool operator that owns these parameters.
     /// - Returns: A ``PoolParams`` instance populated from this CLI response.
     /// - Throws: If any field value is malformed (e.g. invalid URL, invalid hex).
-    public func toPoolParams(poolOperator: PoolOperator) throws -> PoolParams {
+    public func toPoolParams(poolOperator: PoolOperator, strict: Bool = false) async throws -> PoolParams {
 
         // VRF key hash
         let vrfKeyHash = VrfKeyHash(payload: vrf.hexStringToData)
@@ -190,9 +190,9 @@ extension PoolStateParams {
         // Pool metadata
         let poolMetadata: PoolMetadata?
         if let meta = metadata {
-            poolMetadata = try PoolMetadata(
+            poolMetadata = try await PoolMetadata.fetch(
                 url: try Url(meta.url),
-                poolMetadataHash: PoolMetadataHash(payload: meta.hash.hexStringToData)
+                poolMetadataHash: strict ? PoolMetadataHash(payload: meta.hash.hexStringToData) : nil
             )
         } else {
             poolMetadata = nil
