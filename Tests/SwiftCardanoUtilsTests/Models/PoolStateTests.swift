@@ -218,6 +218,41 @@ private extension CLIResponse {
         }
     }
     """
+
+    static let poolStateSinglePoolNoMetadata = """
+    {
+        "003a75d89895458b5604f4cfb00d4a3511e5b367bcc2582cb476f8c6": {
+            "futurePoolParams": null,
+            "poolParams": {
+                "spsCost": 340000000,
+                "spsDeposit": 500000000,
+                "spsMargin": 0,
+                "spsMetadata": null,
+                "spsOwners": [
+                    "0470daa17236a4291be26c24d9b4bb9ed023e282077572458cdfcf1a"
+                ],
+                "spsPledge": 500000000,
+                "spsRelays": [
+                    {
+                        "single host address": {
+                            "IPv4": "0.0.0.0",
+                            "IPv6": null,
+                            "port": 3533
+                        }
+                    }
+                ],
+                "spsRewardAccount": {
+                    "credential": {
+                        "keyHash": "0470daa17236a4291be26c24d9b4bb9ed023e282077572458cdfcf1a"
+                    },
+                    "network": "Testnet"
+                },
+                "spsVrf": "52a8535d6b2e69025d188d13c10c3940a1ead314ca67cd9b400b3e36472164e0"
+            },
+            "retiring": null
+        }
+    }
+    """
 }
 
 // MARK: - PoolRelay Model Tests
@@ -857,7 +892,7 @@ struct PoolStateParamsToPoolParamsTests {
 
     private var sampleParams: PoolStateParams {
         get throws {
-            let data = try #require(CLIResponse.poolStateSinglePool.data(using: .utf8))
+            let data = try #require(CLIResponse.poolStateSinglePoolNoMetadata.data(using: .utf8))
             let state = try JSONDecoder().decode(PoolState.self, from: data)
             return try #require(Array(state.pools.values).first?.poolParams)
         }
@@ -868,61 +903,61 @@ struct PoolStateParamsToPoolParamsTests {
     }
 
     @Test("toPoolParams returns a PoolParams with correct cost and pledge")
-    func testCostAndPledge() throws {
+    func testCostAndPledge() async throws {
         let params = try sampleParams
         let pool = try samplePool
-        let result = try params.toPoolParams(poolOperator: pool)
+        let result = try await params.toPoolParams(poolOperator: pool)
 
         #expect(result.cost == 340_000_000)
         #expect(result.pledge == 500_000_000)
     }
 
     @Test("toPoolParams maps poolOperator key hash from the supplied PoolOperator")
-    func testPoolOperatorKeyHash() throws {
+    func testPoolOperatorKeyHash() async throws {
         let params = try sampleParams
         let pool = try samplePool
-        let result = try params.toPoolParams(poolOperator: pool)
+        let result = try await params.toPoolParams(poolOperator: pool)
 
         #expect(result.poolOperator.payload == pool.poolKeyHash.payload)
     }
 
     @Test("toPoolParams converts VRF key hash from hex string")
-    func testVrfKeyHash() throws {
+    func testVrfKeyHash() async throws {
         let params = try sampleParams
         let pool = try samplePool
-        let result = try params.toPoolParams(poolOperator: pool)
+        let result = try await params.toPoolParams(poolOperator: pool)
 
         #expect(result.vrfKeyHash.payload == params.vrf.hexStringToData)
     }
 
     @Test("toPoolParams converts zero margin to UnitInterval(0, 1)")
-    func testZeroMargin() throws {
+    func testZeroMargin() async throws {
         let params = try sampleParams
         let pool = try samplePool
-        let result = try params.toPoolParams(poolOperator: pool)
+        let result = try await params.toPoolParams(poolOperator: pool)
 
         #expect(result.margin.numerator == 0)
         #expect(result.margin.denominator == 1)
     }
 
     @Test("toPoolParams converts non-zero margin to a reduced UnitInterval fraction")
-    func testNonZeroMargin() throws {
+    func testNonZeroMargin() async throws {
         let data = try #require(CLIResponse.poolStateAllPools.data(using: .utf8))
         let state = try JSONDecoder().decode(PoolState.self, from: data)
         let pool2 = try PoolOperator(from: poolHex2.hexStringToData)
         let params = try #require(state.pools[pool2]?.poolParams)
         // poolHex2 has spsMargin: 0.02 → should reduce to 1/50
-        let result = try params.toPoolParams(poolOperator: pool2)
+        let result = try await params.toPoolParams(poolOperator: pool2)
 
         let ratio = Double(result.margin.numerator) / Double(result.margin.denominator)
         #expect(abs(ratio - 0.02) < 1e-9)
     }
 
     @Test("toPoolParams constructs reward account with Testnet header byte (0xE0)")
-    func testRewardAccountTestnetByte() throws {
+    func testRewardAccountTestnetByte() async throws {
         let params = try sampleParams
         let pool = try samplePool
-        let result = try params.toPoolParams(poolOperator: pool)
+        let result = try await params.toPoolParams(poolOperator: pool)
 
         #expect(result.rewardAccount.payload.first == 0xE0)
         let keyHashHex = params.rewardAccount.credential.keyHash
@@ -930,10 +965,10 @@ struct PoolStateParamsToPoolParamsTests {
     }
 
     @Test("toPoolParams populates pool owners from hex strings")
-    func testPoolOwners() throws {
+    func testPoolOwners() async throws {
         let params = try sampleParams
         let pool = try samplePool
-        let result = try params.toPoolParams(poolOperator: pool)
+        let result = try await params.toPoolParams(poolOperator: pool)
 
         let owners = result.poolOwners.asArray
         #expect(owners.count == 1)
@@ -941,10 +976,10 @@ struct PoolStateParamsToPoolParamsTests {
     }
 
     @Test("toPoolParams converts single host address relay")
-    func testSingleHostAddressRelay() throws {
+    func testSingleHostAddressRelay() async throws {
         let params = try sampleParams
         let pool = try samplePool
-        let result = try params.toPoolParams(poolOperator: pool)
+        let result = try await params.toPoolParams(poolOperator: pool)
 
         #expect(result.relays?.count == 1)
         guard case .singleHostAddr(let addr) = result.relays?.first else {
@@ -957,12 +992,12 @@ struct PoolStateParamsToPoolParamsTests {
     }
 
     @Test("toPoolParams converts single host name relay")
-    func testSingleHostNameRelay() throws {
+    func testSingleHostNameRelay() async throws {
         let data = try #require(CLIResponse.poolStateAllPools.data(using: .utf8))
         let state = try JSONDecoder().decode(PoolState.self, from: data)
         let pool2 = try PoolOperator(from: poolHex2.hexStringToData)
         let params = try #require(state.pools[pool2]?.poolParams)
-        let result = try params.toPoolParams(poolOperator: pool2)
+        let result = try await params.toPoolParams(poolOperator: pool2)
 
         guard case .singleHostName(let hostName) = result.relays?.first else {
             Issue.record("Expected singleHostName relay")
@@ -973,12 +1008,12 @@ struct PoolStateParamsToPoolParamsTests {
     }
 
     @Test("toPoolParams converts multi host name relay")
-    func testMultiHostNameRelay() throws {
+    func testMultiHostNameRelay() async throws {
         let data = try #require(CLIResponse.poolStateMultiHostNameRelay.data(using: .utf8))
         let state = try JSONDecoder().decode(PoolState.self, from: data)
         let pool = try samplePool
         let params = try #require(state.pools[pool]?.poolParams)
-        let result = try params.toPoolParams(poolOperator: pool)
+        let result = try await params.toPoolParams(poolOperator: pool)
 
         guard case .multiHostName(let multiHost) = result.relays?.first else {
             Issue.record("Expected multiHostName relay")
@@ -988,33 +1023,44 @@ struct PoolStateParamsToPoolParamsTests {
     }
 
     @Test("toPoolParams populates metadata url and hash")
-    func testMetadata() throws {
-        let params = try sampleParams
+    func testMetadata() async throws {
+        let data = try #require(CLIResponse.poolStateSinglePool.data(using: .utf8))
+        let state = try JSONDecoder().decode(PoolState.self, from: data)
         let pool = try samplePool
-        let result = try params.toPoolParams(poolOperator: pool)
+        let params = try #require(state.pools[pool]?.poolParams)
 
-        #expect(result.poolMetadata?.url?.absoluteString == "https://example.com/MPP6")
-        #expect(result.poolMetadata?.poolMetadataHash?.payload == params.metadata!.hash.hexStringToData)
+        let metadataURL = "https://example.com/MPP6"
+        let mockMetadataJSON = """
+        {"name":"TestPool","description":"A test pool","ticker":"TST","homepage":"https://example.com"}
+        """
+        MockURLProtocol.responses[metadataURL] = .success(Data(mockMetadataJSON.utf8))
+        defer { MockURLProtocol.responses[metadataURL] = nil }
+
+        let session = MockURLProtocol.makeSession()
+        let result = try await params.toPoolParams(poolOperator: pool, session: session)
+
+        #expect(result.poolMetadata?.url?.absoluteString == metadataURL)
+        #expect(result.poolMetadata?.name == "TestPool")
     }
 
     @Test("toPoolParams produces nil metadata when spsMetadata is null")
-    func testNilMetadata() throws {
+    func testNilMetadata() async throws {
         let data = try #require(CLIResponse.poolStateRetiring.data(using: .utf8))
         let state = try JSONDecoder().decode(PoolState.self, from: data)
         let pool = try samplePool
         let params = try #require(state.pools[pool]?.poolParams)
-        let result = try params.toPoolParams(poolOperator: pool)
+        let result = try await params.toPoolParams(poolOperator: pool)
 
         #expect(result.poolMetadata == nil)
     }
 
     @Test("toPoolParams produces an empty relays list when spsRelays is empty")
-    func testEmptyRelays() throws {
+    func testEmptyRelays() async throws {
         let data = try #require(CLIResponse.poolStateRetiring.data(using: .utf8))
         let state = try JSONDecoder().decode(PoolState.self, from: data)
         let pool = try samplePool
         let params = try #require(state.pools[pool]?.poolParams)
-        let result = try params.toPoolParams(poolOperator: pool)
+        let result = try await params.toPoolParams(poolOperator: pool)
 
         #expect(result.relays?.isEmpty == true)
     }
