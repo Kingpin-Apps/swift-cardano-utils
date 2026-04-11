@@ -141,7 +141,7 @@ struct MithrilConfigTests {
         
         try jsonData.write(to: tempFile, atomically: true, encoding: .utf8)
         
-        let jsonProvider = try await JSONProvider(filePath: .init(tempFile.path))
+        let jsonProvider = try await FileProvider<JSONSnapshot>(filePath: .init(tempFile.path))
         let configReader = ConfigReader(providers: [jsonProvider])
         
         defer { try? FileManager.default.removeItem(at: tempFile) }

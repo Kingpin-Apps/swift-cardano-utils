@@ -289,7 +289,7 @@ struct ConfigTests {
         
         try jsonData.write(to: URL(fileURLWithPath: tempFile.string), atomically: true, encoding: .utf8)
         
-        let jsonProvider = try await JSONProvider(filePath: .init(tempFile.string))
+        let jsonProvider = try await FileProvider<JSONSnapshot>(filePath: .init(tempFile.string))
         let configReader = ConfigReader(providers: [jsonProvider])
         
         let config = try Config(config: configReader)

@@ -170,8 +170,8 @@ public struct CardanoConfig: Codable, Sendable {
     /// - Parameter config: The config reader to read configuration values from.
     public init(config: ConfigReader) throws {
         
-        func key(_ codingKey: CodingKeys) -> String {
-            return "cardano.\(codingKey.rawValue)"
+        func key(_ codingKey: CodingKeys) -> ConfigKey {
+            return ConfigKey("cardano.\(codingKey.rawValue)")
         }
         
         self.cli = config.string(

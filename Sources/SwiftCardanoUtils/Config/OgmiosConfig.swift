@@ -73,8 +73,8 @@ public struct OgmiosConfig: Codable, Sendable {
     ///
     /// - Parameter config: The config reader to read configuration values from.
     public init(config: ConfigReader) throws {
-        func key(_ codingKey: CodingKeys) -> String {
-            return "ogmios.\(codingKey.rawValue)"
+        func key(_ codingKey: CodingKeys) -> ConfigKey {
+            return ConfigKey("ogmios.\(codingKey.rawValue)")
         }
         
         self.binary = config.string(forKey: key(.binary), as: FilePath.self)

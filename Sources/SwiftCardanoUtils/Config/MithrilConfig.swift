@@ -49,8 +49,8 @@ public struct MithrilConfig: Codable, Sendable {
     ///
     /// - Parameter config: The config reader to read configuration values from.
     public init(config: ConfigReader) throws {
-        func key(_ codingKey: CodingKeys) -> String {
-            return "mithril.\(codingKey.rawValue)"
+        func key(_ codingKey: CodingKeys) -> ConfigKey {
+            return ConfigKey("mithril.\(codingKey.rawValue)")
         }
         
         self.binary = config.string(

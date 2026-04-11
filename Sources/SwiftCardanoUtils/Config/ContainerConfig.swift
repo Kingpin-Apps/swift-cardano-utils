@@ -204,8 +204,8 @@ public struct ContainerConfig: Codable, Sendable {
     ///   - config: The config reader to read values from.
     ///   - namespace: The dot-separated key prefix, e.g. `"kupo.container"`.
     public init(config: ConfigReader, namespace: String) throws {
-        func key(_ codingKey: CodingKeys) -> String {
-            return "\(namespace).\(codingKey.rawValue)"
+        func key(_ codingKey: CodingKeys) -> ConfigKey {
+            return ConfigKey("\(namespace).\(codingKey.rawValue)")
         }
 
         guard let runtimeRaw = config.string(forKey: key(.runtime)),
@@ -253,7 +253,7 @@ public struct ContainerConfig: Codable, Sendable {
     ///
     /// Use this instead of a manual sentinel-key check in service config `init(config:)`.
     public static func tryInit(config: ConfigReader, namespace: String) throws -> ContainerConfig? {
-        let imageKey = "\(namespace).\(CodingKeys.imageName.rawValue)"
+        let imageKey = ConfigKey("\(namespace).\(CodingKeys.imageName.rawValue)")
         guard config.string(forKey: imageKey) != nil else { return nil }
         return try ContainerConfig(config: config, namespace: namespace)
     }

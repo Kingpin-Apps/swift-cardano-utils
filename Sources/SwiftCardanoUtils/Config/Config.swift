@@ -1,5 +1,6 @@
 import Foundation
 import Configuration
+import ConfigurationTOML
 import SystemPackage
 import SwiftCardanoCore
 
@@ -55,10 +56,24 @@ public struct Config: Codable, Sendable {
     }
     
     public static func load(path: FilePath) async throws -> Config {
-        let config = ConfigReader(providers: [
-            EnvironmentVariablesProvider(),
-            try await JSONProvider(filePath: .init(path.string))
-        ])
+        let ext = path.extension?.lowercased()
+        var providers: [any ConfigProvider] = [EnvironmentVariablesProvider()]
+        if ext == "toml" {
+            providers.append(try await FileProvider<TOMLSnapshot>(
+                parsingOptions: .default,
+                filePath: path
+            ))
+        } else if ext == "yaml" || ext == "yml" {
+            providers.append(try await FileProvider<YAMLSnapshot>(
+                filePath: path
+            ))
+        } else {
+            providers.append(try await FileProvider<JSONSnapshot>(
+                filePath: path,
+                allowMissing: false
+            ))
+        }
+        let config = ConfigReader(providers: providers)
         return try Config(config: config)
     }
 }
