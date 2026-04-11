@@ -1,3 +1,9 @@
+## 0.4.0 (2026-04-10)
+
+### Feat
+
+- add YAML and TOML support
+
 ## 0.3.4 (2026-03-07)
 
 ### Fix
