@@ -20,7 +20,7 @@ public enum SwiftCardanoUtilsError: Error, LocalizedError {
     case valueError(String)
     case versionMismatch(String)
     
-    var errorDescription: String? {
+    public var errorDescription: String? {
         switch self {
             case .binaryNotFound(let path):
                 return "Binary not found at: \(path)"
