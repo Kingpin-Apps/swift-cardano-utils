@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - Errors
 
-enum SwiftCardanoUtilsError: Error, LocalizedError {
+public enum SwiftCardanoUtilsError: Error, LocalizedError {
     case binaryNotFound(String)
     case commandFailed([String], String)
     case processAlreadyRunning
