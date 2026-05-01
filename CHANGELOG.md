@@ -1,3 +1,9 @@
+## 0.4.3 (2026-05-01)
+
+### Fix
+
+- make errorDescription public and fix TestLogHandler
+
 ## 0.4.2 (2026-05-01)
 
 ### Fix
