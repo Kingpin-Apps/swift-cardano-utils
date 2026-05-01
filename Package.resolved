@@ -1,5 +1,5 @@
 {
-  "originHash" : "076abd979ac247f033b590dead938f459cfd7ed19c9cff580eba51b0b02637f3",
+  "originHash" : "514f7adbb0d6b8d87e777628251ca3b1aca8193e0d2fdb2c57df3819ee2b8d24",
   "pins" : [
     {
       "identity" : "base32",
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/tuist/Command.git",
       "state" : {
-        "revision" : "2b9c835b8e373faf0e9a196508a34e20db73769a",
-        "version" : "0.14.0"
+        "revision" : "c05a02621ef13a2772f26f5aa7f4ca0563226a5c",
+        "version" : "0.14.2"
       }
     },
     {
@@ -51,8 +51,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Kolos65/Mockable",
       "state" : {
-        "revision" : "0a822d53fa7516abe659b44a9c508b8eb9b666bd",
-        "version" : "0.4.1"
+        "revision" : "bd20509c34ca3205003677747ad8dcb70d18b7ca",
+        "version" : "0.6.2"
       }
     },
     {
@@ -114,8 +114,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Kingpin-Apps/swift-cardano-core.git",
       "state" : {
-        "revision" : "317027536eec4c6350c204dc867e150f0600cf0b",
-        "version" : "0.3.9"
+        "revision" : "95aa7b5363014ec99e482982fdad601b6b7d3dc8",
+        "version" : "0.3.16"
       }
     },
     {
@@ -177,8 +177,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-log.git",
       "state" : {
-        "revision" : "ce592ae52f982c847a4efc0dd881cc9eb32d29f2",
-        "version" : "1.6.4"
+        "revision" : "5073617dac96330a486245e4c0179cb0a6fd2256",
+        "version" : "1.12.0"
       }
     },
     {
@@ -195,8 +195,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Kingpin-Apps/swift-mnemonic.git",
       "state" : {
-        "revision" : "b05972fe91e2fd63a507b73862842724007a35bc",
-        "version" : "0.2.1"
+        "revision" : "af037bfb8964c380e387cac5c413074e6929123c",
+        "version" : "0.2.2"
       }
     },
     {
@@ -240,8 +240,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-system",
       "state" : {
-        "revision" : "395a77f0aa927f0ff73941d7ac35f2b46d47c9db",
-        "version" : "1.6.3"
+        "revision" : "7c6ad0fc39d0763e0b699210e4124afd5041c5df",
+        "version" : "1.6.4"
       }
     },
     {

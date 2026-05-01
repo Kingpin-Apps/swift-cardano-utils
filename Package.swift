@@ -22,11 +22,11 @@ let package = Package(
             traits: [.defaults, "YAML"]
         ),
         .package(url: "https://github.com/mattt/swift-configuration-toml.git", from: "2.0.0"),
-        .package(url: "https://github.com/apple/swift-log.git", from: "1.6.4"),
-        .package(url: "https://github.com/apple/swift-system.git", from: "1.6.3"),
-        .package(url: "https://github.com/Kingpin-Apps/swift-cardano-core.git", from: "0.3.9"),
-        .package(url: "https://github.com/tuist/Command.git", .upToNextMinor(from: "0.14.0")),
-        .package(url: "https://github.com/Kolos65/Mockable", .upToNextMinor(from: "0.4.1")),
+        .package(url: "https://github.com/apple/swift-log.git", from: "1.12.0"),
+        .package(url: "https://github.com/apple/swift-system.git", from: "1.6.4"),
+        .package(url: "https://github.com/Kingpin-Apps/swift-cardano-core.git", from: "0.3.16"),
+        .package(url: "https://github.com/tuist/Command.git", .upToNextMinor(from: "0.14.2")),
+        .package(url: "https://github.com/Kolos65/Mockable", .upToNextMinor(from: "0.6.2")),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
