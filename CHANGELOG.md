@@ -1,3 +1,9 @@
+## 0.4.5 (2026-05-11)
+
+### Fix
+
+- check if file exists in tests
+
 ## 0.4.4 (2026-05-11)
 
 ### Fix
