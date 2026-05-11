@@ -1,3 +1,9 @@
+## 0.4.4 (2026-05-11)
+
+### Fix
+
+- improve platform compatibility
+
 ## 0.4.3 (2026-05-01)
 
 ### Fix
