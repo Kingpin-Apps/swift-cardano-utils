@@ -1,6 +1,9 @@
 import Foundation
 import SwiftCardanoCore
 import Logging
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 // MARK: - Mithril Command Base Infrastructure
 

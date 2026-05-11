@@ -114,8 +114,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Kingpin-Apps/swift-cardano-core.git",
       "state" : {
-        "revision" : "95aa7b5363014ec99e482982fdad601b6b7d3dc8",
-        "version" : "0.3.16"
+        "revision" : "251640c5b37e27c1be3745363d15821a9fe0971a",
+        "version" : "0.3.19"
       }
     },
     {
@@ -204,8 +204,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Kingpin-Apps/swift-ncal.git",
       "state" : {
-        "revision" : "e42fbe3c3d45a159ac626c956c83466373927722",
-        "version" : "0.2.1"
+        "revision" : "092ff55a1e32ea7bd6faeb6a3884dd90109558ae",
+        "version" : "0.2.2"
       }
     },
     {

@@ -1,5 +1,8 @@
 import Foundation
 import SwiftCardanoCore
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 // MARK: - Pool State
 

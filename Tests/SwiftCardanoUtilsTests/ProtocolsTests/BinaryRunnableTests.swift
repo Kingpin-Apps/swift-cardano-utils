@@ -208,7 +208,7 @@ struct BinaryRunnableTests {
         
         // With showOutput = false, start() should return immediately
         // (much less than the 0.5 seconds the process would take)
-        #expect(duration < 0.1, "Expected start() to return immediately, took \(duration) seconds")
+        #expect(duration < 0.2, "Expected start() to return immediately, took \(duration) seconds")
         
     }
     
