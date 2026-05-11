@@ -73,6 +73,7 @@ struct ConfigTests {
     
     private func createTempFile() -> FilePath {
         let tempDir = FileManager.default.temporaryDirectory
+        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         let fileName = "test-config-\(UUID().uuidString).json"
         return FilePath(tempDir.appendingPathComponent(fileName).path)
     }
