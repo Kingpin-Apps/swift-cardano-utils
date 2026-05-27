@@ -2,8 +2,6 @@ import Foundation
 import SystemPackage
 import SwiftCardanoCore
 import Logging
-import PotentCodables
-import PotentCBOR
 import Command
 
 
@@ -191,7 +189,7 @@ public struct CardanoCLI: BinaryInterfaceable {
     }
     
     /// Get the current epoch from the node
-    public func getEpoch() async throws -> Int {
+    public func getEpoch() async throws -> EpochNumber {
         do {
             let chainTip = try await query.tip()
             
@@ -256,7 +254,7 @@ public struct CardanoCLI: BinaryInterfaceable {
     }
     
     /// Get the current tip (slot number) of the blockchain
-    public func getTip() async throws -> Int {
+    public func getTip() async throws -> SlotNumber {
         let chainTip = try await query.tip()
         
         guard let syncProgress = chainTip.syncProgress,
@@ -282,8 +280,8 @@ public struct CardanoCLI: BinaryInterfaceable {
     }
     
     /// Calculate the current TTL (Time To Live) for transactions
-    public func getCurrentTTL() async throws -> Int {
-        return try await getTip() + cardanoConfig.ttlBuffer
+    public func getCurrentTTL() async throws -> SlotNumber {
+        return try await getTip() + SlotNumber(cardanoConfig.ttlBuffer)
     }
     
     /// Get protocol parameters from the Cardano node or offline file
@@ -406,7 +404,7 @@ public struct CardanoCLI: BinaryInterfaceable {
             for (asset, amount) in utxoValue {
                 if asset == "lovelace" {
                     if let lovelace = amount as? Int {
-                        value.coin = Int(lovelace)
+                        value.coin = Int64(lovelace)
                     }
                 } else {
                     let policyId = asset
@@ -425,7 +423,7 @@ public struct CardanoCLI: BinaryInterfaceable {
                             multiAsset[policy] = Asset([:])
                         }
                         // Add the asset to the policy
-                        multiAsset[policy]?[assetName] = assetAmount
+                        multiAsset[policy]?[assetName] = Int64(assetAmount)
                     }
                 }
             }
