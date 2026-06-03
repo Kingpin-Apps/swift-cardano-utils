@@ -1,3 +1,9 @@
+## 0.5.2 (2026-06-02)
+
+### Fix
+
+- use correct version command
+
 ## 0.5.1 (2026-05-29)
 
 ### Fix
