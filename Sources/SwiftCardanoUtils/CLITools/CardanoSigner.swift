@@ -72,7 +72,7 @@ public struct CardanoSigner: BinaryInterfaceable {
 
     /// Get the version of cardano-signer
     public func version() async throws -> String {
-        let output = try await runCommand(["help"])
+        let output = try await runCommand(["--version"])
         
         // Extract version using regex pattern
         let pattern = #"cardano-signer (\d+\.\d+\.\d+)"#
