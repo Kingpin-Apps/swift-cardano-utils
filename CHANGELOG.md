@@ -1,3 +1,9 @@
+## 0.5.3 (2026-06-25)
+
+### Fix
+
+- decode cardano-cli 11.0 `query pool-state` (reward account renamed `spsRewardAccount` → `spsAccountId` and flattened; network threaded via decoder userInfo); stop swallowing the real decode error in `poolState(pool:)`
+
 ## 0.5.2 (2026-06-02)
 
 ### Fix
