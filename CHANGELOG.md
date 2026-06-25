@@ -1,3 +1,9 @@
+## 0.5.4 (2026-06-25)
+
+### Fix
+
+- `PoolStateParams.toPoolParams`: by default tolerate an unreachable or hash-mismatching pool metadata document (still returning the on-chain url + hash); pass `strict: true` to require successful download + hash verification
+
 ## 0.5.3 (2026-06-25)
 
 ### Fix
