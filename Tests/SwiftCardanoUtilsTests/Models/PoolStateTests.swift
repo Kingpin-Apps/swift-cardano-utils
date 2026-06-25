@@ -1172,4 +1172,61 @@ struct PoolStateParamsToPoolParamsTests {
 
         #expect(result.relays?.isEmpty == true)
     }
+
+    /// A single-pool fixture whose metadata points at `metaUrl`. Each test uses a
+    /// unique URL so the shared `MockURLProtocol.responses` (the suite runs in
+    /// parallel) never races. An unregistered URL makes the fetch fail.
+    private func paramsWithMetadata(url metaUrl: String) throws -> PoolStateParams {
+        let json = """
+        {
+            "003a75d89895458b5604f4cfb00d4a3511e5b367bcc2582cb476f8c6": {
+                "futurePoolParams": null,
+                "poolParams": {
+                    "spsCost": 340000000, "spsDeposit": 500000000, "spsMargin": 0,
+                    "spsMetadata": { "hash": "75a1562ee7700c3330a65c650efe1efd9f33fc4fa003be130d5abaaa03c43f65", "url": "\(metaUrl)" },
+                    "spsOwners": [], "spsPledge": 500000000, "spsRelays": [],
+                    "spsRewardAccount": { "credential": { "keyHash": "0470daa17236a4291be26c24d9b4bb9ed023e282077572458cdfcf1a" }, "network": "Testnet" },
+                    "spsVrf": "52a8535d6b2e69025d188d13c10c3940a1ead314ca67cd9b400b3e36472164e0"
+                },
+                "retiring": null
+            }
+        }
+        """
+        let state = try JSONDecoder().decode(PoolState.self, from: Data(json.utf8))
+        return try #require(Array(state.pools.values).first?.poolParams)
+    }
+
+    @Test("toPoolParams (lenient, default) tolerates metadata that doesn't match its hash")
+    func testLenientMetadataFallback() async throws {
+        let metadataURL = "https://lenient-meta-mismatch.test/pool.json"
+        let params = try paramsWithMetadata(url: metadataURL)
+        let pool = try samplePool
+
+        // Reachable URL whose body is NOT the expected metadata (wrong hash / not JSON).
+        MockURLProtocol.responses[metadataURL] = .success(Data("<html>not pool metadata</html>".utf8))
+        defer { MockURLProtocol.responses[metadataURL] = nil }
+        let session = MockURLProtocol.makeSession()
+
+        // Default is lenient (strict: false): no throw; on-chain url + hash preserved,
+        // off-chain document (name/ticker/…) left nil.
+        let result = try await params.toPoolParams(poolOperator: pool, session: session)
+        #expect(result.poolMetadata?.url?.absoluteString == metadataURL)
+        #expect(result.poolMetadata?.poolMetadataHash != nil)
+        #expect(result.poolMetadata?.name == nil)
+    }
+
+    @Test("toPoolParams (strict) throws when metadata doesn't match its hash")
+    func testStrictMetadataThrowsOnMismatch() async throws {
+        let metadataURL = "https://strict-meta-mismatch.test/pool.json"
+        let params = try paramsWithMetadata(url: metadataURL)
+        let pool = try samplePool
+
+        MockURLProtocol.responses[metadataURL] = .success(Data("<html>not pool metadata</html>".utf8))
+        defer { MockURLProtocol.responses[metadataURL] = nil }
+        let session = MockURLProtocol.makeSession()
+
+        await #expect(throws: Error.self) {
+            _ = try await params.toPoolParams(poolOperator: pool, strict: true, session: session)
+        }
+    }
 }

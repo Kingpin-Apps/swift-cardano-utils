@@ -305,14 +305,39 @@ extension PoolStateParams {
             }
         }
 
-        // Pool metadata
+        // Pool metadata. The on-chain `url` + `hash` are always preserved; only the
+        // *verification* of the off-chain document is governed by `strict`.
         let poolMetadata: PoolMetadata?
         if let meta = metadata {
-            poolMetadata = try await PoolMetadata.fetch(
-                url: try Url(meta.url),
-                poolMetadataHash: strict ? PoolMetadataHash(payload: meta.hash.hexStringToData) : nil,
-                session: session
-            )
+            let metaUrl = try Url(meta.url)
+            let metaHash = PoolMetadataHash(payload: meta.hash.hexStringToData)
+            if strict {
+                // Download the off-chain document and verify its hash; any failure
+                // (unreachable URL or hash mismatch) is fatal.
+                poolMetadata = try await PoolMetadata.fetch(
+                    url: metaUrl,
+                    poolMetadataHash: metaHash,
+                    session: session
+                )
+            } else {
+                // Lenient: try to enrich with the off-chain document (name, ticker,
+                // …) without verifying it, but never fail — and always keep the
+                // on-chain url + hash even when the document is unreachable or no
+                // longer matches.
+                let fetched = try? await PoolMetadata.fetch(
+                    url: metaUrl,
+                    poolMetadataHash: nil,
+                    session: session
+                )
+                poolMetadata = (try? PoolMetadata(
+                    name: fetched?.name,
+                    description: fetched?.desc,
+                    ticker: fetched?.ticker,
+                    homepage: fetched?.homepage,
+                    url: metaUrl,
+                    poolMetadataHash: metaHash
+                )) ?? (try? PoolMetadata(url: metaUrl, poolMetadataHash: metaHash))
+            }
         } else {
             poolMetadata = nil
         }
