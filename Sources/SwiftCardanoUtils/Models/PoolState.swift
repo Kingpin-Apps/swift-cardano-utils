@@ -14,15 +14,75 @@ public struct PoolStateMetadata: Codable, Sendable {
     public let url: String
 }
 
-/// Credential used in a pool's reward account.
+/// Network the `cardano-cli query pool-state` response was produced on.
+///
+/// cardano-cli 11.0+ no longer embeds the network inside the pool's account id, so
+/// it is threaded into the decoder via `userInfo` (as the string `"Mainnet"` or
+/// `"Testnet"`) when decoding a ``PoolState`` so that ``PoolStateRewardAccount``
+/// can still reconstruct the correct reward-account header byte.
+public extension CodingUserInfoKey {
+    static let poolStateNetwork = CodingUserInfoKey(rawValue: "swiftCardanoUtils.poolStateNetwork")!
+}
+
+/// Credential used in a pool's reward account (legacy CLI shape).
 public struct PoolStateCredential: Codable, Sendable {
     public let keyHash: String
 }
 
 /// Reward account associated with a stake pool.
+///
+/// Two CLI shapes are accepted:
+/// - cardano-cli 11.0+: `"spsAccountId": { "keyHash": "<hex>" }` — flat, no network.
+/// - older CLIs: `"spsRewardAccount": { "credential": { "keyHash": "<hex>" }, "network": "Testnet" }`.
+///
+/// When the JSON omits the network (the 11.0+ shape) it is taken from the value
+/// threaded in via `decoder.userInfo[.poolStateNetwork]`, defaulting to `"Testnet"`.
 public struct PoolStateRewardAccount: Codable, Sendable {
-    public let credential: PoolStateCredential
+    public let keyHash: String
     public let network: String
+
+    /// Backward-compatible accessor for the legacy nested `credential` shape.
+    public var credential: PoolStateCredential { PoolStateCredential(keyHash: keyHash) }
+
+    private enum CodingKeys: String, CodingKey {
+        case keyHash
+        case credential
+        case network
+    }
+
+    private enum CredentialKeys: String, CodingKey {
+        case keyHash
+    }
+
+    public init(keyHash: String, network: String) {
+        self.keyHash = keyHash
+        self.network = network
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        if let keyHash = try container.decodeIfPresent(String.self, forKey: .keyHash) {
+            // cardano-cli 11.0+ flat shape: { "keyHash": "<hex>" }
+            self.keyHash = keyHash
+        } else {
+            // Legacy nested shape: { "credential": { "keyHash": "<hex>" }, ... }
+            let credential = try container.nestedContainer(keyedBy: CredentialKeys.self, forKey: .credential)
+            self.keyHash = try credential.decode(String.self, forKey: .keyHash)
+        }
+
+        if let network = try container.decodeIfPresent(String.self, forKey: .network) {
+            self.network = network
+        } else {
+            self.network = (decoder.userInfo[.poolStateNetwork] as? String) ?? "Testnet"
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(keyHash, forKey: .keyHash)
+        try container.encode(network, forKey: .network)
+    }
 }
 
 // MARK: - PoolRelay
@@ -126,8 +186,63 @@ public struct PoolStateParams: Codable, Sendable {
         case owners = "spsOwners"
         case pledge = "spsPledge"
         case relays = "spsRelays"
-        case rewardAccount = "spsRewardAccount"
+        // cardano-cli 11.0+ renamed the reward account from `spsRewardAccount`
+        // to `spsAccountId`. Accept both so the model decodes across CLI versions.
+        case rewardAccount = "spsAccountId"
+        case legacyRewardAccount = "spsRewardAccount"
         case vrf = "spsVrf"
+    }
+
+    public init(
+        cost: UInt64,
+        deposit: UInt64,
+        margin: Double,
+        metadata: PoolStateMetadata?,
+        owners: [String],
+        pledge: UInt64,
+        relays: [PoolRelay],
+        rewardAccount: PoolStateRewardAccount,
+        vrf: String
+    ) {
+        self.cost = cost
+        self.deposit = deposit
+        self.margin = margin
+        self.metadata = metadata
+        self.owners = owners
+        self.pledge = pledge
+        self.relays = relays
+        self.rewardAccount = rewardAccount
+        self.vrf = vrf
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.cost = try container.decode(UInt64.self, forKey: .cost)
+        self.deposit = try container.decode(UInt64.self, forKey: .deposit)
+        self.margin = try container.decode(Double.self, forKey: .margin)
+        self.metadata = try container.decodeIfPresent(PoolStateMetadata.self, forKey: .metadata)
+        self.owners = try container.decode([String].self, forKey: .owners)
+        self.pledge = try container.decode(UInt64.self, forKey: .pledge)
+        self.relays = try container.decode([PoolRelay].self, forKey: .relays)
+        self.vrf = try container.decode(String.self, forKey: .vrf)
+        if container.contains(.rewardAccount) {
+            self.rewardAccount = try container.decode(PoolStateRewardAccount.self, forKey: .rewardAccount)
+        } else {
+            self.rewardAccount = try container.decode(PoolStateRewardAccount.self, forKey: .legacyRewardAccount)
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(cost, forKey: .cost)
+        try container.encode(deposit, forKey: .deposit)
+        try container.encode(margin, forKey: .margin)
+        try container.encodeIfPresent(metadata, forKey: .metadata)
+        try container.encode(owners, forKey: .owners)
+        try container.encode(pledge, forKey: .pledge)
+        try container.encode(relays, forKey: .relays)
+        try container.encode(rewardAccount, forKey: .rewardAccount)
+        try container.encode(vrf, forKey: .vrf)
     }
 }
 
@@ -167,7 +282,7 @@ extension PoolStateParams {
         // Key-based stake addresses use 0xE0 (Testnet) or 0xE1 (Mainnet).
         let networkByte: UInt8 = rewardAccount.network.lowercased() == "mainnet" ? 0xE1 : 0xE0
         let rewardAccountHash = RewardAccountHash(
-            payload: Data([networkByte]) + rewardAccount.credential.keyHash.hexStringToData
+            payload: Data([networkByte]) + rewardAccount.keyHash.hexStringToData
         )
 
         // Pool owners

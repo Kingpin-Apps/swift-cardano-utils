@@ -133,12 +133,20 @@ public struct QueryCommandImpl: CommandProtocol {
             args = ["--stake-pool-id", try pool.toBech32()] + args
         }
         let result = try await executeCommand("pool-state", arguments: args)
-        guard let data = result.data(using: .utf8),
-              let poolState = try? JSONDecoder().decode(PoolState.self, from: data)
-        else {
-            throw DecodingError.valueNotFound(PoolState.self, DecodingError.Context(codingPath: [], debugDescription: "Failed to decode PoolState from JSON"))
+        guard let data = result.data(using: .utf8) else {
+            throw DecodingError.valueNotFound(
+                PoolState.self,
+                DecodingError.Context(codingPath: [], debugDescription: "pool-state returned no UTF-8 data")
+            )
         }
-        return poolState
+        // cardano-cli 11.0+ drops the network from the pool's account id, so thread
+        // the queried network into the decoder for reward-account reconstruction.
+        // Decode without `try?` so a genuine schema mismatch surfaces its real cause
+        // instead of a misleading "found null".
+        let decoder = JSONDecoder()
+        decoder.userInfo[.poolStateNetwork] =
+            baseCLI.cardanoConfig.network.networkId == .mainnet ? "Mainnet" : "Testnet"
+        return try decoder.decode(PoolState.self, from: data)
     }
     
     /// Local Mempool info

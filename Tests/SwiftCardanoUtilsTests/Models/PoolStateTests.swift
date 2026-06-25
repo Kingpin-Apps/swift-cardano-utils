@@ -219,6 +219,64 @@ private extension CLIResponse {
     }
     """
 
+    /// cardano-cli 11.0+ shape: reward account is `spsAccountId` (flat `{ keyHash }`,
+    /// no `network`), and `spsDelegators` is present (and ignored by the model).
+    static let poolStateNode11 = """
+    {
+        "003a75d89895458b5604f4cfb00d4a3511e5b367bcc2582cb476f8c6": {
+            "futurePoolParams": null,
+            "poolParams": {
+                "spsAccountId": {
+                    "keyHash": "0470daa17236a4291be26c24d9b4bb9ed023e282077572458cdfcf1a"
+                },
+                "spsCost": 170000000,
+                "spsDelegators": [],
+                "spsDeposit": 500000000,
+                "spsMargin": 0.1,
+                "spsMetadata": {
+                    "hash": "75a1562ee7700c3330a65c650efe1efd9f33fc4fa003be130d5abaaa03c43f65",
+                    "url": "https://example.com/MPP6"
+                },
+                "spsOwners": [
+                    "0470daa17236a4291be26c24d9b4bb9ed023e282077572458cdfcf1a"
+                ],
+                "spsPledge": 1000000000,
+                "spsRelays": [
+                    { "single host address": { "IPv4": "127.0.0.1", "IPv6": null, "port": 3001 } }
+                ],
+                "spsVrf": "52a8535d6b2e69025d188d13c10c3940a1ead314ca67cd9b400b3e36472164e0"
+            },
+            "retiring": 1340
+        }
+    }
+    """
+
+    /// cardano-cli 11.0+ shape with no metadata (so `toPoolParams` performs no network fetch).
+    static let poolStateNode11NoMetadata = """
+    {
+        "003a75d89895458b5604f4cfb00d4a3511e5b367bcc2582cb476f8c6": {
+            "futurePoolParams": null,
+            "poolParams": {
+                "spsAccountId": {
+                    "keyHash": "0470daa17236a4291be26c24d9b4bb9ed023e282077572458cdfcf1a"
+                },
+                "spsCost": 170000000,
+                "spsDelegators": [],
+                "spsDeposit": 500000000,
+                "spsMargin": 0.1,
+                "spsMetadata": null,
+                "spsOwners": [
+                    "0470daa17236a4291be26c24d9b4bb9ed023e282077572458cdfcf1a"
+                ],
+                "spsPledge": 1000000000,
+                "spsRelays": [],
+                "spsVrf": "52a8535d6b2e69025d188d13c10c3940a1ead314ca67cd9b400b3e36472164e0"
+            },
+            "retiring": null
+        }
+    }
+    """
+
     static let poolStateSinglePoolNoMetadata = """
     {
         "003a75d89895458b5604f4cfb00d4a3511e5b367bcc2582cb476f8c6": {
@@ -666,6 +724,56 @@ struct PoolStateModelTests {
 
         let entry = try #require(Array(decoded.pools.values).first)
         #expect(entry.retiring == 550)
+    }
+}
+
+// MARK: - cardano-cli 11.0 (spsAccountId) Tests
+
+@Suite("PoolState cardano-cli 11.0 shape")
+struct PoolStateNode11Tests {
+
+    @Test("Decodes the spsAccountId reward-account shape (no network → defaults to Testnet)")
+    func testDecodeSpsAccountId() throws {
+        let data = try #require(CLIResponse.poolStateNode11.data(using: .utf8))
+        let state = try JSONDecoder().decode(PoolState.self, from: data)
+
+        let entry = try #require(Array(state.pools.values).first)
+        #expect(entry.poolParams.cost == 170_000_000)
+        #expect(entry.poolParams.pledge == 1_000_000_000)
+        #expect(entry.poolParams.margin == 0.1)
+        #expect(entry.retiring == 1340)
+        // Reward account keyHash decoded from the flat spsAccountId shape.
+        #expect(entry.poolParams.rewardAccount.keyHash == "0470daa17236a4291be26c24d9b4bb9ed023e282077572458cdfcf1a")
+        // Backward-compat accessor still works.
+        #expect(entry.poolParams.rewardAccount.credential.keyHash == "0470daa17236a4291be26c24d9b4bb9ed023e282077572458cdfcf1a")
+        // No network in the JSON and no userInfo → defaults to Testnet.
+        #expect(entry.poolParams.rewardAccount.network == "Testnet")
+    }
+
+    @Test("Network is taken from decoder.userInfo when the JSON omits it")
+    func testNetworkFromUserInfo() throws {
+        let data = try #require(CLIResponse.poolStateNode11.data(using: .utf8))
+        let decoder = JSONDecoder()
+        decoder.userInfo[.poolStateNetwork] = "Mainnet"
+        let state = try decoder.decode(PoolState.self, from: data)
+
+        let entry = try #require(Array(state.pools.values).first)
+        #expect(entry.poolParams.rewardAccount.network == "Mainnet")
+    }
+
+    @Test("toPoolParams reconstructs the reward account with the threaded network byte")
+    func testToPoolParamsUsesThreadedNetwork() async throws {
+        let data = try #require(CLIResponse.poolStateNode11NoMetadata.data(using: .utf8))
+        let decoder = JSONDecoder()
+        decoder.userInfo[.poolStateNetwork] = "Mainnet"
+        let state = try decoder.decode(PoolState.self, from: data)
+        let pool = try PoolOperator(from: "003a75d89895458b5604f4cfb00d4a3511e5b367bcc2582cb476f8c6".hexStringToData)
+        let params = try #require(state.pools.values.first)
+        let result = try await params.poolParams.toPoolParams(poolOperator: pool)
+
+        // Mainnet reward-account header byte is 0xE1.
+        #expect(result.rewardAccount.payload.first == 0xE1)
+        #expect(result.rewardAccount.payload.dropFirst() == params.poolParams.rewardAccount.keyHash.hexStringToData)
     }
 }
 
