@@ -1,5 +1,5 @@
 {
-  "originHash" : "2cb8b271eb58807ef014742fde03a4109c6c0476d7db4326bbae13ac859b9294",
+  "originHash" : "9ce41a4f30cf8815c17aa53f159038eb3e92b5fe65cf55ce00db30a290e125d7",
   "pins" : [
     {
       "identity" : "base32",
@@ -96,8 +96,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Kingpin-Apps/swift-cardano-core.git",
       "state" : {
-        "revision" : "096243346ab6a9e6c5a57992cb1c694a9795dc52",
-        "version" : "0.4.3"
+        "revision" : "b38df7490bc7c84611a5b8bbad93c29749a07bb5",
+        "version" : "0.5.0"
       }
     },
     {

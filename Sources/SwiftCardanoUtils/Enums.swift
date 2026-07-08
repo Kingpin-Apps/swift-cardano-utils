@@ -7,7 +7,7 @@ import SystemPackage
 // MARK: - Network Type Enum
 
 /// Supported Cardano networks
-extension Network: @retroactive CustomStringConvertible {}
+// Network's CustomStringConvertible + Codable now live in SwiftCardanoCore (Network.swift).
 extension Network: @retroactive CaseIterable, @retroactive ExpressibleByConfigString {
     public static let allCases: [Network] = [
         .mainnet,
@@ -62,40 +62,9 @@ extension Network: @retroactive CaseIterable, @retroactive ExpressibleByConfigSt
     }
 }
 
-// MARK: - Network Codable Implementation
-
-extension Network: @retroactive Decodable {}
-extension Network: @retroactive Encodable {}
-extension Network {
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        if let stringValue = try? container.decode(String.self) {
-            self.init(from: stringValue)
-        } else if let intValue = try? container.decode(Int.self) {
-            self = .custom(intValue)
-        } else {
-            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Invalid network value"))
-        }
-    }
-    
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch self {
-        case .mainnet:
-            try container.encode("mainnet")
-        case .preprod:
-            try container.encode("preprod")
-        case .preview:
-            try container.encode("preview")
-        case .guildnet:
-            try container.encode("guildnet")
-        case .sanchonet:
-            try container.encode("sanchonet")
-        case .custom(let magic):
-            try container.encode(magic)
-        }
-    }
-}
+// MARK: - Network Codable
+// Moved to SwiftCardanoCore (Network.swift) — core now owns Network's Codable conformance so
+// consumers don't depend on this CLI toolkit for it.
 
 
 // MARK: - Hardware Wallet Types
