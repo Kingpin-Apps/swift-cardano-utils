@@ -1,14 +1,20 @@
+## 0.5.5 (2026-07-08)
+
+### Fix
+
+- **network**: source Network Codable/CustomStringConvertible from swift-cardano-core (require 0.5.0)
+
 ## 0.5.4 (2026-06-25)
 
 ### Fix
 
-- `PoolStateParams.toPoolParams`: by default tolerate an unreachable or hash-mismatching pool metadata document (still returning the on-chain url + hash); pass `strict: true` to require successful download + hash verification
+- tolerate unverifiable pool metadata unless strict (keep on-chain url+hash)
 
 ## 0.5.3 (2026-06-25)
 
 ### Fix
 
-- decode cardano-cli 11.0 `query pool-state` (reward account renamed `spsRewardAccount` → `spsAccountId` and flattened; network threaded via decoder userInfo); stop swallowing the real decode error in `poolState(pool:)`
+- decode cardano-cli 11.0 pool-state (spsAccountId reward account, network via userInfo)
 
 ## 0.5.2 (2026-06-02)
 
