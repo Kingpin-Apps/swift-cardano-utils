@@ -38,16 +38,28 @@ public struct QueryCommandImpl: CommandProtocol {
     /// Get the node's current set of stake pool ids - returns array of pool IDs
     public func stakePools(arguments: [String]) async throws -> [String] {
         let result = try await executeCommand("stake-pools", arguments: arguments + networkArgs)
-        return result.components(separatedBy: .newlines).filter { !$0.isEmpty }
+        return Self.parseStakePoolIds(result)
     }
     
     /// Get the node's current set of stake pool ids - returns array of `PoolOperator`
     public func stakePools() async throws -> [PoolOperator] {
         let result = try await executeCommand("stake-pools", arguments: networkArgs)
-        return try result
+        return try Self.parseStakePoolIds(result).map { try PoolOperator(from: $0) }
+    }
+
+    /// Parse `query stake-pools` output. Current cardano-cli versions print a JSON array
+    /// of pool IDs by default; older versions (and `--output-text`) print one per line.
+    static func parseStakePoolIds(_ output: String) -> [String] {
+        let trimmed = output.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.hasPrefix("["),
+           let data = trimmed.data(using: .utf8),
+           let ids = try? JSONDecoder().decode([String].self, from: data) {
+            return ids
+        }
+        return trimmed
             .components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }
-            .map { try PoolOperator(from: $0) }
     }
     
     /// Get the node's current tip (slot no, hash, block no) - returns JSON
