@@ -1,3 +1,9 @@
+## 0.5.6 (2026-09-16)
+
+### Fix
+
+- **query**: parse JSON output of query stake-pools
+
 ## 0.5.5 (2026-07-08)
 
 ### Fix
