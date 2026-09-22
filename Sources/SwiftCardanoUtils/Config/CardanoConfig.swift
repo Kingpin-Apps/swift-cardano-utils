@@ -270,11 +270,14 @@ public struct CardanoConfig: Codable, Sendable {
         self.mempoolCapacityOverride = config.int(forKey: key(.mempoolCapacityOverride))
         self.noMempoolCapacityOverride = config.bool(forKey: key(.noMempoolCapacityOverride))
         
-        self.network = config.string(
-            forKey: key(.network),
-            as: Network.self,
-            default: .mainnet
-        )
+        // `Network.custom` encodes as its bare protocol magic, so a devnet's network
+        // comes back from TOML/JSON/YAML as an integer, which the string read does not
+        // coerce. Without the int fallback a custom magic silently became `.mainnet`,
+        // aiming every address, CLI invocation, and chain query at the wrong network.
+        self.network =
+            config.string(forKey: key(.network), as: Network.self)
+            ?? config.int(forKey: key(.network)).map { Network.custom($0) }
+            ?? .mainnet
         self.era = Era(from: config.string(forKey: key(.era)) ?? "conway")
         self.ttlBuffer = config.int(
             forKey: key(.ttlBuffer),

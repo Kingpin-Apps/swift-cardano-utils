@@ -258,6 +258,82 @@ struct CardanoConfigTests {
         }
     }
     
+    // MARK: - ConfigReader Network Tests
+
+    @Test("CardanoConfig reads a named network from the reader")
+    func testNamedNetworkFromReader() throws {
+        let reader = ConfigReader(
+            provider: InMemoryProvider(
+                name: "test",
+                values: ["cardano.network": "preprod", "cardano.era": "conway"]
+            )
+        )
+        let config = try CardanoConfig(config: reader)
+        #expect(config.network == .preprod)
+    }
+
+    @Test("CardanoConfig reads a custom network magic written as an integer")
+    func testIntegerNetworkMagicFromReader() throws {
+        // `Network.custom` encodes as its bare magic, so it comes back from
+        // TOML/JSON/YAML as an integer. Reading it only as a string silently
+        // produced mainnet and aimed every address at the wrong network.
+        let reader = ConfigReader(
+            provider: InMemoryProvider(
+                name: "test",
+                values: ["cardano.network": 42, "cardano.era": "conway"]
+            )
+        )
+        let config = try CardanoConfig(config: reader)
+        #expect(config.network == .custom(42))
+        #expect(config.network.testnetMagic == 42)
+        #expect(config.network.networkId == .testnet)
+    }
+
+    @Test("CardanoConfig reads a custom network magic written as a string")
+    func testStringNetworkMagicFromReader() throws {
+        let reader = ConfigReader(
+            provider: InMemoryProvider(
+                name: "test",
+                values: ["cardano.network": "42", "cardano.era": "conway"]
+            )
+        )
+        let config = try CardanoConfig(config: reader)
+        #expect(config.network == .custom(42))
+    }
+
+    @Test("CardanoConfig defaults to mainnet when no network is configured")
+    func testMissingNetworkFromReader() throws {
+        let reader = ConfigReader(
+            provider: InMemoryProvider(name: "test", values: ["cardano.era": "conway"])
+        )
+        let config = try CardanoConfig(config: reader)
+        #expect(config.network == .mainnet)
+    }
+
+    @Test("a custom network round-trips through encode and the reader")
+    func testCustomNetworkRoundTripsThroughTheReader() throws {
+        // The encoder writes `.custom` as a bare int, so this is the shape a
+        // saved config file actually has.
+        let original = CardanoConfig(network: .custom(42), era: .conway, ttlBuffer: 3600)
+        let encoded = try JSONEncoder().encode(original)
+        let json = try #require(
+            try JSONSerialization.jsonObject(with: encoded) as? [String: Any]
+        )
+        let magic = try #require(json["network"] as? Int)
+        #expect(magic == 42)
+
+        let reader = ConfigReader(
+            provider: InMemoryProvider(
+                name: "test",
+                values: [
+                    "cardano.network": ConfigValue(.int(magic), isSecret: false),
+                    "cardano.era": "conway",
+                ]
+            )
+        )
+        #expect(try CardanoConfig(config: reader).network == original.network)
+    }
+
     @Test("CardanoConfig requires mandatory fields")
     func testMandatoryFields() {
         let incompleteJSON = """
