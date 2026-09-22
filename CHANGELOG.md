@@ -1,3 +1,9 @@
+## 0.5.7 (2026-09-22)
+
+### Fix
+
+- **config**: read a custom network magic written as an integer
+
 ## 0.5.6 (2026-09-16)
 
 ### Fix
