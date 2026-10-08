@@ -1,3 +1,9 @@
+## 0.5.8 (2026-10-08)
+
+### Fix
+
+- **query**: decode object-form stake and vote delegations from stake-address-info
+
 ## 0.5.7 (2026-09-22)
 
 ### Fix
