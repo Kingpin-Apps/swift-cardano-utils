@@ -482,11 +482,11 @@ public struct CardanoCLI: BinaryInterfaceable {
         
         do {
             let stakeAddressInfo = try JSONDecoder().decode(
-                [StakeAddressInfo].self,
+                [CLIStakeAddressInfo].self,
                 from: results.toData
             )
-            
-            return stakeAddressInfo
+
+            return stakeAddressInfo.map(\.stakeAddressInfo)
         } catch {
             throw SwiftCardanoUtilsError
                 .invalidOutput(
