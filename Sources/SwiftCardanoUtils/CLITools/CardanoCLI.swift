@@ -1,3 +1,4 @@
+import BigInt
 import Foundation
 import SystemPackage
 import SwiftCardanoCore
@@ -248,7 +249,11 @@ public struct CardanoCLI: BinaryInterfaceable {
         
         let currentTime = Date()
         let timeDiff = currentTime.timeIntervalSince(startDate)
-        let currentEpoch = UInt32(timeDiff) / epochLength
+        guard timeDiff >= 0, epochLength > 0,
+              let currentEpoch = UInt32(exactly: UInt64(timeDiff) / epochLength)
+        else {
+            throw SwiftCardanoUtilsError.invalidOutput("Could not calculate epoch from genesis")
+        }
         
         return currentEpoch
     }
@@ -403,17 +408,23 @@ public struct CardanoCLI: BinaryInterfaceable {
             
             for (asset, amount) in utxoValue {
                 if asset == "lovelace" {
-                    if let lovelace = amount as? Int {
-                        value.coin = Int64(lovelace)
+                    guard let lovelace = Self.exactInteger(amount) else {
+                        throw SwiftCardanoUtilsError.valueError("Invalid lovelace amount: \(amount)")
                     }
+                    value.coin = lovelace
                 } else {
                     let policyId = asset
                     
-                    guard let assets = amount as? [String: Int] else {
+                    guard let rawAssets = amount as? [String: Any] else {
                         continue
                     }
                     
-                    for (assetHexName, assetAmount) in assets {
+                    for (assetHexName, rawAmount) in rawAssets {
+                        guard let assetAmount = Self.exactInteger(rawAmount) else {
+                            throw SwiftCardanoUtilsError.valueError(
+                                "Invalid quantity for asset \(policyId).\(assetHexName): \(rawAmount)"
+                            )
+                        }
                         // Create Asset and add to MultiAsset
                         let policy = try ScriptHash(from: .string(policyId))
                         let assetName = AssetName(from: assetHexName)
@@ -423,7 +434,7 @@ public struct CardanoCLI: BinaryInterfaceable {
                             multiAsset[policy] = Asset([:])
                         }
                         // Add the asset to the policy
-                        multiAsset[policy]?[assetName] = Int64(assetAmount)
+                        multiAsset[policy]?[assetName] = assetAmount
                     }
                 }
             }
@@ -646,4 +657,16 @@ extension CardanoCLI {
         return DebugCommandImpl(baseCLI: self)
     }
     
+}
+
+extension CardanoCLI {
+    /// Reads a JSON integer exactly, at any size.
+    ///
+    /// `JSONSerialization` hands back an `NSNumber` (or an `NSDecimalNumber` above
+    /// `UInt64.max`); its decimal text is parsed so no quantity is narrowed or rounded.
+    /// Returns `nil` for anything that is not a whole number.
+    static func exactInteger(_ raw: Any) -> BigInt? {
+        guard let number = raw as? NSNumber else { return nil }
+        return BigInt(number.stringValue)
+    }
 }

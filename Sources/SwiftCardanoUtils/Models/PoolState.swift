@@ -290,7 +290,7 @@ extension PoolStateParams {
         let poolOwners = ListOrOrderedSet<VerificationKeyHash>.list(ownerHashes)
 
         // Relays
-        let coreRelays: [Relay] = relays.map { relay in
+        let coreRelays: [Relay] = try relays.map { relay in
             switch relay {
             case .singleHostAddress(let ipv4String, let ipv6String, let port):
                 return .singleHostAddr(SingleHostAddr(
@@ -299,9 +299,9 @@ extension PoolStateParams {
                     ipv6: ipv6String.flatMap { IPv6Address($0) }
                 ))
             case .singleHostName(let dnsName, let port):
-                return .singleHostName(SingleHostName(port: port, dnsName: dnsName))
+                return .singleHostName(try SingleHostName(port: port, dnsName: dnsName))
             case .multiHostName(let dnsName):
-                return .multiHostName(MultiHostName(dnsName: dnsName))
+                return .multiHostName(try MultiHostName(dnsName: dnsName))
             }
         }
 
@@ -345,8 +345,8 @@ extension PoolStateParams {
         return PoolParams(
             poolOperator: poolOperator.poolKeyHash,
             vrfKeyHash: vrfKeyHash,
-            pledge: Int(pledge),
-            cost: Int(cost),
+            pledge: pledge,
+            cost: cost,
             margin: unitInterval,
             rewardAccount: rewardAccountHash,
             poolOwners: poolOwners,

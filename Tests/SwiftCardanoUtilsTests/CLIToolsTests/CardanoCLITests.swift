@@ -376,6 +376,49 @@ struct CardanoCLITests {
         #expect(
             utxos[0].input.transactionId.payload.toHex == "39a7a284c2a0948189dc45dec670211cd4d72f7b66c5726c08d9b3df11e44d58"
         )
+        #expect(utxos[0].output.amount.coin == 708864940)
+        let policy = try ScriptHash(from: .string("d8d46a3e430fab5dc8c5a0a7fc82abbf4339a89034a8c804bb7e6012"))
+        #expect(
+            utxos[0].output.amount.multiAsset[policy]?[AssetName(from: "636861726c69335f6164615f6c71")]
+                == 9223372035870126880
+        )
+    }
+
+    @Test("CardanoCLI get utxos keeps token quantities above Int64.max exactly")
+    func testUTxOsLargeQuantity() async throws {
+        let config = createTestConfiguration()
+        let runner = createCardanoCLIMockCommandRunner(config: config)
+        let response = """
+        {"39a7a284c2a0948189dc45dec670211cd4d72f7b66c5726c08d9b3df11e44d58#1":{"address":"addr_test1qp4kux2v7xcg9urqssdffff5p0axz9e3hcc43zz7pcuyle0e20hkwsu2ndpd9dh9anm4jn76ljdz0evj22stzrw9egxqmza5y3","value":{"lovelace":45000000000000000,"d8d46a3e430fab5dc8c5a0a7fc82abbf4339a89034a8c804bb7e6012":{"636861726c69335f6164615f6c71":18446744073709551615}}}}
+        """
+
+        given(runner)
+            .run(
+                arguments: .value([config.cardano!.cli!.string] + CLICommands.utxos),
+                environment: .any,
+                workingDirectory: .any
+            )
+            .willReturn(
+                AsyncThrowingStream<CommandEvent, any Error> { continuation in
+                    continuation.yield(.standardOutput([UInt8](response.utf8)))
+                    continuation.finish()
+                }
+            )
+
+        let cli = try await CardanoCLI(configuration: config, commandRunner: runner)
+        let address = try Address(
+            from: .string(
+                "addr_test1qp4kux2v7xcg9urqssdffff5p0axz9e3hcc43zz7pcuyle0e20hkwsu2ndpd9dh9anm4jn76ljdz0evj22stzrw9egxqmza5y3"
+            )
+        )
+
+        let utxos = try await cli.utxos(address: address)
+
+        #expect(utxos.count == 1)
+        #expect(utxos[0].output.amount.coin == 45000000000000000)
+        let policy = try ScriptHash(from: .string("d8d46a3e430fab5dc8c5a0a7fc82abbf4339a89034a8c804bb7e6012"))
+        let quantity = utxos[0].output.amount.multiAsset[policy]?[AssetName(from: "636861726c69335f6164615f6c71")]
+        #expect(quantity?.description == "18446744073709551615")
     }
         
     // MARK: - Protocol Parameters Tests
@@ -405,6 +448,12 @@ struct CardanoCLITests {
         
         #expect(params.txFeePerByte == 44)
         #expect(params.txFeeFixed == 155381)
+        // cardano-cli prints rationals as decimals; they must read back exactly.
+        #expect(params.monetaryExpansion.numerator == 3 && params.monetaryExpansion.denominator == 1000)
+        #expect(params.executionUnitPrices.priceSteps.lowerBound == 721)
+        #expect(params.executionUnitPrices.priceSteps.upperBound == 10_000_000)
+        #expect(params.minFeeRefScriptCostPerByte?.lowerBound == 15)
+        #expect(params.minFeeRefScriptCostPerByte?.upperBound == 1)
     }
     
     
