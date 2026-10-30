@@ -1,3 +1,9 @@
+## 0.5.10 (2026-10-30)
+
+### Fix
+
+- **cardano-cli**: read a UTxO's inline datum from its CBOR
+
 ## 0.5.9 (2026-10-30)
 
 ### Fix
