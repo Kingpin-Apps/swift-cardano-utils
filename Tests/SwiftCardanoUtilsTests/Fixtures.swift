@@ -171,6 +171,9 @@ struct CLIResponse {
         ]
         """
     
+    /// `Constr 0 [997, 10000000000]`: the inline datum's CBOR, which is what is read.
+    static let utxoInlineDatumRaw = "d8799f1903e51b00000002540be400ff"
+
     static var utxos: String {
         let dictionary = [
             "39a7a284c2a0948189dc45dec670211cd4d72f7b66c5726c08d9b3df11e44d58#0": [
@@ -216,6 +219,7 @@ struct CLIResponse {
                         ["int": 10000000000]
                     ]
                 ],
+                "inlineDatumRaw": utxoInlineDatumRaw,
                 "inlineDatumhash": "c56003cba9cfcf2f73cf6a5f4d6354d03c281bcd2bbd7a873d7475faa10a7123",
                 "referenceScript": nil,
                 "value": [

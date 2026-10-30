@@ -382,6 +382,42 @@ struct CardanoCLITests {
             utxos[0].output.amount.multiAsset[policy]?[AssetName(from: "636861726c69335f6164615f6c71")]
                 == 9223372035870126880
         )
+        guard case .data(let datum)? = utxos[0].output.datumOption?.datum else {
+            Issue.record("Expected an inline datum")
+            return
+        }
+        #expect(try datum.toCBORHex() == CLIResponse.utxoInlineDatumRaw)
+    }
+
+    @Test("A UTxO's inline datum is read from its CBOR, so integers past 128 bits are exact")
+    func testUTxOsDatumFromCBOR() throws {
+        // CBOR tag 2 (positive bignum) of 2^136: 0x01 followed by 17 zero bytes.
+        let bignum = "c252" + "01" + String(repeating: "00", count: 17)
+        let response = """
+        {"39a7a284c2a0948189dc45dec670211cd4d72f7b66c5726c08d9b3df11e44d58#0":{"address":"addr_test1qp4kux2v7xcg9urqssdffff5p0axz9e3hcc43zz7pcuyle0e20hkwsu2ndpd9dh9anm4jn76ljdz0evj22stzrw9egxqmza5y3","value":{"lovelace":1},"inlineDatum":{"int":87112285931760246646623899502532662132736},"inlineDatumRaw":"\(bignum)"}}
+        """
+        let utxos = try CardanoCLI.parseUTxOs(Data(response.utf8))
+        guard case .data(let datum)? = utxos.first?.output.datumOption?.datum else {
+            Issue.record("Expected an inline datum")
+            return
+        }
+        #expect(try datum.toCBORHex() == bignum)
+    }
+
+    @Test("An inline datum given only as JSON throws rather than being read lossily")
+    func testUTxOsDatumJSONOnly() {
+        let response = """
+        {"39a7a284c2a0948189dc45dec670211cd4d72f7b66c5726c08d9b3df11e44d58#0":{"address":"addr_test1qp4kux2v7xcg9urqssdffff5p0axz9e3hcc43zz7pcuyle0e20hkwsu2ndpd9dh9anm4jn76ljdz0evj22stzrw9egxqmza5y3","value":{"lovelace":1},"inlineDatum":{"int":1}}}
+        """
+        #expect(throws: SwiftCardanoUtilsError.self) { try CardanoCLI.parseUTxOs(Data(response.utf8)) }
+    }
+
+    @Test("A fractional or non-numeric quantity throws")
+    func testUTxOsBadQuantity() {
+        for value in [#"{"lovelace":1.5}"#, #"{"lovelace":"1"}"#, #"{"lovelace":1,"d8d46a3e430fab5dc8c5a0a7fc82abbf4339a89034a8c804bb7e6012":{"00":true}}"#] {
+            let response = #"{"39a7a284c2a0948189dc45dec670211cd4d72f7b66c5726c08d9b3df11e44d58#0":{"address":"addr_test1qp4kux2v7xcg9urqssdffff5p0axz9e3hcc43zz7pcuyle0e20hkwsu2ndpd9dh9anm4jn76ljdz0evj22stzrw9egxqmza5y3","value":"# + value + "}}"
+            #expect(throws: SwiftCardanoUtilsError.self) { try CardanoCLI.parseUTxOs(Data(response.utf8)) }
+        }
     }
 
     @Test("CardanoCLI get utxos keeps token quantities above Int64.max exactly")

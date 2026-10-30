@@ -319,52 +319,30 @@ public struct CardanoCLI: BinaryInterfaceable {
         return params
     }
     
-    /// Get a script object from a reference script dictionary
+    /// A script object from a UTxO's `referenceScript` entry.
     ///
-    /// - Parameter referenceScript: The reference script dictionary
-    /// - Returns: A script object
-    /// - Throws: CardanoChainError if the script type is not supported
-    private func getScript(from referenceScript: [String: Any]) async throws -> ScriptType {
-        guard let script = referenceScript["script"] as? [String: Any],
-              let scriptType = script["type"] as? String
-        else {
+    /// - Throws: ``SwiftCardanoUtilsError/valueError(_:)`` if the script type is not supported
+    static func getScript(from referenceScript: CLIJSON) throws -> ScriptType {
+        guard let script = referenceScript["script"], let scriptType = script["type"]?.string else {
             throw SwiftCardanoUtilsError.valueError("Invalid reference script")
         }
-        
-        if scriptType == "PlutusScriptV1" {
-            guard let cborHex = script["cborHex"] as? String,
-                  let cborData = Data(hexString: cborHex)
-            else {
-                throw SwiftCardanoUtilsError.valueError("Invalid PlutusScriptV1 CBOR")
+        func cbor(_ name: String) throws -> Data {
+            guard let hex = script["cborHex"]?.string, let data = Data(hexString: hex) else {
+                throw SwiftCardanoUtilsError.valueError("Invalid \(name) CBOR")
             }
-            
-            // Create PlutusV1Script from CBOR
-            let v1script = PlutusV1Script(data: cborData)
-            return .plutusV1Script(v1script)
-        } else if scriptType == "PlutusScriptV2" {
-            guard let cborHex = script["cborHex"] as? String,
-                  let cborData = Data(hexString: cborHex)
-            else {
-                throw SwiftCardanoUtilsError.valueError("Invalid PlutusScriptV2 CBOR")
-            }
-            
-            // Create PlutusV2Script from CBOR
-            let v2script = PlutusV2Script(data: cborData)
-            return .plutusV2Script(v2script)
-        } else {
-            // Create NativeScript from dictionary
-            // Convert the dictionary to JSON data
-            guard let jsonData = try? JSONSerialization.data(withJSONObject: script, options: [])
-            else {
-                throw SwiftCardanoUtilsError.valueError("Failed to serialize NativeScript JSON")
-            }
-            
-            // Decode the JSON data to a NativeScript object
-            let nativeScript = try JSONDecoder().decode(NativeScript.self, from: jsonData)
-            return .nativeScript(nativeScript)
+            return data
+        }
+        switch scriptType {
+        case "PlutusScriptV1":
+            return .plutusV1Script(PlutusV1Script(data: try cbor("PlutusScriptV1")))
+        case "PlutusScriptV2":
+            return .plutusV2Script(PlutusV2Script(data: try cbor("PlutusScriptV2")))
+        default:
+            // A native script in cardano-cli's JSON form.
+            return .nativeScript(try JSONDecoder().decode(NativeScript.self, from: JSONEncoder().encode(script)))
         }
     }
-    
+
     /// Get all UTxOs associated with an address
     ///
     /// - Parameter address: An address encoded with bech32
@@ -376,111 +354,128 @@ public struct CardanoCLI: BinaryInterfaceable {
             "--address", address.toBech32(), "--out-file", "/dev/stdout"
         ])
         
-        guard let data = result.data(using: .utf8),
-              let rawUtxos = try? JSONSerialization.jsonObject(with: data, options: [])
-                as? [String: [String: Any]]
-        else {
+        guard let data = result.data(using: .utf8) else {
             throw SwiftCardanoUtilsError.valueError("Failed to parse UTxOs JSON")
         }
-        
+        return try Self.parseUTxOs(data)
+    }
+
+    /// The UTxOs in `query utxo --output-json` output, read exactly: amounts
+    /// through `JSONDecoder` as exact numbers, datums from their CBOR.
+    static func parseUTxOs(_ data: Data) throws -> [UTxO] {
+        let rawUtxos: [String: CLIJSON]
+        do {
+            rawUtxos = try JSONDecoder().decode([String: CLIJSON].self, from: data)
+        } catch {
+            throw SwiftCardanoUtilsError.valueError("Failed to parse UTxOs JSON: \(error)")
+        }
+
         var utxos: [UTxO] = []
-        
+
         for (txHash, utxo) in rawUtxos {
             let parts = txHash.split(separator: "#")
             guard parts.count == 2,
-                  let txIdx = Int(parts[1])
+                  let txIdx = UInt16(parts[1])
             else {
-                continue
+                throw SwiftCardanoUtilsError.valueError("Invalid UTxO reference: \(txHash)")
             }
-            
-            let txId = String(parts[0])
+
             let txIn = TransactionInput(
-                transactionId: try TransactionId(from: .string(txId)),
-                index: UInt16(txIdx)
+                transactionId: try TransactionId(from: .string(String(parts[0]))),
+                index: txIdx
             )
-            
-            guard let utxoValue = utxo["value"] as? [String: Any] else {
-                continue
+
+            guard let utxoValue = utxo["value"]?.object else {
+                throw SwiftCardanoUtilsError.valueError("UTxO \(txHash) has no value")
             }
-            
+
             var value = Value(coin: 0)
             var multiAsset = MultiAsset([:])
-            
+
             for (asset, amount) in utxoValue {
                 if asset == "lovelace" {
-                    guard let lovelace = Self.exactInteger(amount) else {
+                    guard let lovelace = amount.integer else {
                         throw SwiftCardanoUtilsError.valueError("Invalid lovelace amount: \(amount)")
                     }
                     value.coin = lovelace
                 } else {
                     let policyId = asset
-                    
-                    guard let rawAssets = amount as? [String: Any] else {
-                        continue
+                    guard let rawAssets = amount.object else {
+                        throw SwiftCardanoUtilsError.valueError("Invalid assets for policy \(policyId): \(amount)")
                     }
-                    
+                    let policy = try ScriptHash(from: .string(policyId))
                     for (assetHexName, rawAmount) in rawAssets {
-                        guard let assetAmount = Self.exactInteger(rawAmount) else {
+                        guard let assetAmount = rawAmount.integer else {
                             throw SwiftCardanoUtilsError.valueError(
                                 "Invalid quantity for asset \(policyId).\(assetHexName): \(rawAmount)"
                             )
                         }
-                        // Create Asset and add to MultiAsset
-                        let policy = try ScriptHash(from: .string(policyId))
                         let assetName = AssetName(from: assetHexName)
-                        
-                        // Initialize the Asset for this policy if it doesn't exist
                         if multiAsset[policy] == nil {
                             multiAsset[policy] = Asset([:])
                         }
-                        // Add the asset to the policy
                         multiAsset[policy]?[assetName] = assetAmount
                     }
                 }
             }
-            
-            // Set the multi-asset on the value
             value.multiAsset = multiAsset
-            
-            // Handle datum hash
+
             var datumHash: DatumHash? = nil
-            if let datumHashStr = utxo["datumhash"] as? String {
+            if let datumHashStr = utxo["datumhash"]?.string {
                 datumHash = try DatumHash(from: .string(datumHashStr))
             }
-            
-            // Handle datum
-            var datumOption: DatumOption? = nil
-            if let datumStr = utxo["datum"] as? String, let datumData = Data(hexString: datumStr) {
-                datumOption = try DatumOption.fromCBOR(data: datumData)
-            } else if let inlineDatum = utxo["inlineDatum"] as? [AnyHashable: Any] {
-                let primitiveDict = try Primitive.fromAny(inlineDatum)
-                let plutusData = try PlutusData(from: primitiveDict)
-                datumOption = DatumOption(datum: plutusData)
-            }
-            
-            // Handle reference script
+
+            let datumOption = try datumOption(utxo, txHash)
+
             var script: ScriptType? = nil
-            if let referenceScript = utxo["referenceScript"] as? [String: Any] {
-                script = try await getScript(from: referenceScript)
+            if let referenceScript = utxo["referenceScript"], !referenceScript.isNull {
+                script = try getScript(from: referenceScript)
             }
-            
-            let address = try Address(
-                from: .string(utxo["address"] as! String)
-            )
+
+            guard let addressText = utxo["address"]?.string else {
+                throw SwiftCardanoUtilsError.valueError("UTxO \(txHash) has no address")
+            }
             let txOut = TransactionOutput(
-                address: address,
+                address: try Address(from: .string(addressText)),
                 amount: value,
                 datumHash: datumHash,
                 datumOption: datumOption,
                 script: script
             )
-            
+
             utxos.append(UTxO(input: txIn, output: txOut))
         }
-        
+
         return utxos
     }
-    
+
+    /// A UTxO entry's datum, read from its CBOR: `datum` (a datum option) or
+    /// `inlineDatumRaw` (the inline datum's Plutus data). `nil` when it has neither.
+    ///
+    /// The JSON `inlineDatum` is never read: a datum integer is unbounded and a
+    /// JSON number does not hold it exactly. An entry with an inline datum but
+    /// no CBOR for it throws.
+    static func datumOption(_ entry: CLIJSON, _ txHash: String) throws -> DatumOption? {
+        if let datum = entry["datum"]?.string {
+            guard let data = Data(hexString: datum) else {
+                throw SwiftCardanoUtilsError.valueError("UTxO \(txHash) datum is not hex")
+            }
+            return try DatumOption.fromCBOR(data: data)
+        }
+        if let raw = entry["inlineDatumRaw"]?.string {
+            guard let data = Data(hexString: raw) else {
+                throw SwiftCardanoUtilsError.valueError("UTxO \(txHash) inlineDatumRaw is not hex")
+            }
+            return DatumOption(datum: try PlutusData.fromCBOR(data: data))
+        }
+        if let inline = entry["inlineDatum"], !inline.isNull {
+            throw SwiftCardanoUtilsError.valueError(
+                "UTxO \(txHash) has an inline datum only as JSON (no inlineDatumRaw), whose integers cannot be read exactly"
+            )
+        }
+        return nil
+    }
+
     /// Get the stake address information
     ///
     /// - Parameter address: The stake address
@@ -657,16 +652,4 @@ extension CardanoCLI {
         return DebugCommandImpl(baseCLI: self)
     }
     
-}
-
-extension CardanoCLI {
-    /// Reads a JSON integer exactly, at any size.
-    ///
-    /// `JSONSerialization` hands back an `NSNumber` (or an `NSDecimalNumber` above
-    /// `UInt64.max`); its decimal text is parsed so no quantity is narrowed or rounded.
-    /// Returns `nil` for anything that is not a whole number.
-    static func exactInteger(_ raw: Any) -> BigInt? {
-        guard let number = raw as? NSNumber else { return nil }
-        return BigInt(number.stringValue)
-    }
 }
