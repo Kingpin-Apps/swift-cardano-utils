@@ -1,3 +1,10 @@
+## 0.5.9 (2026-10-30)
+
+### Fix
+
+- **pool-state**: read a pool margin as the exact fraction of its decimal
+- build against swift-cardano-core 0.10
+
 ## 0.5.8 (2026-10-08)
 
 ### Fix
