@@ -275,8 +275,8 @@ extension PoolStateParams {
         // VRF key hash
         let vrfKeyHash = VrfKeyHash(payload: vrf.hexStringToData)
 
-        // Margin: convert Double (0.0–1.0) to a reduced UnitInterval fraction
-        let unitInterval = marginToUnitInterval(margin)
+        // Margin: the exact fraction of the decimal cardano-cli wrote
+        let unitInterval = try marginToUnitInterval(margin)
 
         // Reward account: prepend the Cardano network header byte to the 28-byte key hash.
         // Key-based stake addresses use 0xE0 (Testnet) or 0xE1 (Mainnet).
@@ -356,12 +356,32 @@ extension PoolStateParams {
     }
 }
 
-/// Converts a margin `Double` (0.0–1.0) to a ``UnitInterval`` with a reduced numerator/denominator.
-private func marginToUnitInterval(_ value: Double) -> UnitInterval {
-    if value <= 0 { return UnitInterval(numerator: 0, denominator: 1) }
-    if value >= 1 { return UnitInterval(numerator: 1, denominator: 1) }
-    let denominator: UInt64 = 10_000_000_000
-    let numerator = UInt64((value * Double(denominator)).rounded())
+/// Converts a margin to the ``UnitInterval`` of the decimal it was read from.
+///
+/// cardano-cli writes a margin as a decimal, and a `Double`'s shortest text is
+/// that decimal, so `0.0000721` becomes 721/10000000 exactly rather than a
+/// rounded approximation.
+///
+/// - Throws: When the margin is outside 0–1, or its decimal needs a
+///   denominator larger than a `UInt64`.
+private func marginToUnitInterval(_ value: Double) throws -> UnitInterval {
+    guard value >= 0, value <= 1, let decimal = Decimal(string: String(value)) else {
+        throw SwiftCardanoUtilsError.valueError("A pool margin must be between 0 and 1, got \(value)")
+    }
+    var numerator = UInt64("\(decimal.significand)")
+    var denominator: UInt64? = 1
+    for _ in 0..<abs(decimal.exponent) {
+        if decimal.exponent < 0 {
+            denominator = denominator.flatMap { $0.multipliedReportingOverflow(by: 10) }
+                .flatMap { $0.overflow ? nil : $0.partialValue }
+        } else {
+            numerator = numerator.flatMap { $0.multipliedReportingOverflow(by: 10) }
+                .flatMap { $0.overflow ? nil : $0.partialValue }
+        }
+    }
+    guard let numerator, let denominator else {
+        throw SwiftCardanoUtilsError.valueError("Pool margin \(value) does not fit a ledger fraction")
+    }
     let g = gcd(numerator, denominator)
     return UnitInterval(numerator: numerator / g, denominator: denominator / g)
 }

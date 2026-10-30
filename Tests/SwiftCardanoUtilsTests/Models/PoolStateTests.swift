@@ -1020,6 +1020,45 @@ struct PoolStateParamsToPoolParamsTests {
         #expect(result.pledge == 500_000_000)
     }
 
+    struct MarginCase: Sendable, CustomTestStringConvertible {
+        let json: String
+        let numerator: UInt64
+        let denominator: UInt64
+        var testDescription: String { json }
+    }
+
+    static let marginCases: [MarginCase] = [
+        MarginCase(json: "0", numerator: 0, denominator: 1),
+        MarginCase(json: "1", numerator: 1, denominator: 1),
+        MarginCase(json: "0.02", numerator: 1, denominator: 50),
+        MarginCase(json: "0.0000721", numerator: 721, denominator: 10_000_000),
+        MarginCase(json: "1e-05", numerator: 1, denominator: 100_000),
+        MarginCase(json: "0.123456789012", numerator: 30_864_197_253, denominator: 250_000_000_000),
+    ]
+
+    @Test("toPoolParams reads the margin as the exact fraction of its decimal", arguments: marginCases)
+    func testExactMargin(_ margin: MarginCase) async throws {
+        let json = CLIResponse.poolStateSinglePoolNoMetadata.replacingOccurrences(
+            of: #""spsMargin": [^,]+"#, with: "\"spsMargin\": \(margin.json)", options: .regularExpression)
+        let state = try JSONDecoder().decode(PoolState.self, from: Data(json.utf8))
+        let params = try #require(Array(state.pools.values).first?.poolParams)
+        let result = try await params.toPoolParams(poolOperator: try samplePool)
+
+        #expect(result.margin.numerator == margin.numerator)
+        #expect(result.margin.denominator == margin.denominator)
+    }
+
+    @Test("toPoolParams rejects a margin above 1")
+    func testMarginAboveOne() async throws {
+        let json = CLIResponse.poolStateSinglePoolNoMetadata.replacingOccurrences(
+            of: #""spsMargin": [^,]+"#, with: "\"spsMargin\": 1.5", options: .regularExpression)
+        let state = try JSONDecoder().decode(PoolState.self, from: Data(json.utf8))
+        let params = try #require(Array(state.pools.values).first?.poolParams)
+        await #expect(throws: SwiftCardanoUtilsError.self) {
+            try await params.toPoolParams(poolOperator: try samplePool)
+        }
+    }
+
     @Test("toPoolParams maps poolOperator key hash from the supplied PoolOperator")
     func testPoolOperatorKeyHash() async throws {
         let params = try sampleParams
