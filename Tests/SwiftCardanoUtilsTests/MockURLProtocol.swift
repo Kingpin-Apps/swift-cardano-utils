@@ -3,8 +3,19 @@ import Foundation
 /// A `URLProtocol` subclass that intercepts URL requests and returns preset responses.
 /// Register it via `MockURLProtocol.makeSession()` and pass the session to methods under test.
 final class MockURLProtocol: URLProtocol {
-    /// Keyed by URL string → `Result<Data, Error>`.
-    nonisolated(unsafe) static var responses: [String: Result<Data, Error>] = [:]
+    /// Keyed by URL string → `Result<Data, Error>`. Suites run in parallel and
+    /// set and read it at once, so it is held behind a lock.
+    static let responses = Responses()
+
+    final class Responses: @unchecked Sendable {
+        private let lock = NSLock()
+        private var storage: [String: Result<Data, Error>] = [:]
+
+        subscript(url: String) -> Result<Data, Error>? {
+            get { lock.withLock { storage[url] } }
+            set { lock.withLock { storage[url] = newValue } }
+        }
+    }
 
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
