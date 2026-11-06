@@ -1,5 +1,5 @@
 {
-  "originHash" : "3129d91033c3dceab567c10fb8b7fdb1451aed7246d544f83d75484b16ce8121",
+  "originHash" : "8dc7f74d07d61a94120782dc50245628f1ba450a5fda4a67fdef89eb109e6912",
   "pins" : [
     {
       "identity" : "base32",
@@ -69,8 +69,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-asn1.git",
       "state" : {
-        "revision" : "3b6410f7dee09eb33cdd26260c5fd47fda19b0e2",
-        "version" : "1.7.3"
+        "revision" : "917b472dbe53ba699cbb0495f9a95a084bc6364d",
+        "version" : "1.7.4"
       }
     },
     {
@@ -96,8 +96,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Kingpin-Apps/swift-cardano-core.git",
       "state" : {
-        "revision" : "d87009d79f50db04058d33f5d2dae49835f66248",
-        "version" : "0.10.0"
+        "revision" : "1ad20e350f83f3bc6bb7c4e90e1966e554a433c3",
+        "version" : "0.10.2"
       }
     },
     {
@@ -123,8 +123,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-configuration",
       "state" : {
-        "revision" : "5aa8bdb1ddd11de51cb30b0ba575f4b05a9a169d",
-        "version" : "1.4.0"
+        "revision" : "0b0c23215764302f7db752b079c024fbaff12e62",
+        "version" : "1.5.0"
       }
     },
     {
@@ -159,8 +159,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Kingpin-Apps/swift-kes.git",
       "state" : {
-        "revision" : "c79b68762e420d181a9144c6b77c9b24d9bb33e3",
-        "version" : "1.0.2"
+        "revision" : "fefaa18a5351ef85fc911a8c9bde75e5d6e86869",
+        "version" : "1.0.3"
       }
     },
     {
@@ -168,8 +168,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-log.git",
       "state" : {
-        "revision" : "c9c6bb9d275ec0d95c3ad16391f3f045dc623104",
-        "version" : "1.16.2"
+        "revision" : "e3da04078777e6a1b72ce19981fbd6539b0847d8",
+        "version" : "1.17.0"
       }
     },
     {
@@ -186,8 +186,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Kingpin-Apps/swift-mnemonic.git",
       "state" : {
-        "revision" : "7345f86daa9277b0510aaed9c5fd2fce5d41e89b",
-        "version" : "0.2.6"
+        "revision" : "97ac7a4a2dc7ef329fe0fb8d6e3e3400fedafbc4",
+        "version" : "0.2.7"
       }
     },
     {
@@ -195,8 +195,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Kingpin-Apps/swift-nacl.git",
       "state" : {
-        "revision" : "03f8a9e2a7626fdc56f100da78f101fe05002298",
-        "version" : "1.0.3"
+        "revision" : "32aac9e9f00f362a359b198bc76eae4fa95f329f",
+        "version" : "1.1.0"
       }
     },
     {
